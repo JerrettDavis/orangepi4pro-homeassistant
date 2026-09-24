@@ -3,6 +3,7 @@
 .build/
 dist/
 .venv/
+.worktrees/
 .env
 .env.*
 !.env.example
