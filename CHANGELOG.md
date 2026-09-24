@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.12
+
+- Enable Firefox's XInput2 path so one-finger drags on the X11 touchscreen
+  scroll Home Assistant instead of selecting page text.
+
 ## 0.1.0-alpha.8
 
 - Disable snapd self re-execution for the kiosk on the custom kernel, whose

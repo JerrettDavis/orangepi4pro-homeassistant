@@ -3,6 +3,7 @@ set -euo pipefail
 
 export DISPLAY="${DISPLAY:-:0}"
 export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+export MOZ_USE_XINPUT2=1
 
 for _ in $(seq 1 60); do
   xset q >/dev/null 2>&1 && break
