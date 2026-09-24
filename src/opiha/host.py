@@ -13,7 +13,7 @@ from . import config
 from .common import ApplianceError, REPO, atomic_json, atomic_bytes, private_mkdir, read_json
 
 
-PUBLIC_DIRS = ("bin", "src", "scripts", "homeassistant", "web", "config", "vendor")
+PUBLIC_DIRS = ("bin", "src", "scripts", "systemd", "homeassistant", "web", "config", "vendor")
 PUBLIC_FILES = ("README.md", "LICENSE", "VERSION", "pyproject.toml")
 
 
@@ -89,6 +89,8 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
     for path, label in ((layout.unit, "unit"), (layout.config, "configuration")):
         if path.exists() and _relative(layout, path) not in owned:
             raise ApplianceError(f"Existing Home Assistant {label} is not owned by this installer")
+    if (layout.current.exists() or layout.current.is_symlink()) and _relative(layout, layout.current) not in owned:
+        raise ApplianceError("Existing Home Assistant current selector is not owned by this installer")
 
     release_path = layout.install_root / "releases" / release
     if release_path.exists():
@@ -211,7 +213,11 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
     temporary_link.symlink_to(selected, target_is_directory=True)
     os.replace(temporary_link, layout.current)
 
-    owned = [_relative(layout, layout.config), _relative(layout, layout.unit)]
+    owned = [
+        _relative(layout, layout.config),
+        _relative(layout, layout.current),
+        _relative(layout, layout.unit),
+    ]
     manifest = {
         "schema": 1,
         "release": release,

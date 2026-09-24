@@ -141,6 +141,22 @@ def test_plan_refuses_preexisting_unowned_release_directory(tmp_path):
         host.plan(root=root, release="0.1.0a1")
 
 
+def test_plan_refuses_preexisting_unowned_current_selector(tmp_path):
+    root = linux_root(tmp_path)
+    current = root / "opt/orangepi-homeassistant/current"
+    current.parent.mkdir(parents=True)
+    current.symlink_to("somewhere-else")
+    with pytest.raises(ApplianceError, match="current selector is not owned"):
+        host.plan(root=root, release="0.1.0a1")
+
+
+def test_installed_release_contains_unit_template_needed_for_upgrade(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+    assert (layout.current / "systemd/orangepi-homeassistant.service").is_file()
+
+
 @pytest.mark.skipif(os.name != "posix", reason="POSIX mode assertion")
 def test_apply_private_roots_are_mode_0700(tmp_path):
     root = linux_root(tmp_path)
