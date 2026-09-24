@@ -1,0 +1,6 @@
+{
+  "mountpoint": "/mnt/YOUR_OFFBOX_BACKUP_MOUNT",
+  "destination": "/mnt/YOUR_OFFBOX_BACKUP_MOUNT/opiha",
+  "recipient": "age1REPLACE_WITH_YOUR_PUBLIC_RECIPIENT",
+  "signing_key": "/private/REPLACE_WITH_PRIVATE_SIGNING_KEY.pem"
+}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home Control | Orange Pi</title>
+<style>
+:root{color-scheme:dark;font:18px system-ui,sans-serif;background:#111d2c;color:#edf4f8}body{max-width:850px;margin:6vh auto;padding:28px}header{display:flex;gap:18px;align-items:center}.mark{width:55px;height:55px;border:2px solid #43c5be;border-radius:15px;display:grid;place-items:center;font-size:28px;color:#43c5be}.eyebrow{color:#86a1bb;font-size:13px;letter-spacing:.16em;text-transform:uppercase}h1{font-weight:550;margin:8px 0 24px;font-size:clamp(30px,5vw,48px)}.card{background:#1a2a3d;border:1px solid #2e465d;padding:25px;border-radius:16px;margin:18px 0}.row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2e465d}.row:last-child{border:0}.good{color:#5fd2c0}.quiet{color:#9bb0c2}a.button{display:inline-block;padding:18px 26px;background:#45c1bc;color:#082a32;border-radius:10px;text-decoration:none;font-weight:650}small{display:block;line-height:1.6;color:#9bb0c2;margin-top:22px}#error{color:#efc89a}
+</style>
+<header><div class="mark">⌂</div><div><div class="eyebrow">Orange Pi 4 Pro</div><div>Home Control</div></div></header>
+<h1 id="heading">Checking your appliance.</h1>
+<div class="card"><div class="row"><span>Home Assistant</span><span id="ha">Checking</span></div><div class="row"><span>Person detector</span><span id="vision">Not running</span></div><div class="row"><span>Storage available</span><span id="storage">Checking</span></div><div class="row"><span>Environment</span><span id="mode">Checking</span></div></div>
+<a class="button" id="open" href="http://127.0.0.1:8123/">Open Home Assistant</a>
+<small>This page has no administrative controls and never reads your credentials.<br>Use the private recovery bundle or Home Assistant's backup upload to restore your household.<br>Diagnostic service: localhost only. Camera footage is not stored.</small><p id="error"></p>
+<script>
+let target='http://127.0.0.1:8123/';let readyCount=0;
+fetch('/ui.json').then(r=>r.json()).then(c=>{target=c.ha_url+c.dashboard_path;document.getElementById('open').href=target;});
+async function update(){try{const s=await (await fetch('/health.json')).json();document.getElementById('ha').textContent=s.homeassistant.responding?'Responding':'Waiting for startup or cutover';document.getElementById('ha').className=s.homeassistant.responding?'good':'quiet';document.getElementById('vision').textContent=s.vision.available?(s.vision.person?'Person detected':'No person detected'):'Unavailable / disabled';document.getElementById('storage').textContent=(s.storage.free_bytes/1024**3).toFixed(1)+' GiB';document.getElementById('mode').textContent=s.mode;document.getElementById('heading').textContent=s.homeassistant.responding?'Home control is ready.':'Your appliance is starting.';readyCount=s.homeassistant.responding?readyCount+1:0;if(readyCount>=3&&new URLSearchParams(location.search).get('stay')!=='1')location.replace(target);}catch(e){document.getElementById('error').textContent='The local status service is unavailable.';}}update();setInterval(update,3000);
+</script></html>

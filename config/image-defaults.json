@@ -1,0 +1,11 @@
+{
+  "ha_version": "2026.9.3",
+  "timezone": "Etc/UTC",
+  "dashboard_path": "/lovelace",
+  "images": {
+    "homeassistant": "ghcr.io/home-assistant/home-assistant:2026.9.3",
+    "zwave": "zwavejs/zwave-js-ui:11.24.1",
+    "mqtt": "eclipse-mosquitto:2.0.22",
+    "camera": "alexxit/go2rtc:1.9.14"
+  }
+}

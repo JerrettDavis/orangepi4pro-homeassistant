@@ -1,0 +1,28 @@
+# Private machine/household state and generated artifacts
+.local/
+.build/
+dist/
+.venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+*.tar
+*.tar.gz
+*.age
+*.age.sig
+*.img
+*.img.xz
+*.vhdx
+*.db
+*.db-shm
+*.db-wal
+.storage/
+identity.txt
+*private*.pem
+*.key
+# Explicit public vendoring is opt-in; review before git add -f
+vendor/*.zip

@@ -1,0 +1,10 @@
+[Unit]
+Description=Encrypted off-box appliance snapshot
+After=opiha-firstboot.service docker.service
+ConditionPathExists=/etc/opiha/backup.json
+
+[Service]
+Type=oneshot
+ExecStart=/opt/orangepi4pro-homeassistant/scripts/nightly-backup.sh
+TimeoutStartSec=0
+UMask=0077

@@ -1,0 +1,15 @@
+[Unit]
+Description=Prepare Orange Pi appliance state and signed recovery
+After=local-fs.target network-online.target docker.service
+Wants=network-online.target docker.service
+Before=display-manager.service opiha-stack.service opiha-status.service opiha-vision.service opiha-kiosk.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/orangepi4pro-homeassistant/scripts/first-boot.sh
+RemainAfterExit=yes
+TimeoutStartSec=0
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

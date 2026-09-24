@@ -1,0 +1,45 @@
+{
+  "release": "0.1.0-alpha.1",
+  "prepared_local_date": "2026-09-23",
+  "timezone": "America/Chicago",
+  "environment": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.13.5"
+  },
+  "test_suite": {
+    "tests": 87,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 86
+  },
+  "checks": {
+    "python_compile": "passed",
+    "bash_syntax": "passed",
+    "public_source_pattern_scan": "passed",
+    "source_archive_determinism": "passed (automated test)",
+    "openssl_signature_roundtrip_and_tamper": "passed with real openssl",
+    "http_status_service": "passed with actual loopback HTTP requests",
+    "opencv_inference": "passed on synthetic blank frame; no accuracy benchmark",
+    "age_encrypt_decrypt": "skipped: age and age-keygen executables unavailable",
+    "docker_runtime": "not run: Docker unavailable",
+    "systemd_analysis": "incomplete: target installed executables and docker.service absent in test container",
+    "full_image_apply": "not run: no clean boot-tested A733 image or hardware available",
+    "powershell_export": "not run: pwsh unavailable",
+    "arm64_boot_display_camera_zwave": "not run: no hardware available",
+    "a733_npu": "not implemented"
+  },
+  "tools": {
+    "docker": false,
+    "age": false,
+    "age-keygen": false,
+    "openssl": true,
+    "pwsh": false,
+    "ffmpeg": true,
+    "systemd-analyze": true
+  },
+  "upstream_images_pulled": false,
+  "flashable_image_included": false,
+  "github_uploaded": false
+}

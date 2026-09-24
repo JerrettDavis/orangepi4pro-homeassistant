@@ -1,0 +1,24 @@
+[Unit]
+Description=Low-rate local person detection (CPU baseline)
+Requires=opiha-firstboot.service
+After=opiha-firstboot.service opiha-stack.service
+StartLimitIntervalSec=0
+
+[Service]
+User=opiha-vision
+Group=opiha-vision
+ExecCondition=/usr/bin/python3 -c "import json,sys; sys.exit(0 if json.load(open('/run/opiha/runtime.json'))['features']['camera'] else 1)"
+ExecStart=/opt/orangepi4pro-homeassistant/bin/opiha --config /run/opiha/runtime.json vision
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run/opiha/status
+CPUQuota=100%
+MemoryMax=512M
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

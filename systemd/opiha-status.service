@@ -1,0 +1,20 @@
+[Unit]
+Description=Read-only local appliance status
+Requires=opiha-firstboot.service
+After=opiha-firstboot.service
+
+[Service]
+User=opiha-status
+Group=opiha-status
+ExecStart=/opt/orangepi4pro-homeassistant/bin/opiha --config /run/opiha/runtime.json serve
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+RestrictSUIDSGID=yes
+MemoryMax=96M
+
+[Install]
+WantedBy=multi-user.target

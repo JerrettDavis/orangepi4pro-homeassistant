@@ -1,0 +1,24 @@
+# Unavailable in the quarantined lab by design. Runs on the native appliance.
+rest:
+  - resource: http://127.0.0.1:8099/health.json
+    scan_interval: 5
+    timeout: 3
+    sensor:
+      - name: Orange Pi Vision Status
+        unique_id: opiha_vision_status
+        value_template: >-
+          {% if not value_json.vision.available %}unavailable
+          {% elif value_json.vision.person %}occupied
+          {% else %}clear{% endif %}
+      - name: Orange Pi Free Storage
+        unique_id: opiha_free_storage
+        unit_of_measurement: GiB
+        value_template: "{{ (value_json.storage.free_bytes / 1073741824) | round(1) }}"
+
+template:
+  - binary_sensor:
+      - name: Orange Pi Person
+        unique_id: opiha_person
+        device_class: occupancy
+        state: "{{ is_state('sensor.orange_pi_vision_status', 'occupied') }}"
+        availability: "{{ states('sensor.orange_pi_vision_status') in ['clear', 'occupied'] }}"

@@ -1,0 +1,21 @@
+title: Home Control
+views:
+  - title: Home
+    path: home
+    icon: mdi:home
+    cards:
+      - type: markdown
+        content: |
+          # Home control
+          Your integrations, rooms and devices belong in household state, not the image.
+          Edit this dashboard after migration or keep your existing dashboard.
+      - type: entities
+        title: Appliance
+        entities:
+          - binary_sensor.orange_pi_person
+          - sensor.orange_pi_vision_status
+          - sensor.orange_pi_free_storage
+      - type: markdown
+        content: |
+          **Camera privacy:** local processing; no recordings enabled.
+          **Detection:** CPU baseline, not an identity or security system.

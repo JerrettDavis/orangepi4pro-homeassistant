@@ -1,0 +1,16 @@
+[Unit]
+Description=Home Assistant appliance containers
+Requires=docker.service opiha-firstboot.service
+After=docker.service opiha-firstboot.service network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/orangepi4pro-homeassistant/scripts/start-stack.sh
+ExecStop=/opt/orangepi4pro-homeassistant/bin/opiha --config /etc/opiha/appliance.json down
+TimeoutStartSec=0
+TimeoutStopSec=180
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

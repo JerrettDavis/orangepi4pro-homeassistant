@@ -1,0 +1,21 @@
+[Unit]
+Description=Home control touchscreen kiosk
+Requires=opiha-firstboot.service
+Wants=display-manager.service opiha-status.service
+After=display-manager.service opiha-firstboot.service opiha-status.service
+StartLimitIntervalSec=0
+
+[Service]
+User=opiha-kiosk
+Group=opiha-kiosk
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/opiha-kiosk/.Xauthority
+ExecStart=/opt/orangepi4pro-homeassistant/scripts/kiosk-session.sh
+Restart=on-failure
+RestartSec=15
+KillMode=control-group
+TimeoutStopSec=30
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=graphical.target
