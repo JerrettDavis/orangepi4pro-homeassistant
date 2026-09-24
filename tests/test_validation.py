@@ -86,6 +86,21 @@ def test_validate_images_reports_inspection_error_as_failure():
     ]
 
 
+def test_validate_images_reports_unpinned_reference_as_failure():
+    validation = load_validation()
+    result = validation.validate_images(
+        {"fixture": "example.invalid/app"}, validation.registry_inspect
+    )
+    assert result == [
+        {
+            "name": "fixture",
+            "image": "example.invalid/app",
+            "arm64": False,
+            "error": "inspection failed",
+        }
+    ]
+
+
 def test_registry_index_platforms_reads_oci_index_and_ignores_attestations():
     validation = load_validation()
     document = {

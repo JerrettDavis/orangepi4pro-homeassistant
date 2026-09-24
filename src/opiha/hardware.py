@@ -132,6 +132,31 @@ def parse_devices(text: str) -> list[str]:
     return sorted(devices)
 
 
+def _parse_key_values(text: str, separator: str = "=") -> dict[str, str]:
+    values: dict[str, str] = {}
+    for line in text.splitlines():
+        if separator not in line:
+            continue
+        key, value = line.split(separator, 1)
+        values[key.strip()] = value.strip().strip('"')
+    return values
+
+
+def _integer_field(text: str, name: str) -> int | None:
+    match = re.search(rf"^{re.escape(name)}:\s+(\d+)", text, re.MULTILINE)
+    return int(match.group(1)) if match else None
+
+
+def _df_bytes(text: str) -> tuple[int | None, int | None]:
+    rows = [line.split() for line in text.splitlines() if line.split()]
+    if len(rows) < 2 or len(rows[-1]) < 2:
+        return None, None
+    try:
+        return int(rows[-1][0]), int(rows[-1][1])
+    except ValueError:
+        return None, None
+
+
 def _row_index(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     index: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
@@ -188,6 +213,8 @@ def classify_flash_target(
         reasons.add("ambiguous")
     elif matches[0].get("type") != "disk":
         reasons.add("not-whole-disk")
+    elif not matches[0].get("size") or not matches[0].get("model"):
+        reasons.add("missing-identification")
 
     role_targets = {"/": "root", "/boot": "boot", "/boot/efi": "efi"}
     for target, role in role_targets.items():
@@ -257,6 +284,11 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
     camera = _probe(runner, ["v4l2-ctl", "--list-devices"])
     input_devices = _probe(runner, ["cat", "/proc/bus/input/devices"])
     modules = _probe(runner, ["cat", "/proc/modules"])
+    os_release = _probe(runner, ["cat", "/etc/os-release"])
+    dt_model = _probe(runner, ["cat", "/proc/device-tree/model"])
+    meminfo = _probe(runner, ["cat", "/proc/meminfo"])
+    cpuinfo = _probe(runner, ["cat", "/proc/cpuinfo"])
+    root_space = _probe(runner, ["df", "-B1", "--output=size,avail", "/"])
 
     rows = parse_lsblk(lsblk.stdout) if lsblk.status == "ok" else []
     mounts = parse_findmnt(findmnt.stdout) if findmnt.status == "ok" else {}
@@ -264,6 +296,12 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
     serial_devices = sorted(glob.glob("/dev/serial/by-id/*"))
     input_names = re.findall(r'^N:\s+Name="([^"]+)"', input_devices.stdout, re.MULTILINE)
     loaded_modules = {line.split()[0] for line in modules.stdout.splitlines() if line.split()}
+    os_values = _parse_key_values(os_release.stdout) if os_release.status == "ok" else {}
+    root_total, root_available = _df_bytes(root_space.stdout)
+    cpu_features = next(
+        (line.split(":", 1)[1].strip().split() for line in cpuinfo.stdout.splitlines() if line.lower().startswith(("features", "flags")) and ":" in line),
+        [],
+    )
     result: dict[str, Any] = {
         "schema": 1,
         "privacy": "private" if private else "public-sanitized",
@@ -271,6 +309,20 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
             "architecture": arch.stdout.strip() if arch.status == "ok" else "unknown",
             "kernel": kernel.stdout.strip() if kernel.status == "ok" else "unknown",
             "hostname": hostname.stdout.strip() if hostname.status == "ok" else "unknown",
+            "os": {
+                "id": os_values.get("ID", "unknown"),
+                "version_id": os_values.get("VERSION_ID", "unknown"),
+            },
+            "device_tree_model": dt_model.stdout.rstrip("\x00\n") if dt_model.status == "ok" else "unknown",
+        },
+        "resources": {
+            "memory_total_kib": _integer_field(meminfo.stdout, "MemTotal"),
+            "memory_available_kib": _integer_field(meminfo.stdout, "MemAvailable"),
+            "cpu_count": len(re.findall(r"^processor\s*:", cpuinfo.stdout, re.MULTILINE)),
+            "cpu_features": sorted(set(cpu_features)),
+            "root_total_bytes": root_total,
+            "root_available_bytes": root_available,
+            "thermal_zones": sorted(glob.glob("/sys/class/thermal/thermal_zone*")),
         },
         "storage": {
             "devices": rows,
@@ -284,7 +336,12 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
             "compose": compose.status,
             "compose_version": compose.stdout.strip() if compose.status == "ok" else "unavailable",
         },
-        "display": {"status": display.status, "summary": display.stdout.strip()},
+        "display": {
+            "status": display.status,
+            "summary": display.stdout.strip(),
+            "drm_nodes": sorted(glob.glob("/dev/dri/card*")),
+            "framebuffers": sorted(glob.glob("/dev/fb[0-9]*")),
+        },
         "input": {
             "devices": sorted(set(input_names)),
             "native_touch_modules": sorted(

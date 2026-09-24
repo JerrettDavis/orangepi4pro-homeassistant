@@ -111,7 +111,7 @@ def validate_images(
             platforms = manifest_platforms(inspector(image))
             arm64 = any(platform in {"linux/arm64", "linux/arm64/v8"} for platform in platforms)
             results.append({"name": name, "image": image, "arm64": arm64})
-        except (OSError, subprocess.SubprocessError):
+        except (OSError, ValueError, subprocess.SubprocessError):
             results.append(
                 {"name": name, "image": image, "arm64": False, "error": "inspection failed"}
             )

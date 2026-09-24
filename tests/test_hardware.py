@@ -88,11 +88,11 @@ def test_parse_devices_returns_unique_device_paths_without_missing_globs():
 
 def fixture_rows(with_mounted_sd=False):
     rows = [
-        {"path": "/dev/nvme0n1", "type": "disk", "parent": None, "mountpoints": []},
+        {"path": "/dev/nvme0n1", "type": "disk", "parent": None, "mountpoints": [], "size": "256G", "model": "fixture-nvme"},
         {"path": "/dev/nvme0n1p1", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/boot/efi"]},
         {"path": "/dev/nvme0n1p2", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/boot"]},
         {"path": "/dev/nvme0n1p3", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/"]},
-        {"path": "/dev/mmcblk1", "type": "disk", "parent": None, "mountpoints": []},
+        {"path": "/dev/mmcblk1", "type": "disk", "parent": None, "mountpoints": [], "size": "128G", "model": "fixture-sd"},
         {
             "path": "/dev/mmcblk1p1",
             "type": "part",
@@ -130,6 +130,16 @@ def test_unmounted_unprotected_disk_is_safe_candidate():
         "/dev/mmcblk1", fixture_rows(), {"/": "/dev/nvme0n1p3"}
     )
     assert result == {"path": "/dev/mmcblk1", "safe": True, "reasons": []}
+
+
+def test_flash_candidate_without_size_or_model_is_rejected():
+    rows = fixture_rows()
+    rows[4].update(size=None, model=None)
+    result = hardware.classify_flash_target(
+        "/dev/mmcblk1", rows, {"/": "/dev/nvme0n1p3"}
+    )
+    assert not result["safe"]
+    assert result["reasons"] == ["missing-identification"]
 
 
 def test_ambiguous_or_non_disk_target_is_rejected():
@@ -204,6 +214,11 @@ def test_collect_inventory_uses_fixed_commands_and_sanitizes_public_result():
             ("findmnt", "-rn", "-o", "TARGET,SOURCE"): "/ /dev/nvme0n1p3\n",
             ("cat", "/proc/bus/input/devices"): 'N: Name="QDtech MPI7003"\nH: Handlers=event1\n',
             ("cat", "/proc/modules"): "hid_multitouch 28672 0 - Live 0x0\n",
+            ("cat", "/etc/os-release"): 'ID=ubuntu\nVERSION_ID="22.04"\n',
+            ("cat", "/proc/device-tree/model"): "Orange Pi 4 Pro\x00",
+            ("cat", "/proc/meminfo"): "MemTotal:        6000000 kB\nMemAvailable:    5000000 kB\n",
+            ("cat", "/proc/cpuinfo"): "processor : 0\nprocessor : 1\nFeatures : fp asimd aes\n",
+            ("df", "-B1", "--output=size,avail", "/"): "1B-blocks Avail\n53687091200 37580963840\n",
         }
         return hardware.CommandResult(tuple(argv), 0, fixtures.get(tuple(argv), ""), "ok")
 
@@ -217,6 +232,11 @@ def test_collect_inventory_uses_fixed_commands_and_sanitizes_public_result():
         "devices": ["QDtech MPI7003"],
         "native_touch_modules": ["hid_multitouch"],
     }
+    assert result["system"]["os"] == {"id": "ubuntu", "version_id": "22.04"}
+    assert result["system"]["device_tree_model"] == "Orange Pi 4 Pro"
+    assert result["resources"]["memory_available_kib"] == 5000000
+    assert result["resources"]["cpu_count"] == 2
+    assert result["resources"]["root_available_bytes"] == 37580963840
 
 
 def test_public_inventory_generalizes_nonstandard_mount_paths():
