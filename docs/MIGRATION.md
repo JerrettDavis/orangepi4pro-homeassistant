@@ -10,6 +10,31 @@ Use the same HA release on the Orange Pi for the first migration. Avoid a simult
 
 ## Choose the first import method
 
+## Validated source-to-target staging state
+
+The September 2026 rehearsal inspected the running source rather than relying
+on repository assumptions. The source and target run the same Home Assistant
+Core release. A fresh, protected, HA-only native backup including the recorder
+database was copied directly to the Orange Pi, stored root-only outside Git,
+and its SHA-256 was verified at both ends. The source remains running and
+authoritative; the target remains at blank onboarding. No household state is
+in this repository.
+
+The source is a supervised appliance and has Supervisor add-ons. A native HA
+restore migrates Home Assistant state, not the add-on processes. Before
+cutover, classify every installed add-on as one of:
+
+1. required before restored HA may start (for example its MQTT broker or
+   database),
+2. required during the acceptance window (for example Matter, ESPHome, media,
+   proxy, or device bridges),
+3. intentionally retired, or
+4. retained temporarily on another host with a documented endpoint.
+
+Do not copy add-on secrets into Compose files or Git. Put private settings in
+root-owned files below `/srv/homeassistant` or another documented private-state
+directory and back them up in the encrypted recovery set.
+
 ### A. Native HA backup through onboarding
 
 Install/start a new HA Container, open the HA onboarding page, and use its backup upload/restore flow with the required backup key. This is Home Assistant's supported migration route. **Do not pass that archive to `opiha restore`**: the formats are deliberately different, and this repository does not fake an undocumented decryption/onboarding API.
@@ -81,6 +106,35 @@ ssh -L 8091:127.0.0.1:8091 ADMIN@ORANGE_PI_HOST
 Existing Z-Wave UI auth is preserved. The image generates private default/session material but does not force a new auth mode or rotate an imported password. Loopback binding is the default exposure control. Enable/review UI authentication during the first enrollment.
 
 ## Cutover
+
+Treat cutover as a sequence of gates, not one large action:
+
+1. Record a final source inventory and confirm the staged backup is still the
+   intended artifact. Confirm source and target HA releases match.
+2. Verify rollback: source boot access, its protected backup, target SSH, and a
+   command that stops the target stack without depending on the kiosk.
+3. Prepare required external services, but keep consumers or device ownership
+   on the source until the maintenance window.
+4. Stop the source Home Assistant cleanly. Confirm its UI and automations are
+   no longer running before restoring the target.
+5. Restore the native backup through target onboarding. Keep the old service
+   address, reverse proxy, and Z-Wave endpoint unchanged until target local
+   health and logs are reviewed.
+6. Recreate or redirect required add-on dependencies one at a time. Never run
+   two MQTT brokers with the same client identity or two active device bridges
+   against hardware that permits only one owner.
+7. Move the LAN service identity only after confirming the old host is stopped.
+   Change one layer at a time: reservation/address, proxy upstream, then public
+   or local DNS. Preserve a direct SSH path to both hosts throughout.
+8. Compare pre/post inventories, run SQLite integrity checks, exercise selected
+   critical entities and automations, and reboot the target once.
+9. Migrate Z-Wave separately using [ZWAVE-MIGRATION.md](ZWAVE-MIGRATION.md).
+10. Keep the source powered off but recoverable through the acceptance window;
+    do not delete it merely because the target UI loads.
+
+At any failed gate, stop the target before restarting the source. If a network
+identity was moved, reverse that change before starting the source so only one
+production HA is reachable under the production identity.
 
 Confirm the original HA VM and old Z-Wave server are stopped, and the controller is attached to only one server. Then:
 

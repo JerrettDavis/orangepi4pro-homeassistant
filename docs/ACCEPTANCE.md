@@ -14,7 +14,7 @@ unit test.
 | Physical touch input in kiosk | Pending | Human acceptance tap required |
 | Encrypted appliance backup verify | Pass | Signed age bundle created and verified on-device |
 | Applied appliance restore | Pending | Do not replace household state during blank-host testing |
-| Production HA native backup staged | In progress | Verify transferred archive checksum before restore |
+| Production HA native backup staged | Pass | Fresh HA-only backup with database is root-only on the target; source and target SHA-256 matched |
 | Production HA restore | Pending | Source HAOS must remain rollback authority until deliberate cutover |
 | Camera stream | Blocked | No V4L2 or media-controller endpoint enumerates |
 | CPU person detector on real camera | Blocked | Detector code exists; no camera frames are available |
@@ -23,7 +23,7 @@ unit test.
 | Spare-media flash | Blocked | No positively identified disposable destination |
 | Spare-media boot/power-cycle recovery | Blocked | Depends on the prior two checks |
 
-Before retiring Hyper-V, complete the production comparison in
+Before retiring the source appliance, complete the production comparison in
 [Migration](MIGRATION.md), recreate every required HAOS add-on as an external
-service, move the Z-Wave controller deliberately, validate touch, reboot the
-host, and retain a tested rollback path.
+service, follow the independent [Z-Wave migration](ZWAVE-MIGRATION.md), validate
+touch, reboot the host, and retain a tested rollback path.

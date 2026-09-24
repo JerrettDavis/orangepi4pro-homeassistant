@@ -7,7 +7,8 @@ Version **0.1.0-alpha.8**. This is a complete source repository for local evalua
 The current cyberdeck host has been inspected and blank Home Assistant has now
 been runtime-validated on its ARM64 Docker engine, including a persistent
 container recreation. Its NVMe boot chain, custom kernel, Xorg display, and
-native touchscreen remain the protected baseline; camera streaming, kiosk,
+native touchscreen remain the protected baseline. The local kiosk and encrypted
+blank-state backup flow are runtime-validated; camera streaming, physical touch,
 Z-Wave hardware, reboot recovery, and a flashable image are not yet validated. See the sanitized
 [live hardware baseline](docs/LIVE-HARDWARE-BASELINE.md).
 
@@ -77,15 +78,16 @@ External databases, NAS contents, OS network/mount policy, reverse-proxy service
 ## Read in this order
 
 1. [Quickstart and safe PC tests](docs/QUICKSTART.md)
-2. [Hyper-V migration and Z-Wave cutover](docs/MIGRATION.md)
-3. [Install on the existing Orange Pi host](docs/HOST-INSTALL.md)
-4. [Build a custom image and offline container cache](docs/IMAGE-BUILD.md)
-5. [Flashing safety gate](docs/FLASHING.md)
-6. [Encrypted backups and signed unattended recovery](docs/RECOVERY.md)
-7. [Display, camera, HACS and NPU boundaries](docs/HARDWARE.md)
-8. [Architecture and operational contract](docs/ARCHITECTURE.md)
-9. [Acceptance status](docs/ACCEPTANCE.md)
-10. [Next implementation steps](docs/NEXT-STEPS.md)
+2. [Production Home Assistant migration](docs/MIGRATION.md)
+3. [Z-Wave controller migration](docs/ZWAVE-MIGRATION.md)
+4. [Install on the existing Orange Pi host](docs/HOST-INSTALL.md)
+5. [Build a custom image and offline container cache](docs/IMAGE-BUILD.md)
+6. [Flashing safety gate](docs/FLASHING.md)
+7. [Encrypted backups and signed unattended recovery](docs/RECOVERY.md)
+8. [Display, camera, HACS and NPU boundaries](docs/HARDWARE.md)
+9. [Architecture and operational contract](docs/ARCHITECTURE.md)
+10. [Acceptance status](docs/ACCEPTANCE.md)
+11. [Next implementation steps](docs/NEXT-STEPS.md)
 
 [Security](SECURITY.md) · [Command reference](docs/CLI.md) · [Upstream sources and version notes](docs/SOURCES.md) · [Validation](reports/VALIDATION.md)
 
