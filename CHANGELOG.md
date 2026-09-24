@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.4
+
+- Make installed public release directories traversable by the unprivileged kiosk user.
+
 ## 0.1.0-alpha.3
 
 - Added an XFCE/Xorg Firefox kiosk that preserves the working cyberdeck display stack.

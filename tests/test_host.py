@@ -181,3 +181,14 @@ def test_apply_private_roots_are_mode_0700(tmp_path):
     assert layout.state_root.stat().st_mode & 0o777 == 0o700
     assert layout.work_root.stat().st_mode & 0o777 == 0o700
     assert layout.config.parent.stat().st_mode & 0o777 == 0o700
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX mode assertion")
+def test_apply_public_release_ancestors_are_traversable(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+
+    assert layout.install_root.stat().st_mode & 0o777 == 0o755
+    assert (layout.install_root / "releases").stat().st_mode & 0o777 == 0o755
+    assert layout.current.resolve().stat().st_mode & 0o777 == 0o755

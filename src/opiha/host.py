@@ -191,6 +191,8 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
 
     releases = layout.install_root / "releases"
     releases.mkdir(parents=True, exist_ok=True)
+    os.chmod(layout.install_root, 0o755)
+    os.chmod(releases, 0o755)
     release_path = releases / release
     if not release_path.exists():
         staging = Path(tempfile.mkdtemp(prefix=f".{release}.", dir=releases))
@@ -200,6 +202,7 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
         finally:
             if staging.exists():
                 shutil.rmtree(staging)
+    os.chmod(release_path, 0o755)
 
     private_mkdir(layout.state_root)
     if not (layout.state_root / ".opiha-state.json").exists():
