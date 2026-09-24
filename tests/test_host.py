@@ -121,6 +121,7 @@ def test_installed_kiosk_user_unit_reuses_existing_xfce_session(tmp_path):
     assert "DISPLAY=:0" in text
     assert "XAUTHORITY=%h/.Xauthority" in text
     assert "ExecStart=/opt/orangepi-homeassistant/current/scripts/kiosk-session.sh" in text
+    assert "NoNewPrivileges" not in text
     assert "WantedBy=" not in text
     assert "openbox" not in text.lower()
     assert not list((root / "etc/systemd/user").glob("*.wants/orangepi-homeassistant-kiosk.service"))

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-alpha.7
+
+- Allow the Firefox Snap launcher to perform its required confinement capability transition.
+
 ## 0.1.0-alpha.6
 
 - Treat unsupported X11 screen-saver and DPMS controls as non-fatal kiosk hints.
