@@ -10,7 +10,7 @@ def test_admin_commands_expand_to_fixed_argument_vectors():
     calls = []
     runner = lambda argv: calls.append(argv) or subprocess.CompletedProcess(argv, 0)
 
-    for command in ("daemon-reload", "start", "stop", "restart", "status", "render", "doctor", "compose-ps", "journal", "kiosk-start", "kiosk-stop", "kiosk-status"):
+    for command in ("daemon-reload", "start", "stop", "restart", "status", "render", "doctor", "compose-ps", "journal", "kiosk-daemon-reload", "kiosk-start", "kiosk-stop", "kiosk-status"):
         admin.dispatch(command, runner=runner)
 
     assert calls[0] == ["/bin/systemctl", "daemon-reload"]
@@ -20,9 +20,11 @@ def test_admin_commands_expand_to_fixed_argument_vectors():
     assert calls[6][-1] == "doctor"
     assert calls[7][-1] == "ps"
     assert calls[8][0] == "/bin/journalctl"
-    assert calls[9] == ["/bin/systemctl", "start", "orangepi-homeassistant-kiosk@orangepi.service"]
-    assert calls[10] == ["/bin/systemctl", "stop", "orangepi-homeassistant-kiosk@orangepi.service"]
-    assert "orangepi-homeassistant-kiosk@orangepi.service" in calls[11]
+    kiosk_control = ["/bin/systemctl", "--user", "--machine=orangepi@.host"]
+    assert calls[9] == kiosk_control + ["daemon-reload"]
+    assert calls[10] == kiosk_control + ["start", "orangepi-homeassistant-kiosk.service"]
+    assert calls[11] == kiosk_control + ["stop", "orangepi-homeassistant-kiosk.service"]
+    assert calls[12] == kiosk_control + ["status", "orangepi-homeassistant-kiosk.service", "--no-pager"]
 
 
 @pytest.mark.parametrize("command", ["", "shell", "../../bin/sh", "start extra", "reboot", "enable"])

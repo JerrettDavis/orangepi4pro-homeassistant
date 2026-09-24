@@ -1,0 +1,17 @@
+[Unit]
+Description=Orange Pi Home Assistant touchscreen kiosk
+After=graphical-session.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+ExecCondition=/bin/sh -c 'test ! -e "$HOME/.config/opiha/kiosk.disabled"'
+ExecStart=/opt/orangepi-homeassistant/current/scripts/kiosk-session.sh
+Restart=always
+RestartSec=10
+KillMode=control-group
+TimeoutStartSec=240
+TimeoutStopSec=30
+NoNewPrivileges=yes
+

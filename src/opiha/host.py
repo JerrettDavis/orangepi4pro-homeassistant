@@ -27,6 +27,7 @@ class Layout:
     config: Path
     unit: Path
     kiosk_unit: Path
+    legacy_kiosk_unit: Path
     manifest: Path
 
     @classmethod
@@ -40,7 +41,8 @@ class Layout:
             work_root=root / "var/lib/orangepi-homeassistant",
             config=root / "etc/orangepi-homeassistant/appliance.json",
             unit=root / "etc/systemd/system/orangepi-homeassistant.service",
-            kiosk_unit=root / "etc/systemd/system/orangepi-homeassistant-kiosk@.service",
+            kiosk_unit=root / "etc/systemd/user/orangepi-homeassistant-kiosk.service",
+            legacy_kiosk_unit=root / "etc/systemd/system/orangepi-homeassistant-kiosk@.service",
             manifest=root / "var/lib/orangepi-homeassistant/deployment.json",
         )
 
@@ -86,6 +88,7 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         layout.config,
         layout.unit,
         layout.kiosk_unit,
+        layout.legacy_kiosk_unit,
     ):
         _reject_symlink_ancestors(path, layout.root)
     owned = _owned_files(layout)
@@ -122,6 +125,8 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         changes.append("install-disabled-unit")
     if not layout.kiosk_unit.exists():
         changes.append("install-disabled-kiosk-unit")
+    if layout.legacy_kiosk_unit.exists() and _relative(layout, layout.legacy_kiosk_unit) in owned:
+        changes.append("remove-legacy-kiosk-unit")
     selected = Path("releases") / release
     if not layout.current.is_symlink() or Path(os.readlink(layout.current)) != selected:
         changes.append("select-release")
@@ -179,7 +184,7 @@ def _unit_text() -> bytes:
 
 
 def _kiosk_unit_text() -> bytes:
-    return (REPO / "systemd/orangepi-homeassistant-kiosk@.service").read_bytes()
+    return (REPO / "systemd/orangepi-homeassistant-kiosk.service").read_bytes()
 
 
 def install(*, root: Path = Path("/"), release: str) -> dict:
@@ -222,6 +227,8 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
 
     atomic_bytes(layout.unit, _unit_text(), 0o644)
     atomic_bytes(layout.kiosk_unit, _kiosk_unit_text(), 0o644)
+    if layout.legacy_kiosk_unit.exists() and _relative(layout, layout.legacy_kiosk_unit) in _owned_files(layout):
+        layout.legacy_kiosk_unit.unlink()
 
     selected = Path("releases") / release
     temporary_link = layout.install_root / ".current.new"

@@ -23,7 +23,7 @@ def test_layout_uses_dedicated_public_private_and_generated_roots(tmp_path):
     assert layout.work_root == tmp_path / "var/lib/orangepi-homeassistant"
     assert layout.config == tmp_path / "etc/orangepi-homeassistant/appliance.json"
     assert layout.unit == tmp_path / "etc/systemd/system/orangepi-homeassistant.service"
-    assert layout.kiosk_unit == tmp_path / "etc/systemd/system/orangepi-homeassistant-kiosk@.service"
+    assert layout.kiosk_unit == tmp_path / "etc/systemd/user/orangepi-homeassistant-kiosk.service"
 
 
 def test_plan_is_read_only_and_lists_first_install_changes(tmp_path):
@@ -111,19 +111,35 @@ def test_installed_unit_is_disabled_and_has_no_kiosk_or_hardware_services(tmp_pa
     assert not list((root / "etc/systemd/system").glob("*.wants/orangepi-homeassistant.service"))
 
 
-def test_installed_kiosk_template_reuses_existing_xfce_session(tmp_path):
+def test_installed_kiosk_user_unit_reuses_existing_xfce_session(tmp_path):
     root = linux_root(tmp_path)
     host.install(root=root, release="0.1.0a1")
     layout = host.Layout.for_root(root)
     text = layout.kiosk_unit.read_text()
 
-    assert "User=%i" in text
+    assert "User=" not in text
     assert "DISPLAY=:0" in text
-    assert "XAUTHORITY=/home/%i/.Xauthority" in text
+    assert "XAUTHORITY=%h/.Xauthority" in text
     assert "ExecStart=/opt/orangepi-homeassistant/current/scripts/kiosk-session.sh" in text
     assert "WantedBy=" not in text
     assert "openbox" not in text.lower()
-    assert not list((root / "etc/systemd/system").glob("*.wants/orangepi-homeassistant-kiosk@*.service"))
+    assert not list((root / "etc/systemd/user").glob("*.wants/orangepi-homeassistant-kiosk.service"))
+
+
+def test_upgrade_removes_installer_owned_legacy_system_kiosk_unit(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+    legacy = root / "etc/systemd/system/orangepi-homeassistant-kiosk@.service"
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text("legacy")
+    manifest = host.read_manifest(layout)
+    manifest["owned_files"].append(str(legacy.relative_to(root)))
+    layout.manifest.write_text(__import__("json").dumps(manifest))
+
+    host.install(root=root, release="0.1.0a2")
+
+    assert not legacy.exists()
 
 
 def test_apply_is_idempotent_and_preserves_marked_private_state(tmp_path):

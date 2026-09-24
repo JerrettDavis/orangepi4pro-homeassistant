@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.5
+
+- Run the Firefox Snap kiosk in the existing graphical user's systemd manager.
+- Safely remove the installer-owned legacy system kiosk unit during upgrade.
+
 ## 0.1.0-alpha.4
 
 - Make installed public release directories traversable by the unprivileged kiosk user.

@@ -5,8 +5,9 @@ existing graphical account. The appliance reuses that session. It does not
 install Openbox, change autologin, start another X server, or replace touch
 configuration.
 
-The static `orangepi-homeassistant-kiosk@.service` template runs Firefox as the
-chosen graphical user. It waits for X11 and local Home Assistant, launches a
+The static user unit `orangepi-homeassistant-kiosk.service` runs Firefox inside
+the existing graphical user's systemd session, as required by the Firefox Snap.
+It waits for X11 and local Home Assistant, launches a
 credential-free loopback URL in kiosk mode, and restarts after browser failure.
 The persistent Firefox profile is private runtime state below the user's
 `snap/firefox/common` directory and must be included in the encrypted recovery
@@ -15,6 +16,7 @@ bundle later.
 For the observed host:
 
 ```bash
+sudo -n /usr/local/sbin/opiha-admin kiosk-daemon-reload
 sudo -n /usr/local/sbin/opiha-admin kiosk-start
 sudo -n /usr/local/sbin/opiha-admin kiosk-status
 sudo -n /usr/local/sbin/opiha-admin kiosk-stop

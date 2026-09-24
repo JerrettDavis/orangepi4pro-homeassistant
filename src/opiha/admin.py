@@ -10,7 +10,8 @@ OPIHA = "/opt/orangepi-homeassistant/current/bin/opiha"
 CONFIG = "/etc/orangepi-homeassistant/appliance.json"
 WORK = "/var/lib/orangepi-homeassistant"
 UNIT = "orangepi-homeassistant.service"
-KIOSK_UNIT = "orangepi-homeassistant-kiosk@orangepi.service"
+KIOSK_UNIT = "orangepi-homeassistant-kiosk.service"
+KIOSK_SYSTEMCTL = ["/bin/systemctl", "--user", "--machine=orangepi@.host"]
 
 COMMANDS = {
     "daemon-reload": ["/bin/systemctl", "daemon-reload"],
@@ -27,9 +28,10 @@ COMMANDS = {
     "journal": [
         "/bin/journalctl", "-u", UNIT, "--since", "-30 minutes", "--no-pager", "-n", "300",
     ],
-    "kiosk-start": ["/bin/systemctl", "start", KIOSK_UNIT],
-    "kiosk-stop": ["/bin/systemctl", "stop", KIOSK_UNIT],
-    "kiosk-status": ["/bin/systemctl", "status", KIOSK_UNIT, "--no-pager"],
+    "kiosk-daemon-reload": KIOSK_SYSTEMCTL + ["daemon-reload"],
+    "kiosk-start": KIOSK_SYSTEMCTL + ["start", KIOSK_UNIT],
+    "kiosk-stop": KIOSK_SYSTEMCTL + ["stop", KIOSK_UNIT],
+    "kiosk-status": KIOSK_SYSTEMCTL + ["status", KIOSK_UNIT, "--no-pager"],
 }
 
 
