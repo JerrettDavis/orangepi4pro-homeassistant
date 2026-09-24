@@ -47,6 +47,28 @@ account cannot access the Docker daemon without interactive elevation, and the
 host lacks `age`, FFmpeg, and OpenCV. Details are in
 [`docs/LIVE-HARDWARE-BASELINE.md`](../docs/LIVE-HARDWARE-BASELINE.md).
 
+## Live-host deployment staging
+
+The deterministic public source archive containing the conservative host
+installer was copied to the Orange Pi's `/tmp`, verified against its adjacent
+SHA-256 file, extracted into a new private staging directory, and scanned there
+with zero detected issues. `./bin/opiha host plan` then ran against the live
+root without elevation and reported only the versioned release, marked private
+state, private configuration, disabled unit, and release-selector changes. It
+reported no package installation, service start/enablement, boot change, or
+network change.
+
+No host files have been applied. Direct root SSH authentication is unavailable
+and the administrative account requires interactive sudo, so the session stops
+at the intentional privilege boundary immediately before:
+
+```bash
+cd /tmp/opiha-host-final-20260923T2142/orangepi4pro-homeassistant
+sudo ./bin/opiha host install --apply
+```
+
+This is a staged/read-only validation, not an Orange Pi container runtime pass.
+
 ## Not executed or not implemented
 
 No appliance container startup, ARM64 container execution, privileged
