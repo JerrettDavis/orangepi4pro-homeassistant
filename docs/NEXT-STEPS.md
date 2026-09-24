@@ -8,6 +8,11 @@ Do not proceed merely because entity counts match. Read actual logs, custom-inte
 
 ## Gate 2: Orange Pi host baseline
 
+The read-only portion of this gate was completed on September 23, 2026 and is
+recorded in [the sanitized live baseline](LIVE-HARDWARE-BASELINE.md). Kernel,
+NVMe boot roles, display, and native touch are observed. Docker workload,
+camera, Z-Wave, kiosk, and appliance restart behavior remain unvalidated.
+
 Use the existing boot-tested kernel and storage setup. Verify cold boot with the actual SD/NVMe boot chain; Ethernet; system time; unique SSH host keys; arm64 Docker images; reboot restart; display/touch and browser sandbox; power/thermal behavior. Test a separate spare destination disk/image before overwriting the only bootable setup.
 
 Confirm the base rootfs has a real browser, age, OpenSSL, Python/OpenCV, Docker Compose, and enough space for current state plus a restore staging/rollback tree. Verify optional service failure does not prevent HA from starting.

@@ -12,6 +12,13 @@ PATTERNS = (
     re.compile(rb'\bgithub_pat_[A-Za-z0-9_]{40,}\b'),
     re.compile(rb'\bAKIA[0-9A-Z]{16}\b'),
 )
+MACHINE_PATTERNS = (
+    re.compile(rb'\b10(?:\.\d{1,3}){3}\b'),
+    re.compile(rb'\b192\.168(?:\.\d{1,3}){2}\b'),
+    re.compile(rb'\b172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}\b'),
+    re.compile(rb'\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b'),
+    re.compile(rb'\b[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\b'),
+)
 
 
 def scan(root=ROOT):
@@ -32,6 +39,10 @@ def scan(root=ROOT):
         content = path.read_bytes()
         if any(pattern.search(content) for pattern in PATTERNS):
             problems.append((relative, 'possible real credential material'))
+        if (relative == 'docs/LIVE-HARDWARE-BASELINE.md' or relative.endswith('hardware-inventory.json')) and any(
+            pattern.search(content) for pattern in MACHINE_PATTERNS
+        ):
+            problems.append((relative, 'possible private machine identifier'))
         checked += 1
     return checked, problems
 

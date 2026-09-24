@@ -4,6 +4,13 @@
 
 This is the **Orange Pi 4 Pro A733**, not the older RK3399 Orange Pi 4 and not a Rockchip RK3588 board. The existing board-support repository remains authoritative for kernel/device-tree/touch/boot details. The appliance neither swaps your kernel nor assumes a Rockchip accelerator API works on Allwinner.
 
+The September 23 live inventory confirms the custom cyberdeck kernel,
+LightDM/Xorg/XFCE, and native QDtech HID touch are active. It also confirms
+there is currently no V4L2/media device and no GPU/NPU inference node. Treat
+the [live baseline](LIVE-HARDWARE-BASELINE.md) as the current hardware truth;
+the Openbox kiosk target below must be reconciled with the working XFCE session
+before installation.
+
 ## Kiosk
 
 The current implementation targets LightDM + Openbox + X11 and an installed Chromium/Chromium-browser or Firefox. The kiosk runs as an unprivileged locked local user. It starts at the local read-only status page and forwards to a local HA dashboard when the HTTP service responds. The browser's sandbox is not disabled.

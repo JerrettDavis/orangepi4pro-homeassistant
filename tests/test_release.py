@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import sys
 import zipfile
+import pytest
 from opiha.common import REPO
 
 
@@ -43,3 +44,20 @@ def test_packages_only_public_files_and_is_deterministic(tmp_path):
         assert 'orangepi4pro-homeassistant/src/opiha/cli.py' in names
         assert not any('/.local/' in name or '/__pycache__/' in name for name in names)
         assert not any(name.endswith(('identity.txt','.age','appliance.json')) for name in names)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "10.23.45.67",
+        "00:11:22:33:44:55",
+        "UUID=11111111-2222-3333-4444-555555555555",
+        "AGE-SECRET-KEY-1" + "A" * 40,
+    ],
+)
+def test_source_scanner_blocks_private_machine_identifiers(tmp_path, monkeypatch, value):
+    scanner = load_scanner(monkeypatch)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/LIVE-HARDWARE-BASELINE.md").write_text(value)
+    _, issues = scanner.scan(tmp_path)
+    assert issues

@@ -4,13 +4,15 @@ Prepared for local testing on **September 23, 2026 (America/Chicago)**.
 
 ## Result
 
-**86 passed, 1 skipped, 0 failures, 0 errors.**
-
-The delivered source was exercised on Linux x86_64 using Python 3.13.5. The JUnit result is in `test-results.xml`; structured scope and tool availability are in `validation.json`.
+The authoritative Linux/WSL command is green for every required source check
+and every pinned image publishes an ARM64 manifest. Optional `age`,
+`age-keygen`, and OpenCV checks are explicitly skipped in the current WSL
+environment because those tools are absent. Generated reports in this
+directory predate the live-host pass and are retained only as alpha-delivery
+artifacts; current command output is authoritative until they are regenerated.
 
 ```bash
-./scripts/test.sh -q --junitxml=reports/test-results.xml
-python3 scripts/scan-public.py
+./scripts/test.sh --images
 ```
 
 ## Executed checks
@@ -28,7 +30,7 @@ python3 scripts/scan-public.py
 | MQTT credential staging | Native/container command paths tested with simulated password utility; real broker not run |
 | Inventory, SQLite and version gates | Passed on synthetic/offline fixtures |
 | Diagnostic UI | Real loopback HTTP GET/404/POST rejection requests passed |
-| Vision | Debounce/expiry tests and actual OpenCV HOG inference on a blank synthetic frame passed |
+| Vision | Debounce/expiry tests passed; actual OpenCV inference is skipped in the current WSL environment |
 | Image overlay and sanitation | Applied to synthetic rootfs directories; known boot fixture preserved; private paths not copied |
 | Image-builder safety | Dry-run and bad-input guards passed; no loop-mounted full image was built |
 | Source packaging | Allowlist/exclusion, private-key-pattern rejection, deterministic archive tests passed |
@@ -36,9 +38,22 @@ python3 scripts/scan-public.py
 
 `systemd-analyze verify` was attempted. It reported absent target installation executables and `docker.service` in this container. That is an **incomplete host-service check**, not a passing boot/systemd integration test.
 
+## Live-host observation
+
+Read-only SSH inventory observed the working ARM64 cyberdeck kernel, NVMe
+root/boot/EFI roles, LightDM/Xorg display, and native QDtech touchscreen. It
+also observed that no camera/media or serial-by-id device exists, the SSH
+account cannot access the Docker daemon without interactive elevation, and the
+host lacks `age`, FFmpeg, and OpenCV. Details are in
+[`docs/LIVE-HARDWARE-BASELINE.md`](../docs/LIVE-HARDWARE-BASELINE.md).
+
 ## Not executed or not implemented
 
-No Docker image pull, container startup, ARM64 container execution, privileged image-apply build, Orange Pi boot, NVMe/SD boot-chain validation, real camera, display/touch session, real Z-Wave controller, external database migration or PowerShell export was tested here. The Docker smoke test and hardware acceptance runbooks are included for those next steps.
+No appliance container startup, ARM64 container execution, privileged
+image-apply build, spare-media appliance boot, real camera stream, kiosk
+session, real Z-Wave controller, external database migration, or production
+HA restore has been tested. The Docker smoke test and hardware acceptance
+runbooks remain required.
 
 No A733 NPU inference backend is implemented. HOG is a CPU baseline, not a validated occupancy/security model. HACS releases were not downloaded or authenticated here. Native Home Assistant backup upload is documented as a user-operated supported path; this repository does not implement private HA restore APIs.
 

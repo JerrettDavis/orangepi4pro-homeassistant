@@ -9,11 +9,17 @@ uname -a
 cat /etc/os-release
 lsblk -f
 ls -l /dev/serial/by-id/ /dev/video* 2>/dev/null || true
+./bin/opiha hardware inventory
 python3 image/overlay.py --target-root / --live
 ./image/install-dependencies.sh
 ```
 
 The first overlay command and dependency command are dry runs. Neither flashes a device. Applying the overlay enables its systemd unit links for subsequent boot, but does not immediately start them.
+
+On the observed cyberdeck host, `age`, FFmpeg, and Python OpenCV are missing;
+camera and Z-Wave device paths are absent; and Docker daemon inspection
+requires interactive elevation. Keep the current SSH session open, review the
+dependency dry run, and capture private recovery evidence before applying it.
 
 ## Explicit installation
 
