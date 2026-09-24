@@ -9,7 +9,7 @@ import sys
 import tempfile
 import urllib.error
 
-from . import __version__, backup, compose, config, hardware, inventory, status
+from . import __version__, backup, compose, config, hardware, host, inventory, status
 from .common import (ApplianceError, COMPONENTS, REPO, atomic_bytes, atomic_json,
                      exclusive_lock, private_mkdir, read_json, run, timestamp)
 
@@ -44,6 +44,14 @@ def parser() -> argparse.ArgumentParser:
     hardware_inventory.add_argument("--private", action="store_true")
     for hardware_command in ("camera", "zwave", "storage"):
         hardware_sub.add_parser(hardware_command, help=f"Inspect {hardware_command} state")
+    host_parser = sub.add_parser("host", help="Plan or apply the non-destructive live-host layout")
+    host_sub = host_parser.add_subparsers(dest="host_command", required=True)
+    for host_command in ("plan", "install"):
+        host_action = host_sub.add_parser(host_command)
+        host_action.add_argument("--root", type=Path, default=Path("/"))
+        host_action.add_argument("--release", default=__version__)
+        if host_command == "install":
+            host_action.add_argument("--apply", action="store_true")
     a = sub.add_parser("serve", help="Run a read-only loopback diagnostic UI")
     a.add_argument("--port", type=int, default=8099)
     sub.add_parser("vision", help="Run low-rate OpenCV HOG person detection from go2rtc")
@@ -379,6 +387,15 @@ def dispatch(args) -> int:
                 emit(result)
         else:
             emit(hardware.collect_section(args.hardware_command))
+        return 0
+    if command == "host":
+        root = args.root.absolute()
+        if args.host_command == "install" and args.apply:
+            if root == Path("/") and os.geteuid() != 0:
+                raise ApplianceError("Applying the live host install requires root")
+            emit(host.install(root=root, release=args.release))
+        else:
+            emit(host.plan(root=root, release=args.release))
         return 0
     if command == "init":
         cfg = config.initialize(path, args.mode, args.data_dir)

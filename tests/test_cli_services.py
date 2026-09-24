@@ -6,7 +6,7 @@ import sqlite3
 import threading
 import urllib.request
 import pytest
-from opiha import backup, cli, config, hardware, inventory, status
+from opiha import backup, cli, config, hardware, host, inventory, status
 from opiha.common import ApplianceError, atomic_json
 from opiha.server import make_server
 from opiha.vision import Presence
@@ -166,3 +166,31 @@ def test_hardware_storage_cli_does_not_require_appliance_config(monkeypatch, cap
     )
     assert cli.main(["hardware", "storage"]) == 0
     assert '"section": "storage"' in capsys.readouterr().out
+
+
+def test_host_plan_cli_does_not_require_appliance_config(monkeypatch, capsys):
+    monkeypatch.setattr(host, "plan", lambda **kwargs: {"apply": False, "changes": []})
+    assert cli.main(["host", "plan"]) == 0
+    assert '"apply": false' in capsys.readouterr().out
+
+
+def test_host_install_cli_is_dry_run_without_apply(monkeypatch, capsys):
+    calls = []
+    monkeypatch.setattr(host, "plan", lambda **kwargs: calls.append(kwargs) or {"apply": False})
+    monkeypatch.setattr(host, "install", lambda **kwargs: pytest.fail("must not apply"))
+    assert cli.main(["host", "install", "--root", "/fixture"]) == 0
+    assert calls[0]["root"] == Path("/fixture")
+
+
+def test_host_install_live_root_requires_elevation(monkeypatch, capsys):
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 1000)
+    assert cli.main(["host", "install", "--apply"]) == 2
+    assert "requires root" in capsys.readouterr().err
+
+
+def test_host_install_synthetic_root_can_apply_without_elevation(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(host, "install", lambda **kwargs: calls.append(kwargs) or {"applied": True})
+    assert cli.main(["host", "install", "--root", str(tmp_path), "--apply"]) == 0
+    assert calls[0]["root"] == tmp_path

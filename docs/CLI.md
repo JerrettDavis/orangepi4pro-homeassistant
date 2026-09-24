@@ -14,6 +14,8 @@ Run `./bin/opiha --help` or `./bin/opiha COMMAND --help` for exact flags. An ins
 | `doctor`, `status` | Inspect prerequisites/hardware or HTTP/storage/vision observations |
 | `hardware inventory [--output PATH] [--private]` | Collect public-sanitized host inventory; private output requires a path outside the repository |
 | `hardware camera`, `hardware zwave`, `hardware storage` | Inspect one hardware area without changing the host |
+| `host plan [--root /]` | Report the exact live-host filesystem changes; read-only |
+| `host install [--root /] [--apply]` | Dry-run by default; stage a release and private layout without starting/enabling services |
 | `serve`, `vision` | Run native read-only UI or optional detector |
 | `lock-images --platform` | Pull, verify architecture and pin image refs to registry digests |
 | `inventory [--ha-config] --output` | Private offline registry/component report |
