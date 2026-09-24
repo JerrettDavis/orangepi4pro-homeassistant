@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.8
+
+- Disable snapd self re-execution for the kiosk on the custom kernel, whose
+  SquashFS build cannot expose the launcher capabilities stored in the snap.
+- Add a fixed restricted-admin command for kiosk journal diagnostics.
+
 ## 0.1.0-alpha.7
 
 - Allow the Firefox Snap launcher to perform its required confinement capability transition.

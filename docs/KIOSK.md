@@ -19,8 +19,15 @@ For the observed host:
 sudo -n /usr/local/sbin/opiha-admin kiosk-daemon-reload
 sudo -n /usr/local/sbin/opiha-admin kiosk-start
 sudo -n /usr/local/sbin/opiha-admin kiosk-status
+sudo -n /usr/local/sbin/opiha-admin kiosk-journal
 sudo -n /usr/local/sbin/opiha-admin kiosk-stop
 ```
+
+The observed cyberdeck kernel has `CONFIG_SQUASHFS_XATTR` disabled. The unit
+sets `SNAP_REEXEC=0` so Firefox uses Ubuntu's capability-bearing distro
+`snap-confine` instead of re-executing the copy inside the newer `snapd` snap.
+This is a host-specific compatibility setting, not a relaxation of Firefox's
+Snap confinement.
 
 Stopping the kiosk does not stop Home Assistant, XFCE, touch, or SSH. To prevent
 an intentional start during maintenance, create

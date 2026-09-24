@@ -32,6 +32,10 @@ COMMANDS = {
     "kiosk-start": KIOSK_SYSTEMCTL + ["start", KIOSK_UNIT],
     "kiosk-stop": KIOSK_SYSTEMCTL + ["stop", KIOSK_UNIT],
     "kiosk-status": KIOSK_SYSTEMCTL + ["status", KIOSK_UNIT, "--no-pager"],
+    "kiosk-journal": [
+        "/bin/journalctl", f"_SYSTEMD_USER_UNIT={KIOSK_UNIT}",
+        "--since", "-30 minutes", "--no-pager", "-n", "300",
+    ],
 }
 
 

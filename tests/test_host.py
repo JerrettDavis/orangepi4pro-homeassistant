@@ -120,6 +120,7 @@ def test_installed_kiosk_user_unit_reuses_existing_xfce_session(tmp_path):
     assert "User=" not in text
     assert "DISPLAY=:0" in text
     assert "XAUTHORITY=%h/.Xauthority" in text
+    assert "Environment=SNAP_REEXEC=0" in text
     assert "ExecStart=/opt/orangepi-homeassistant/current/scripts/kiosk-session.sh" in text
     assert "NoNewPrivileges" not in text
     assert "WantedBy=" not in text

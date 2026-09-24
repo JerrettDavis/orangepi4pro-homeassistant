@@ -10,7 +10,7 @@ def test_admin_commands_expand_to_fixed_argument_vectors():
     calls = []
     runner = lambda argv: calls.append(argv) or subprocess.CompletedProcess(argv, 0)
 
-    for command in ("daemon-reload", "start", "stop", "restart", "status", "render", "doctor", "compose-ps", "journal", "kiosk-daemon-reload", "kiosk-start", "kiosk-stop", "kiosk-status"):
+    for command in ("daemon-reload", "start", "stop", "restart", "status", "render", "doctor", "compose-ps", "journal", "kiosk-daemon-reload", "kiosk-start", "kiosk-stop", "kiosk-status", "kiosk-journal"):
         admin.dispatch(command, runner=runner)
 
     assert calls[0] == ["/bin/systemctl", "daemon-reload"]
@@ -25,6 +25,15 @@ def test_admin_commands_expand_to_fixed_argument_vectors():
     assert calls[10] == kiosk_control + ["start", "orangepi-homeassistant-kiosk.service"]
     assert calls[11] == kiosk_control + ["stop", "orangepi-homeassistant-kiosk.service"]
     assert calls[12] == kiosk_control + ["status", "orangepi-homeassistant-kiosk.service", "--no-pager"]
+    assert calls[13] == [
+        "/bin/journalctl",
+        "_SYSTEMD_USER_UNIT=orangepi-homeassistant-kiosk.service",
+        "--since",
+        "-30 minutes",
+        "--no-pager",
+        "-n",
+        "300",
+    ]
 
 
 @pytest.mark.parametrize("command", ["", "shell", "../../bin/sh", "start extra", "reboot", "enable"])
