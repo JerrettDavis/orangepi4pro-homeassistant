@@ -80,10 +80,12 @@ External databases, NAS contents, OS network/mount policy, reverse-proxy service
 2. [Hyper-V migration and Z-Wave cutover](docs/MIGRATION.md)
 3. [Install on the existing Orange Pi host](docs/HOST-INSTALL.md)
 4. [Build a custom image and offline container cache](docs/IMAGE-BUILD.md)
-5. [Encrypted backups and signed unattended recovery](docs/RECOVERY.md)
-6. [Display, camera, HACS and NPU boundaries](docs/HARDWARE.md)
-7. [Architecture and operational contract](docs/ARCHITECTURE.md)
-8. [Acceptance tests and next implementation steps](docs/NEXT-STEPS.md)
+5. [Flashing safety gate](docs/FLASHING.md)
+6. [Encrypted backups and signed unattended recovery](docs/RECOVERY.md)
+7. [Display, camera, HACS and NPU boundaries](docs/HARDWARE.md)
+8. [Architecture and operational contract](docs/ARCHITECTURE.md)
+9. [Acceptance status](docs/ACCEPTANCE.md)
+10. [Next implementation steps](docs/NEXT-STEPS.md)
 
 [Security](SECURITY.md) · [Command reference](docs/CLI.md) · [Upstream sources and version notes](docs/SOURCES.md) · [Validation](reports/VALIDATION.md)
 
