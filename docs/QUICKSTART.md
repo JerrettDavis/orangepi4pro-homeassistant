@@ -9,8 +9,16 @@ cd orangepi4pro-homeassistant
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e '.[test]'
-./scripts/test.sh -q
+./scripts/test.sh
 ```
+
+`scripts/test.sh` is the authoritative Linux validation entry point. It runs
+the public-source scanner, Python tests and compilation, shell syntax checks,
+configuration rendering, and deterministic source packaging. Optional tools
+such as `age` and OpenCV are reported as explicit skips when absent. Add
+`--images` to inspect each pinned registry index for a `linux/arm64` manifest;
+add `--docker-smoke` only when a real Docker daemon is available and a
+container start is intended.
 
 Install `age` and `openssl` to exercise encryption and signatures. `python3-opencv` is only required for vision; tests skip optional native dependencies when absent and report the skip. Do not mistake a skipped test for a pass.
 

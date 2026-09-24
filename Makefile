@@ -1,8 +1,11 @@
 PYTHON ?= python3
-.PHONY: test smoke scan package
+.PHONY: test validate-images smoke scan package
 
 test:
-	./scripts/test.sh -q
+	./scripts/test.sh
+
+validate-images:
+	./scripts/test.sh --images
 
 smoke:
 	./scripts/docker-smoke.sh
