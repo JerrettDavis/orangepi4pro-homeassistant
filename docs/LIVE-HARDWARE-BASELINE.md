@@ -12,6 +12,8 @@ serial numbers, usernames, credentials, or household state.
 | Container image architecture | `arm64-manifest-verified` | OCI indexes for all four pinned releases contain ARM64 manifests |
 | Repository tests and generated configuration | `locally-tested-linux` | Full WSL/Linux validation command |
 | Blank Home Assistant container on this board | `orange-pi-runtime-validated` | Pinned ARM64 image reached healthy state and survived a stop/recreate/start cycle with persistent bind storage |
+| Local Firefox kiosk | `orange-pi-runtime-validated` | Firefox remained stable in the existing XFCE session, rendered the 1024x600 HA restore screen, and passed independent stop/start recovery while HA stayed healthy |
+| Encrypted appliance backup | `orange-pi-runtime-validated` | A signed age-encrypted blank-state bundle was created and verified on-device; HA resumed healthy afterward |
 | Camera stream and detection | `planned` | No V4L2 or media-controller device is currently enumerated |
 | Z-Wave runtime | `planned` | No serial-by-id device or controller is currently attached |
 | Image boot and recovery | `planned` | No appliance image has been built or booted from spare media |
@@ -89,6 +91,14 @@ inventory. The hashes above are identification evidence, not a recovery copy.
 - The older evdev/X11 calibration files are retained under a disabled
   directory. They are recovery fallbacks, not the current input path.
 - Firefox is installed as an ARM64 Snap. Chromium and Openbox were not found.
+- The custom kernel has `CONFIG_SQUASHFS_XATTR` disabled. A newer snapd snap
+  therefore cannot expose its embedded `snap-confine` capabilities. The kiosk
+  uses `SNAP_REEXEC=0` to select Ubuntu's capability-bearing distro launcher;
+  Firefox remains Snap-confined.
+- The kiosk was visually captured at the panel's native 1024x600 resolution on
+  the HA onboarding/restore screen. Service stability and independent restart
+  are validated. Physical touch interaction still needs a human acceptance
+  tap and is not inferred from the screenshot.
 
 The appliance kiosk must reuse LightDM/XFCE/Xorg initially. Replacing the
 display manager, switching compositors, or re-enabling the legacy touch shim
@@ -132,8 +142,9 @@ have been recorded privately.
   socket-managed rather than unconditionally enabled.
 - Present tools include OpenSSL, Python 3, GStreamer, V4L2 utilities, `curl`,
   `jq`, and `rsync`.
-- Missing deployment dependencies include `age`, `age-keygen`, FFmpeg, and
-  Python OpenCV.
+- `age` and `age-keygen` are installed and passed an on-device encrypted bundle
+  roundtrip. FFmpeg and Python OpenCV remain absent because no camera endpoint
+  exists yet.
 
 All pinned application images publish ARM64 manifests. This proves registry
 availability, not that the images have started successfully on this board.

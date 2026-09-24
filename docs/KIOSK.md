@@ -29,6 +29,18 @@ sets `SNAP_REEXEC=0` so Firefox uses Ubuntu's capability-bearing distro
 This is a host-specific compatibility setting, not a relaxation of Firefox's
 Snap confinement.
 
+## Validation on the live Orange Pi
+
+The Firefox process remained active across multiple observations and rendered
+the HA onboarding/restore page at 1024x600. Stopping the kiosk removed Firefox
+without stopping HA; starting it created a new Firefox process and HA remained
+healthy. A captured X11 screenshot provides visual evidence without containing
+credentials or household state.
+
+Physical touch interaction has not yet been performed by a human. The service
+also remains deliberately disabled at boot until that acceptance tap is
+complete; manual start and crash recovery are validated.
+
 Stopping the kiosk does not stop Home Assistant, XFCE, touch, or SSH. To prevent
 an intentional start during maintenance, create
 `~/.config/opiha/kiosk.disabled` as the graphical user; remove it before the
