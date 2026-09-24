@@ -33,6 +33,16 @@ python3 -m json.tool .local/compose-preview.json
 
 `init` only creates a new private workspace. It does not overwrite an existing one or start a container. Commands use `.local/appliance.json` by default. Put `--config PATH` **before** the command to choose another workspace.
 
+For the existing Orange Pi, preview the dedicated live-host layout instead:
+
+```bash
+./bin/opiha host plan
+./bin/opiha host install
+```
+
+Both commands are read-only in this form. See [host installation](HOST-INSTALL.md)
+before using the explicit `sudo ... host install --apply` path.
+
 ## Blank HA smoke test
 
 ```bash

@@ -57,7 +57,10 @@ runbooks remain required.
 
 No A733 NPU inference backend is implemented. HOG is a CPU baseline, not a validated occupancy/security model. HACS releases were not downloaded or authenticated here. Native Home Assistant backup upload is documented as a user-operated supported path; this repository does not implement private HA restore APIs.
 
-No flashable `.img` is included. No repository or artifacts have been pushed to GitHub. No real household state, keys, credentials, container images, HACS archives or camera footage are included in this source delivery.
+No flashable `.img` is included. The source repository is public on GitHub, but
+no release image or private artifact has been published. No real household
+state, keys, credentials, container images, HACS archives or camera footage are
+included in this source delivery.
 
 ## What these results justify
 
