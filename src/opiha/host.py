@@ -164,21 +164,7 @@ def _copy_release(destination: Path) -> None:
 
 
 def _unit_text() -> bytes:
-    return b"""[Unit]
-Description=Orange Pi Home Assistant container
-Requires=docker.service
-After=docker.service network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/opt/orangepi-homeassistant/current/bin/opiha --config /etc/orangepi-homeassistant/appliance.json up --onboarding
-ExecStop=/opt/orangepi-homeassistant/current/bin/opiha --config /etc/orangepi-homeassistant/appliance.json down
-TimeoutStartSec=0
-TimeoutStopSec=180
-UMask=0077
-"""
+    return (REPO / "systemd/orangepi-homeassistant.service").read_bytes()
 
 
 def install(*, root: Path = Path("/"), release: str) -> dict:

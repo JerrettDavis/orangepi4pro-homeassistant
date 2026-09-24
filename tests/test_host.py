@@ -4,6 +4,7 @@ import os
 import pytest
 
 from opiha import host
+from opiha import compose, config
 from opiha.common import ApplianceError
 
 
@@ -80,6 +81,33 @@ def test_apply_installs_staged_release_state_config_unit_and_manifest(tmp_path):
     assert manifest["release"] == "0.1.0a1"
     assert manifest["release_sha256"] == host.tree_sha256(layout.current.resolve())
     assert str(layout.unit.relative_to(root)) in manifest["owned_files"]
+
+
+def test_installed_config_renders_blank_home_assistant_only(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+    cfg = config.load(layout.config)
+    rendered = compose.generate(cfg)
+
+    assert cfg["data_dir"] == "/srv/homeassistant"
+    assert cfg["work_dir"] == "/var/lib/orangepi-homeassistant"
+    assert cfg["features"] == {"zwave": False, "mqtt": False, "camera": False}
+    assert list(rendered["services"]) == ["homeassistant"]
+    assert rendered["services"]["homeassistant"]["network_mode"] == "host"
+
+
+def test_installed_unit_is_disabled_and_has_no_kiosk_or_hardware_services(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+    text = layout.unit.read_text()
+
+    assert "WantedBy=" not in text
+    assert "opiha-kiosk" not in text
+    assert "vision" not in text
+    assert "zwave" not in text
+    assert not list((root / "etc/systemd/system").glob("*.wants/orangepi-homeassistant.service"))
 
 
 def test_apply_is_idempotent_and_preserves_marked_private_state(tmp_path):
