@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import glob
 import json
+import os
+from pathlib import Path
 import re
+import shutil
+import subprocess
 from typing import Any
 
-from .common import ApplianceError
+from .common import ApplianceError, REPO, atomic_json
 
 
 @dataclass(frozen=True)
@@ -206,3 +211,116 @@ def classify_flash_target(
     result["reasons"] = ordered
     result["safe"] = not ordered
     return result
+
+
+def run_command(argv: list[str]) -> CommandResult:
+    try:
+        completed = subprocess.run(argv, check=False, text=True, capture_output=True, timeout=20)
+    except FileNotFoundError:
+        return CommandResult(tuple(argv), None, "", "unavailable")
+    except subprocess.TimeoutExpired:
+        return CommandResult(tuple(argv), None, "", "timeout")
+    stderr = completed.stderr.lower()
+    if completed.returncode == 0:
+        status = "ok"
+    elif "permission denied" in stderr or "a password is required" in stderr:
+        status = "permission-denied"
+    else:
+        status = "error"
+    return CommandResult(tuple(argv), completed.returncode, completed.stdout, status)
+
+
+def _probe(runner, argv: list[str]) -> CommandResult:
+    result = runner(argv)
+    if not isinstance(result, CommandResult):
+        raise ApplianceError("Hardware command runner returned an invalid result")
+    return result
+
+
+def _tool_status(name: str) -> str:
+    return "available" if shutil.which(name) else "unavailable"
+
+
+def collect_inventory(private: bool = False, runner=run_command) -> dict[str, Any]:
+    arch = _probe(runner, ["uname", "-m"])
+    kernel = _probe(runner, ["uname", "-r"])
+    hostname = _probe(runner, ["hostname"])
+    lsblk = _probe(runner, ["lsblk", "--json", "-o", "NAME,PATH,TYPE,PKNAME,SIZE,FSTYPE,MOUNTPOINTS,MODEL"])
+    findmnt = _probe(runner, ["findmnt", "-rn", "-o", "TARGET,SOURCE"])
+    docker = _probe(runner, ["docker", "version", "--format", "{{.Client.Version}}|{{.Server.Version}}"])
+    compose = _probe(runner, ["docker", "compose", "version", "--short"])
+    display = _probe(runner, ["systemctl", "show", "display-manager", "-p", "Id", "-p", "ActiveState"])
+    failed = _probe(runner, ["systemctl", "--failed", "--no-legend", "--plain"])
+    network = _probe(runner, ["ip", "-brief", "link"])
+    camera = _probe(runner, ["v4l2-ctl", "--list-devices"])
+
+    rows = parse_lsblk(lsblk.stdout) if lsblk.status == "ok" else []
+    mounts = parse_findmnt(findmnt.stdout) if findmnt.status == "ok" else {}
+    mount_roles = {target: source for target, source in mounts.items() if target in {"/", "/boot", "/boot/efi"}}
+    serial_devices = sorted(glob.glob("/dev/serial/by-id/*"))
+    result: dict[str, Any] = {
+        "schema": 1,
+        "privacy": "private" if private else "public-sanitized",
+        "system": {
+            "architecture": arch.stdout.strip() if arch.status == "ok" else "unknown",
+            "kernel": kernel.stdout.strip() if kernel.status == "ok" else "unknown",
+            "hostname": hostname.stdout.strip() if hostname.status == "ok" else "unknown",
+        },
+        "storage": {
+            "devices": rows,
+            "mount_roles": mount_roles,
+            "protected_disks": sorted(protected_disks(rows, mount_roles)),
+            "status": lsblk.status if lsblk.status != "ok" else findmnt.status,
+        },
+        "docker": {
+            "engine": docker.status,
+            "version": docker.stdout.strip() if docker.status == "ok" else "unavailable",
+            "compose": compose.status,
+            "compose_version": compose.stdout.strip() if compose.status == "ok" else "unavailable",
+        },
+        "display": {"status": display.status, "summary": display.stdout.strip()},
+        "camera": {
+            "status": camera.status,
+            "video_devices": sorted(glob.glob("/dev/video[0-9]*")),
+            "media_devices": sorted(glob.glob("/dev/media[0-9]*")),
+            "v4l2_summary": camera.stdout.strip(),
+        },
+        "zwave": {"serial_by_id_present": bool(serial_devices), "devices": serial_devices if private else []},
+        "network": {"status": network.status, "summary": network.stdout.strip()},
+        "services": {"failed_status": failed.status, "failed": failed.stdout.splitlines()},
+        "tools": {name: _tool_status(name) for name in ("age", "age-keygen", "openssl", "ffmpeg", "gst-launch-1.0", "v4l2-ctl", "docker", "jq", "rsync")},
+    }
+    try:
+        import cv2  # type: ignore
+
+        result["tools"]["opencv"] = "available"
+    except ImportError:
+        result["tools"]["opencv"] = "unavailable"
+    return result if private else redact(result)  # type: ignore[return-value]
+
+
+def collect_section(section: str) -> dict[str, Any]:
+    if section not in {"camera", "zwave", "storage"}:
+        raise ApplianceError("Unknown hardware section")
+    value = collect_inventory()[section]
+    if not isinstance(value, dict):
+        raise ApplianceError("Invalid hardware inventory section")
+    return {"section": section, **value}
+
+
+def _has_symlink_ancestor(path: Path) -> bool:
+    raw = path.absolute()
+    return any(part.is_symlink() for part in (raw, *raw.parents))
+
+
+def write_inventory(result: dict, output: Path, private: bool) -> None:
+    raw = output.absolute()
+    if _has_symlink_ancestor(raw):
+        raise ApplianceError("Inventory output path contains a symlink")
+    resolved = raw.resolve()
+    repo = REPO.resolve()
+    if private and (resolved == repo or repo in resolved.parents):
+        raise ApplianceError("Private inventory must be written outside the repository")
+    atomic_json(resolved, result if private else redact(result), mode=0o600)
+    if os.name == "posix":
+        os.chmod(resolved, 0o600)

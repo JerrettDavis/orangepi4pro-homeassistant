@@ -12,6 +12,8 @@ Run `./bin/opiha --help` or `./bin/opiha COMMAND --help` for exact flags. An ins
 | `activate --confirm-cutover` | Arm production startup after source shutdown |
 | `deactivate` | Stop containers and disarm |
 | `doctor`, `status` | Inspect prerequisites/hardware or HTTP/storage/vision observations |
+| `hardware inventory [--output PATH] [--private]` | Collect public-sanitized host inventory; private output requires a path outside the repository |
+| `hardware camera`, `hardware zwave`, `hardware storage` | Inspect one hardware area without changing the host |
 | `serve`, `vision` | Run native read-only UI or optional detector |
 | `lock-images --platform` | Pull, verify architecture and pin image refs to registry digests |
 | `inventory [--ha-config] --output` | Private offline registry/component report |

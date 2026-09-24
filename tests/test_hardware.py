@@ -1,9 +1,11 @@
 import json
+import os
+from pathlib import Path
 
 import pytest
 
 from opiha import hardware
-from opiha.common import ApplianceError
+from opiha.common import ApplianceError, REPO
 
 
 def test_redact_removes_private_identifiers_recursively():
@@ -138,3 +140,63 @@ def test_unresolved_protected_device_ancestry_fails_closed():
     )
     assert not result["safe"]
     assert result["reasons"] == ["ambiguous"]
+
+
+def test_private_inventory_refuses_repository_and_symlink_paths(tmp_path):
+    with pytest.raises(ApplianceError, match="outside the repository"):
+        hardware.write_inventory(
+            {"private": True}, REPO / "private-inventory.json", private=True
+        )
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(real, target_is_directory=True)
+    with pytest.raises(ApplianceError, match="symlink"):
+        hardware.write_inventory(
+            {"private": True}, link / "private.json", private=True
+        )
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX mode assertion")
+def test_private_inventory_file_is_mode_0600(tmp_path):
+    target = tmp_path / "private.json"
+    hardware.write_inventory({"private": True}, target, private=True)
+    assert target.stat().st_mode & 0o777 == 0o600
+
+
+def test_run_command_reports_missing_and_permission_denied(monkeypatch):
+    missing = hardware.run_command(["opiha-command-that-does-not-exist"])
+    assert missing.status == "unavailable"
+    assert missing.returncode is None
+
+    class Denied:
+        returncode = 1
+        stdout = ""
+        stderr = "permission denied"
+
+    monkeypatch.setattr(hardware.subprocess, "run", lambda *args, **kwargs: Denied())
+    denied = hardware.run_command(["docker", "info"])
+    assert denied.status == "permission-denied"
+    assert denied.stdout == ""
+
+
+def test_collect_inventory_uses_fixed_commands_and_sanitizes_public_result():
+    calls = []
+
+    def runner(argv):
+        calls.append(tuple(argv))
+        fixtures = {
+            ("uname", "-m"): "aarch64\n",
+            ("uname", "-r"): "5.15.147-sun60iw2-cyberdeck\n",
+            ("hostname",): "private-host\n",
+            ("lsblk", "--json", "-o", "NAME,PATH,TYPE,PKNAME,SIZE,FSTYPE,MOUNTPOINTS,MODEL"): '{"blockdevices":[]}',
+            ("findmnt", "-rn", "-o", "TARGET,SOURCE"): "/ /dev/nvme0n1p3\n",
+        }
+        return hardware.CommandResult(tuple(argv), 0, fixtures.get(tuple(argv), ""), "ok")
+
+    result = hardware.collect_inventory(runner=runner)
+    text = json.dumps(result)
+    assert result["system"]["architecture"] == "aarch64"
+    assert "private-host" not in text
+    assert all(isinstance(call, tuple) for call in calls)
+    assert not any(call[0] in {"sh", "bash", "sudo"} for call in calls)

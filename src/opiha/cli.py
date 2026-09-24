@@ -9,7 +9,7 @@ import sys
 import tempfile
 import urllib.error
 
-from . import __version__, backup, compose, config, inventory, status
+from . import __version__, backup, compose, config, hardware, inventory, status
 from .common import (ApplianceError, COMPONENTS, REPO, atomic_bytes, atomic_json,
                      exclusive_lock, private_mkdir, read_json, run, timestamp)
 
@@ -37,6 +37,13 @@ def parser() -> argparse.ArgumentParser:
     sub.add_parser("deactivate", help="Stop stack and remove production startup approval")
     sub.add_parser("doctor", help="Inspect prerequisites and hardware; no changes")
     sub.add_parser("status", help="HTTP responsiveness, camera status and free storage")
+    hardware_parser = sub.add_parser("hardware", help="Read-only host hardware diagnostics")
+    hardware_sub = hardware_parser.add_subparsers(dest="hardware_command", required=True)
+    hardware_inventory = hardware_sub.add_parser("inventory", help="Collect sanitized host inventory")
+    hardware_inventory.add_argument("--output", type=Path)
+    hardware_inventory.add_argument("--private", action="store_true")
+    for hardware_command in ("camera", "zwave", "storage"):
+        hardware_sub.add_parser(hardware_command, help=f"Inspect {hardware_command} state")
     a = sub.add_parser("serve", help="Run a read-only loopback diagnostic UI")
     a.add_argument("--port", type=int, default=8099)
     sub.add_parser("vision", help="Run low-rate OpenCV HOG person detection from go2rtc")
@@ -360,6 +367,19 @@ def recover(args, cfg: dict, path: Path) -> None:
 def dispatch(args) -> int:
     path = args.config.resolve()
     command = args.command
+    if command == "hardware":
+        if args.hardware_command == "inventory":
+            if args.private and not args.output:
+                raise ApplianceError("Private hardware inventory requires --output outside the repository")
+            result = hardware.collect_inventory(private=args.private)
+            if args.output:
+                hardware.write_inventory(result, args.output, private=args.private)
+                print(f"Hardware inventory written to {args.output}")
+            else:
+                emit(result)
+        else:
+            emit(hardware.collect_section(args.hardware_command))
+        return 0
     if command == "init":
         cfg = config.initialize(path, args.mode, args.data_dir)
         emit({"initialized": str(path), "mode": cfg["mode"], "data": cfg["data_dir"], "started": False})

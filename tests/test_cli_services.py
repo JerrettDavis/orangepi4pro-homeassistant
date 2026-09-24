@@ -6,7 +6,7 @@ import sqlite3
 import threading
 import urllib.request
 import pytest
-from opiha import backup, cli, config, inventory, status
+from opiha import backup, cli, config, hardware, inventory, status
 from opiha.common import ApplianceError, atomic_json
 from opiha.server import make_server
 from opiha.vision import Presence
@@ -144,3 +144,25 @@ def test_actual_hog_inference_on_blank_frame():
     detector = HogDetector()
     assert detector.detect(np.zeros((480,640,3), dtype=np.uint8)) == 0
     assert detector.detect(np.zeros((64,32,3), dtype=np.uint8)) == 0
+
+
+def test_hardware_inventory_cli_emits_sanitized_json(monkeypatch, capsys):
+    monkeypatch.setattr(
+        hardware,
+        "collect_inventory",
+        lambda private=False: {"system": {"architecture": "aarch64"}, "address": "redacted"},
+    )
+    assert cli.main(["hardware", "inventory"]) == 0
+    output = capsys.readouterr().out
+    assert '"architecture": "aarch64"' in output
+    assert '"address": "redacted"' in output
+
+
+def test_hardware_storage_cli_does_not_require_appliance_config(monkeypatch, capsys):
+    monkeypatch.setattr(
+        hardware,
+        "collect_section",
+        lambda section: {"section": section, "protected": ["root"]},
+    )
+    assert cli.main(["hardware", "storage"]) == 0
+    assert '"section": "storage"' in capsys.readouterr().out
