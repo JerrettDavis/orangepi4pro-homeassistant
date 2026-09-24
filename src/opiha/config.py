@@ -12,7 +12,20 @@ DEFAULT_IMAGES = {
     "zwave": "zwavejs/zwave-js-ui:11.24.1",
     "mqtt": "eclipse-mosquitto:2.0.22",
     "camera": "alexxit/go2rtc:1.9.14",
+    "proxy": "jc21/nginx-proxy-manager@sha256:52b2c59994f3d36acfcf70a1626f29734df0ed8c71bacc0269f78b6f939858bb",
 }
+
+
+def upgrade_proxy_schema(document: dict) -> dict:
+    """Add the disabled proxy defaults only to the exact pre-proxy schema."""
+    result = copy.deepcopy(document)
+    legacy_images = set(DEFAULT_IMAGES) - {"proxy"}
+    legacy_features = {"zwave", "mqtt", "camera"}
+    if set(result.get("images", {})) == legacy_images:
+        result["images"]["proxy"] = DEFAULT_IMAGES["proxy"]
+    if set(result.get("features", {})) == legacy_features:
+        result["features"]["proxy"] = False
+    return result
 
 
 def default_config(mode: str, directory: Path) -> dict:
@@ -23,7 +36,7 @@ def default_config(mode: str, directory: Path) -> dict:
         "work_dir": str(directory / "runtime") if mode == "lab" else "/var/lib/opiha",
         "status_dir": str(directory / "status") if mode == "lab" else "/run/opiha/status",
         "timezone": "Etc/UTC", "ha_version": "2026.9.3", "images": copy.deepcopy(DEFAULT_IMAGES),
-        "features": {"zwave": False, "mqtt": False, "camera": False},
+        "features": {"zwave": False, "mqtt": False, "camera": False, "proxy": False},
         "zwave_device": "", "camera_device": "",
         "ha_url": "http://127.0.0.1:18123" if mode == "lab" else "http://127.0.0.1:8123",
         "dashboard_path": "/lovelace", "lab_port": 18123,
@@ -55,13 +68,13 @@ def validate(cfg: dict) -> dict:
     if not re.fullmatch(r"[0-9]{4}\.[0-9]{1,2}\.[0-9]+", cfg.get("ha_version", "")):
         raise ApplianceError("ha_version must be an explicit stable release such as 2026.9.3")
     if set(cfg.get("images", {})) != set(DEFAULT_IMAGES):
-        raise ApplianceError("Expected four named container image references")
+        raise ApplianceError("Unexpected or missing container image reference")
     for value in cfg["images"].values():
         if not re.fullmatch(r"[a-zA-Z0-9_./:@-]+", value) or not (":" in value):
             raise ApplianceError("Invalid image reference")
         if value.endswith((":latest", ":stable", ":master")):
             raise ApplianceError("Floating image tags are not allowed; use a release tag or digest")
-    if set(cfg.get("features", {})) != {"zwave", "mqtt", "camera"}:
+    if set(cfg.get("features", {})) != {"zwave", "mqtt", "camera", "proxy"}:
         raise ApplianceError("Unknown/missing feature")
     if any(type(v) is not bool for v in cfg["features"].values()):
         raise ApplianceError("Feature switches must be booleans")
@@ -92,7 +105,10 @@ def validate(cfg: dict) -> dict:
 
 
 def load(path: Path) -> dict:
-    return validate(read_json(path))
+    document = read_json(path)
+    if isinstance(document, dict) and document.get("schema") == 1:
+        document = upgrade_proxy_schema(document)
+    return validate(document)
 
 
 def initialize(path: Path, mode: str, data_dir: str | None = None) -> dict:

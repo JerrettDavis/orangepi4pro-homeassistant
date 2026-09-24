@@ -12,7 +12,7 @@ import time
 from typing import Any, Iterator
 
 REPO = Path(__file__).resolve().parents[2]
-COMPONENTS = ("ha", "zwave", "mqtt", "camera", "ssl", "media", "share", "private", "kiosk")
+COMPONENTS = ("ha", "zwave", "mqtt", "camera", "proxy", "ssl", "media", "share", "private", "kiosk")
 
 
 class ApplianceError(RuntimeError):

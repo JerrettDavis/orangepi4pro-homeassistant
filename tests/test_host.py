@@ -94,7 +94,7 @@ def test_installed_config_renders_blank_home_assistant_only(tmp_path):
 
     assert cfg["data_dir"] == "/srv/homeassistant"
     assert cfg["work_dir"] == "/var/lib/orangepi-homeassistant"
-    assert cfg["features"] == {"zwave": False, "mqtt": False, "camera": False}
+    assert cfg["features"] == {"zwave": False, "mqtt": False, "camera": False, "proxy": False}
     assert list(rendered["services"]) == ["homeassistant"]
     assert rendered["services"]["homeassistant"]["network_mode"] == "host"
 

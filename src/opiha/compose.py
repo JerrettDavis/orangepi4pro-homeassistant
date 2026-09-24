@@ -67,6 +67,23 @@ def generate(cfg: dict) -> dict:
                        "volumes": [bind(d / "camera/go2rtc.yaml", "/config/go2rtc.yaml", True)],
                        "mem_limit": "384m", "cpus": 1.0})
         services["camera"] = camera
+    if cfg["features"]["proxy"]:
+        proxy = service("proxy")
+        proxy.update({
+            "network_mode": "host",
+            "environment": {"TZ": cfg["timezone"]},
+            "volumes": [
+                bind(d / "proxy/data", "/data"),
+                bind(d / "proxy/data/letsencrypt", "/etc/letsencrypt"),
+            ],
+            "depends_on": {"homeassistant": {"condition": "service_healthy"}},
+            "healthcheck": {
+                "test": ["CMD-SHELL", "curl -fsS http://127.0.0.1:81/"],
+                "interval": "30s", "timeout": "10s", "retries": 5, "start_period": "120s",
+            },
+            "mem_limit": "768m", "cpus": 1.5,
+        })
+        services["proxy"] = proxy
     return result
 
 
@@ -115,6 +132,11 @@ def verify_hardware(cfg: dict) -> None:
                 raise ApplianceError(f"{feature}: configured character device is unavailable")
     if cfg["features"]["mqtt"] and not (Path(cfg["data_dir"]) / "mqtt/config/passwordfile").is_file():
         raise ApplianceError("MQTT has no password file; run mqtt-init first")
+    if cfg["features"]["proxy"]:
+        proxy = Path(cfg["data_dir"]) / "proxy/data"
+        for required in (proxy / "database.sqlite", proxy / "letsencrypt/live"):
+            if not required.exists():
+                raise ApplianceError(f"Proxy state is incomplete: missing {required}")
 
 
 def running(cfg: dict) -> list[str]:

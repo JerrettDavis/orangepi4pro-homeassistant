@@ -26,8 +26,8 @@ def parser() -> argparse.ArgumentParser:
     for name in ("ha-version", "timezone", "zwave-device", "camera-device", "dashboard-path", "ha-url"):
         a.add_argument("--" + name)
     a.add_argument("--lab-port", type=int)
-    a.add_argument("--enable", choices=("zwave", "mqtt", "camera"), action="append", default=[])
-    a.add_argument("--disable", choices=("zwave", "mqtt", "camera"), action="append", default=[])
+    a.add_argument("--enable", choices=("zwave", "mqtt", "camera", "proxy"), action="append", default=[])
+    a.add_argument("--disable", choices=("zwave", "mqtt", "camera", "proxy"), action="append", default=[])
     sub.add_parser("render", help="Print Compose JSON without starting containers")
     a = sub.add_parser("up", help="Start stack. Appliance restore requires activation first")
     a.add_argument("--onboarding", action="store_true", help="Allow only a new, unauthenticated appliance to start")
@@ -216,7 +216,7 @@ def do_restore(args, cfg: dict, config_path: Path) -> None:
         candidate = copy.deepcopy(cfg)
         if args.apply_settings:
             allowed = config.portable_settings(cfg)
-            incoming = manifest.get("settings", {})
+            incoming = config.upgrade_proxy_schema(manifest.get("settings", {}))
             candidate.update({k: incoming[k] for k in allowed if k in incoming})
             config.validate(candidate)
         check_version(manifest.get("homeassistant_version"), candidate, args.allow_version_change)

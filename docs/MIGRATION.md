@@ -173,6 +173,21 @@ A missing optional camera or radio is reported without making HA itself dependen
 
 Reconfigure the existing HA Z-Wave endpoint. Verify entity/device/area identity, several mains-powered nodes, battery nodes when they wake, secure device communication, automations, mobile apps, notifications and remote access. Reuse an old IP/DNS name only after the old server is off and after reviewing DHCP/reservations and TLS.
 
+For the 2026-09-24 in-place migration, Nginx Proxy Manager private state was
+backed up from the HAOS add-on and restored under `/srv/homeassistant/proxy`.
+Before changing the internal `ha` A record, verify the restored certificate and
+proxy directly while preserving SNI:
+
+```bash
+curl --resolve homeassistant.example.invalid:443:TARGET_IP \
+  https://homeassistant.example.invalid/
+```
+
+Do not publish a DNS change while this direct test returns `400` or `502`.
+Record the old A record and TTL, update the authoritative internal DNS server,
+verify forwarding resolvers, and retain the old proxy until cached answers have
+expired. Never commit the restored proxy database, ACME credentials, or keys.
+
 A private long-lived HA token may be used for read-only API checks:
 
 ```bash

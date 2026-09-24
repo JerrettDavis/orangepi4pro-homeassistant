@@ -7,7 +7,7 @@ from opiha.common import ApplianceError, guarded_root, safe_relative
 
 
 def test_lab_is_quarantined_even_when_features_enabled(cfg):
-    cfg['features'] = {'zwave': True, 'mqtt': True, 'camera': True}
+    cfg['features'] = {'zwave': True, 'mqtt': True, 'camera': True, 'proxy': True}
     cfg['zwave_device'] = '/dev/serial/by-id/fixture'
     cfg['camera_device'] = '/dev/video0'
     c = compose.generate(cfg)
@@ -35,6 +35,12 @@ def test_production_local_admin_ports(prod):
     assert c['services']['zwave']['environment']['ZWAVE_PORT'] == '/dev/zwave'
     assert c['services']['zwave']['devices'] == ['/dev/serial/by-id/fixture:/dev/zwave']
     assert c['services']['camera']['mem_limit'] == '384m'
+    proxy = c['services']['proxy']
+    assert proxy['network_mode'] == 'host'
+    assert proxy['volumes'][0]['source'] == str(Path(prod['data_dir']) / 'proxy/data')
+    assert proxy['volumes'][0]['target'] == '/data'
+    assert proxy['volumes'][1]['target'] == '/etc/letsencrypt'
+    assert proxy['healthcheck']['test'][-1] == 'curl -fsS http://127.0.0.1:81/'
 
 
 def test_cached_images_never_pull(cfg):
@@ -76,6 +82,19 @@ def test_reinit_does_not_overwrite(cfg_path):
     before = cfg_path.read_bytes()
     with pytest.raises(ApplianceError): config.initialize(cfg_path, 'lab')
     assert cfg_path.read_bytes() == before
+
+
+def test_load_adds_disabled_proxy_to_pre_proxy_schema_one_config(tmp_path):
+    path = tmp_path / 'legacy.json'
+    document = config.default_config('lab', tmp_path)
+    document['features'].pop('proxy')
+    document['images'].pop('proxy')
+    path.write_text(json.dumps(document))
+
+    loaded = config.load(path)
+
+    assert loaded['features']['proxy'] is False
+    assert loaded['images']['proxy'] == config.DEFAULT_IMAGES['proxy']
 
 
 def test_seed_never_overwrites(populated):

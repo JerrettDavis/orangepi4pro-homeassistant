@@ -101,3 +101,23 @@ boot-time enablement unit in a later reviewed change.
 
 See [rollback](ROLLBACK.md) before applying and the [live baseline](LIVE-HARDWARE-BASELINE.md)
 for the protected devices and current validation status.
+
+## HTTPS proxy and time synchronization
+
+The optional `proxy` feature runs the pinned, multi-architecture Nginx Proxy
+Manager image with host networking. Its database, generated configuration,
+ACME account, and certificates live under `/srv/homeassistant/proxy`; none are
+part of the public release. Enable it only after restoring that private state
+and configuring Home Assistant to trust the loopback proxy. The feature binds
+ports 80, 81, and 443 and therefore requires those host ports to be free.
+
+The live Orange Pi uses Chrony. On 2026-09-24 it reported stratum 3, normal leap
+status, and approximately 1 ms system offset; the domain controller comparison
+was within 40 ms. The board does not expose a usable RTC, so network time must
+be healthy after boot. Check it without changing providers:
+
+```bash
+chronyc tracking
+chronyc sources -v
+date --iso-8601=ns
+```
