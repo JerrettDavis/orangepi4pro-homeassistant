@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 import pytest
 
@@ -60,3 +61,63 @@ def test_plan_refuses_unowned_existing_unit(tmp_path):
     unit.write_text("unrelated service")
     with pytest.raises(ApplianceError, match="not owned"):
         host.plan(root=root, release="0.1.0a1")
+
+
+def test_apply_installs_staged_release_state_config_unit_and_manifest(tmp_path):
+    root = linux_root(tmp_path)
+    result = host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+
+    assert result["applied"] is True
+    assert (layout.current / "bin/opiha").is_file()
+    assert layout.current.resolve() == layout.install_root / "releases/0.1.0a1"
+    assert (layout.state_root / ".opiha-state.json").is_file()
+    assert (layout.state_root / "ha").is_dir()
+    assert layout.config.is_file()
+    assert layout.unit.is_file()
+    assert "WantedBy" not in layout.unit.read_text()
+    manifest = host.read_manifest(layout)
+    assert manifest["release"] == "0.1.0a1"
+    assert manifest["release_sha256"] == host.tree_sha256(layout.current.resolve())
+    assert str(layout.unit.relative_to(root)) in manifest["owned_files"]
+
+
+def test_apply_is_idempotent_and_preserves_marked_private_state(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    private_file = root / "srv/homeassistant/ha/private-fixture.txt"
+    private_file.write_text("keep")
+
+    second = host.install(root=root, release="0.1.0a1")
+
+    assert second["applied"] is True
+    assert private_file.read_text() == "keep"
+    assert second["changes"] == []
+
+
+def test_apply_refuses_unowned_populated_state(tmp_path):
+    root = linux_root(tmp_path)
+    state = root / "srv/homeassistant"
+    state.mkdir(parents=True)
+    (state / "unknown.txt").write_text("valuable")
+    with pytest.raises(ApplianceError, match="unowned populated state"):
+        host.install(root=root, release="0.1.0a1")
+
+
+def test_plan_refuses_preexisting_unowned_release_directory(tmp_path):
+    root = linux_root(tmp_path)
+    release = root / "opt/orangepi-homeassistant/releases/0.1.0a1"
+    release.mkdir(parents=True)
+    (release / "unknown").write_text("do not trust")
+    with pytest.raises(ApplianceError, match="release is not owned"):
+        host.plan(root=root, release="0.1.0a1")
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX mode assertion")
+def test_apply_private_roots_are_mode_0700(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+    assert layout.state_root.stat().st_mode & 0o777 == 0o700
+    assert layout.work_root.stat().st_mode & 0o777 == 0o700
+    assert layout.config.parent.stat().st_mode & 0o777 == 0o700
