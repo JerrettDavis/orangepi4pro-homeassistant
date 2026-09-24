@@ -142,7 +142,10 @@ availability, not that the images have started successfully on this board.
 
 - NetworkManager is active and enabled; legacy `networking.service` is also
   active. `systemd-networkd` is inactive.
-- Wi-Fi owns the current default route. Ethernet is present but down.
+- Wi-Fi owns the current default route. The appliance now uses the primary
+  trusted WLAN, with the former device WLAN retained at lower autoconnect
+  priority as a fallback. DHCP routing, DNS, external HTTPS, SSH, and HA LAN
+  access were runtime-validated after the move. Ethernet is present but down.
 - SSH is active. mDNS/Avahi is inactive.
 - Chrony is enabled and the clock reported synchronized.
 - One pre-existing failed unit, `dnsmasq.service`, was observed before any

@@ -97,6 +97,14 @@ socket is enabled, but host-reboot recovery has not been claimed or tested;
 boot enablement remains a separate reviewed step after kiosk/display behavior
 and rollback are ready.
 
+The host was subsequently moved from the isolated device WLAN to the primary
+trusted WLAN using a staged NetworkManager profile and timed fallback. The new
+profile has higher autoconnect priority while the prior profile remains an
+enabled fallback. After the move, DHCP routing, local DNS, external HTTPS,
+SSH, and the Home Assistant LAN endpoint were validated. Home Assistant stayed
+healthy throughout. SSIDs, credentials, addresses, MACs, and profile UUIDs are
+intentionally omitted from public evidence.
+
 ## Not executed or not implemented
 
 No privileged image-apply build, spare-media appliance boot, real camera stream, kiosk
