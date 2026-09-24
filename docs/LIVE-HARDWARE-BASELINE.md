@@ -11,7 +11,7 @@ serial numbers, usernames, credentials, or household state.
 | OS, kernel, storage roles, display and touch | `orange-pi-observed` | Read-only commands over SSH on the running cyberdeck system |
 | Container image architecture | `arm64-manifest-verified` | OCI indexes for all four pinned releases contain ARM64 manifests |
 | Repository tests and generated configuration | `locally-tested-linux` | Full WSL/Linux validation command |
-| Docker workload on this board | `planned` | Docker is installed, but the SSH account cannot access its socket without interactive elevation |
+| Blank Home Assistant container on this board | `orange-pi-runtime-validated` | Pinned ARM64 image reached healthy state and survived a stop/recreate/start cycle with persistent bind storage |
 | Camera stream and detection | `planned` | No V4L2 or media-controller device is currently enumerated |
 | Z-Wave runtime | `planned` | No serial-by-id device or controller is currently attached |
 | Image boot and recovery | `planned` | No appliance image has been built or booted from spare media |
@@ -122,9 +122,12 @@ have been recorded privately.
 ## Docker and host dependencies
 
 - Docker Engine 29.6.1 and Compose 5.2.0 are installed for `linux/arm64`.
-- The Docker socket is not accessible to the SSH account, and passwordless
-  sudo is not configured. Actual daemon state and containers were not
-  inventoried in this pass.
+- The Docker socket is not directly accessible to the SSH account. A reviewed,
+  root-owned fixed-command wrapper now permits only appliance operations; it
+  does not grant Docker-group membership or general passwordless sudo.
+- Home Assistant `2026.9.3` was pulled and reached healthy state on ARM64. Its
+  blank onboarding endpoint was reachable locally and from the trusted LAN,
+  and a container recreation completed successfully.
 - Containerd and the Docker socket are enabled. Docker service startup is
   socket-managed rather than unconditionally enabled.
 - Present tools include OpenSSL, Python 3, GStreamer, V4L2 utilities, `curl`,

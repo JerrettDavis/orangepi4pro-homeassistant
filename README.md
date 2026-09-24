@@ -4,10 +4,11 @@
 
 Version **0.1.0-alpha.2**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
 
-The current cyberdeck host has now been inspected read-only. Its NVMe boot
-chain, custom kernel, Xorg display, and native touchscreen are
-`orange-pi-observed`; no appliance containers, camera stream, Z-Wave radio, or
-flashable image have yet been runtime-validated. See the sanitized
+The current cyberdeck host has been inspected and blank Home Assistant has now
+been runtime-validated on its ARM64 Docker engine, including a persistent
+container recreation. Its NVMe boot chain, custom kernel, Xorg display, and
+native touchscreen remain the protected baseline; camera streaming, kiosk,
+Z-Wave hardware, reboot recovery, and a flashable image are not yet validated. See the sanitized
 [live hardware baseline](docs/LIVE-HARDWARE-BASELINE.md).
 
 The host is your existing boot-tested Ubuntu/Debian arm64 Orange Pi image. Home Assistant runs in Docker; the host owns the display and camera. Your household lives in a separately encrypted state bundle, never in Git or a public image.

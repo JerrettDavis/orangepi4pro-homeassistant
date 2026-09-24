@@ -69,10 +69,37 @@ sudo ./bin/opiha host install --apply
 
 This is a staged/read-only validation, not an Orange Pi container runtime pass.
 
+## Live ARM64 Home Assistant runtime
+
+The guarded host installer and restricted administrative wrapper were applied
+interactively on the observed Orange Pi. The installed Compose render contained
+only Home Assistant `2026.9.3`; Z-Wave, MQTT, camera, vision, and kiosk remained
+disabled. No packages, boot assets, network configuration, mounts, or existing
+cyberdeck services were changed.
+
+The pinned ARM64 image pulled successfully and blank Home Assistant reached a
+healthy container state. Its onboarding endpoint responded from both loopback
+and the trusted LAN. A full systemd stop/down followed by container recreation
+and start succeeded while retaining the `/srv/homeassistant/ha` bind. After
+recreation, the onboarding endpoint responded again and the container returned
+to healthy state. At observation time the host retained roughly 4.8 GiB
+available RAM, negligible swap use, and roughly 32 GiB free root storage.
+
+The first recreation exposed an onboarding gate that mistook HA's automatically
+created `.storage/auth` file for imported production state. `0.1.0-alpha.2`
+removes that false signal while retaining the explicit `restored.json` and
+activation gates; a regression test covers the behavior. The corrected release
+passed the complete local and GitHub Actions validation matrices before the
+successful on-device recreation.
+
+The appliance unit is intentionally static and not enabled at boot. Docker's
+socket is enabled, but host-reboot recovery has not been claimed or tested;
+boot enablement remains a separate reviewed step after kiosk/display behavior
+and rollback are ready.
+
 ## Not executed or not implemented
 
-No appliance container startup, ARM64 container execution, privileged
-image-apply build, spare-media appliance boot, real camera stream, kiosk
+No privileged image-apply build, spare-media appliance boot, real camera stream, kiosk
 session, real Z-Wave controller, external database migration, or production
 HA restore has been tested. The Docker smoke test and hardware acceptance
 runbooks remain required.
