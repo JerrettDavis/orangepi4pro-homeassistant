@@ -2,7 +2,7 @@
 
 **A rebuildable home-control appliance for the Orange Pi 4 Pro, Allwinner A733.**
 
-Version **0.1.0-alpha.1**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
+Version **0.1.0-alpha.2**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
 
 The current cyberdeck host has now been inspected read-only. Its NVMe boot
 chain, custom kernel, Xorg display, and native touchscreen are

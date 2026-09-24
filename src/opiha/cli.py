@@ -145,7 +145,7 @@ def start(cfg: dict, onboarding: bool = False) -> None:
     if (work / "restore-journal.json").exists():
         raise ApplianceError("Incomplete restore; repair before startup")
     if cfg["mode"] == "appliance" and not (work / "activated.json").exists():
-        if not onboarding or (work / "restored.json").exists() or (data / "ha/.storage/auth").exists():
+        if not onboarding or (work / "restored.json").exists():
             raise ApplianceError("Production startup is disarmed. Stop the source HA/server, then activate --confirm-cutover")
     version = data / "ha/.HA_VERSION"
     check_version(version.read_text().strip() if version.exists() else None, cfg, allow=True)

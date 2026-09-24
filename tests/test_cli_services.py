@@ -58,6 +58,18 @@ def test_optional_device_failure_does_not_block_ha(prod, monkeypatch):
     assert not any(args[-1] == 'camera' for args in calls)
 
 
+def test_blank_onboarding_can_restart_after_ha_creates_auth_storage(prod, monkeypatch):
+    auth = Path(prod["data_dir"]) / "ha/.storage/auth"
+    auth.parent.mkdir(parents=True, exist_ok=True)
+    auth.write_text('{"version": 1, "data": {"users": []}}')
+    calls = []
+    monkeypatch.setattr(cli.compose, "command", lambda cfg, *args, **kwargs: calls.append(args))
+
+    cli.start(prod, onboarding=True)
+
+    assert ("up", "-d", "--remove-orphans", "homeassistant") in calls
+
+
 def test_cli_backup_and_restore(populated, cfg_path, tmp_path):
     artifact = tmp_path / 'backup.tar.gz'
     assert cli.main(['--config',str(cfg_path),'backup','--output',str(artifact),'--plaintext','--offline','--source-stopped']) == 0
