@@ -21,7 +21,7 @@ class CommandResult:
     status: str
 
 
-_SENSITIVE_KEYS = (
+_SENSITIVE_KEYS = {
     "address",
     "credential",
     "hostname",
@@ -35,7 +35,7 @@ _SENSITIVE_KEYS = (
     "token",
     "username",
     "uuid",
-)
+}
 _TEXT_PATTERNS = (
     re.compile(r"(?i)\b(?:token|password|secret|key)\s*[=:]\s*[^\s,;]+"),
     re.compile(r"(?i)(?<=\bhost\s)[a-z0-9][a-z0-9.-]*"),
@@ -48,7 +48,9 @@ _TEXT_PATTERNS = (
 
 def _sensitive_key(key: object) -> bool:
     normalized = str(key).lower().replace("-", "_")
-    return any(part in normalized for part in _SENSITIVE_KEYS)
+    return normalized in _SENSITIVE_KEYS or any(
+        normalized.endswith("_" + part) for part in _SENSITIVE_KEYS
+    )
 
 
 def _redact_text(value: str) -> str:
@@ -253,11 +255,15 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
     failed = _probe(runner, ["systemctl", "--failed", "--no-legend", "--plain"])
     network = _probe(runner, ["ip", "-brief", "link"])
     camera = _probe(runner, ["v4l2-ctl", "--list-devices"])
+    input_devices = _probe(runner, ["cat", "/proc/bus/input/devices"])
+    modules = _probe(runner, ["cat", "/proc/modules"])
 
     rows = parse_lsblk(lsblk.stdout) if lsblk.status == "ok" else []
     mounts = parse_findmnt(findmnt.stdout) if findmnt.status == "ok" else {}
     mount_roles = {target: source for target, source in mounts.items() if target in {"/", "/boot", "/boot/efi"}}
     serial_devices = sorted(glob.glob("/dev/serial/by-id/*"))
+    input_names = re.findall(r'^N:\s+Name="([^"]+)"', input_devices.stdout, re.MULTILINE)
+    loaded_modules = {line.split()[0] for line in modules.stdout.splitlines() if line.split()}
     result: dict[str, Any] = {
         "schema": 1,
         "privacy": "private" if private else "public-sanitized",
@@ -279,6 +285,12 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
             "compose_version": compose.stdout.strip() if compose.status == "ok" else "unavailable",
         },
         "display": {"status": display.status, "summary": display.stdout.strip()},
+        "input": {
+            "devices": sorted(set(input_names)),
+            "native_touch_modules": sorted(
+                loaded_modules.intersection({"hid_multitouch", "uhid", "uinput"})
+            ),
+        },
         "camera": {
             "status": camera.status,
             "video_devices": sorted(glob.glob("/dev/video[0-9]*")),
@@ -296,7 +308,22 @@ def collect_inventory(private: bool = False, runner=run_command) -> dict[str, An
         result["tools"]["opencv"] = "available"
     except ImportError:
         result["tools"]["opencv"] = "unavailable"
-    return result if private else redact(result)  # type: ignore[return-value]
+    if private:
+        return result
+    public = redact(result)
+    assert isinstance(public, dict)
+    storage = public.get("storage", {})
+    if isinstance(storage, dict):
+        devices = storage.get("devices", [])
+        if isinstance(devices, list):
+            safe_mounts = {"/", "/boot", "/boot/efi", "/tmp", "/var/log", "[SWAP]"}
+            for device in devices:
+                if isinstance(device, dict) and isinstance(device.get("mountpoints"), list):
+                    device["mountpoints"] = [
+                        mount if mount in safe_mounts else "other-mounted"
+                        for mount in device["mountpoints"]
+                    ]
+    return public
 
 
 def collect_section(section: str) -> dict[str, Any]:

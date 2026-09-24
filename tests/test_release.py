@@ -61,3 +61,14 @@ def test_source_scanner_blocks_private_machine_identifiers(tmp_path, monkeypatch
     (tmp_path / "docs/LIVE-HARDWARE-BASELINE.md").write_text(value)
     _, issues = scanner.scan(tmp_path)
     assert issues
+
+
+def test_source_scanner_cli_scans_explicit_capture_directory(tmp_path):
+    (tmp_path / "hardware-inventory.json").write_text("10.23.45.67")
+    result = subprocess.run(
+        [sys.executable, str(REPO / "scripts/scan-public.py"), str(tmp_path)],
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 1
+    assert "possible private machine identifier" in result.stdout

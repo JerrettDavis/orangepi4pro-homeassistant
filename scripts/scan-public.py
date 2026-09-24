@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check allowlisted source files for known private artifacts; not a general secret detector."""
+import argparse
 import re
 from pathlib import Path
 from release_manifest import ROOT, candidates
@@ -21,10 +22,19 @@ MACHINE_PATTERNS = (
 )
 
 
-def scan(root=ROOT):
+def scan(root=ROOT, include_all=False):
     problems = []
     checked = 0
-    for path in candidates(root):
+    paths = (
+        (
+            path
+            for path in sorted(root.rglob('*'))
+            if path.is_file() or path.is_symlink()
+        )
+        if include_all
+        else candidates(root)
+    )
+    for path in paths:
         relative = path.relative_to(root).as_posix()
         if path.is_symlink():
             problems.append((relative, 'source symlinks are not permitted'))
@@ -48,7 +58,11 @@ def scan(root=ROOT):
 
 
 if __name__ == '__main__':
-    count, issues = scan()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('root', nargs='?', type=Path)
+    args = parser.parse_args()
+    root = args.root.resolve() if args.root else ROOT
+    count, issues = scan(root, include_all=bool(args.root))
     for filename, reason in issues:
         print(f'BLOCKED: {filename}: {reason}')
     print(f'Checked {count} allowlisted text/source files; {len(issues)} issue(s).')

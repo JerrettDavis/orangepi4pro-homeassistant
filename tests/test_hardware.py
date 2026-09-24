@@ -39,6 +39,17 @@ def test_redact_scrubs_sensitive_shapes_in_free_text():
     assert result == "host [redacted] has [redacted] and [redacted] on [redacted]"
 
 
+def test_redact_preserves_safe_capability_key_names():
+    result = hardware.redact(
+        {"age-keygen": "unavailable", "serial_by_id_present": False, "api_token": "secret"}
+    )
+    assert result == {
+        "age-keygen": "unavailable",
+        "serial_by_id_present": False,
+        "api_token": "redacted",
+    }
+
+
 def test_parse_lsblk_accepts_json_and_preserves_ancestry():
     rows = hardware.parse_lsblk(
         '{"blockdevices":[{"name":"nvme0n1","path":"/dev/nvme0n1",'
@@ -191,6 +202,8 @@ def test_collect_inventory_uses_fixed_commands_and_sanitizes_public_result():
             ("hostname",): "private-host\n",
             ("lsblk", "--json", "-o", "NAME,PATH,TYPE,PKNAME,SIZE,FSTYPE,MOUNTPOINTS,MODEL"): '{"blockdevices":[]}',
             ("findmnt", "-rn", "-o", "TARGET,SOURCE"): "/ /dev/nvme0n1p3\n",
+            ("cat", "/proc/bus/input/devices"): 'N: Name="QDtech MPI7003"\nH: Handlers=event1\n',
+            ("cat", "/proc/modules"): "hid_multitouch 28672 0 - Live 0x0\n",
         }
         return hardware.CommandResult(tuple(argv), 0, fixtures.get(tuple(argv), ""), "ok")
 
@@ -200,3 +213,28 @@ def test_collect_inventory_uses_fixed_commands_and_sanitizes_public_result():
     assert "private-host" not in text
     assert all(isinstance(call, tuple) for call in calls)
     assert not any(call[0] in {"sh", "bash", "sudo"} for call in calls)
+    assert result["input"] == {
+        "devices": ["QDtech MPI7003"],
+        "native_touch_modules": ["hid_multitouch"],
+    }
+
+
+def test_public_inventory_generalizes_nonstandard_mount_paths():
+    def runner(argv):
+        fixtures = {
+            ("uname", "-m"): "aarch64\n",
+            ("uname", "-r"): "fixture-kernel\n",
+            ("hostname",): "private-host\n",
+            ("lsblk", "--json", "-o", "NAME,PATH,TYPE,PKNAME,SIZE,FSTYPE,MOUNTPOINTS,MODEL"): (
+                '{"blockdevices":[{"name":"nvme0n1","path":"/dev/nvme0n1",'
+                '"type":"disk","mountpoints":[],"children":[{"name":"nvme0n1p6",'
+                '"path":"/dev/nvme0n1p6","type":"part","pkname":"nvme0n1",'
+                '"mountpoints":["/srv/private-person"]}]}]}'
+            ),
+            ("findmnt", "-rn", "-o", "TARGET,SOURCE"): "/ /dev/nvme0n1p6\n",
+        }
+        return hardware.CommandResult(tuple(argv), 0, fixtures.get(tuple(argv), ""), "ok")
+
+    text = json.dumps(hardware.collect_inventory(runner=runner))
+    assert "/srv/private-person" not in text
+    assert "other-mounted" in text
