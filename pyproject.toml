@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orangepi4pro-homeassistant"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "Rebuildable Home Assistant appliance for the Orange Pi 4 Pro A733"
 requires-python = ">=3.10"
 license = {text = "MIT"}

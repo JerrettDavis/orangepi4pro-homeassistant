@@ -1,29 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 export DISPLAY="${DISPLAY:-:0}"
-export XAUTHORITY="${XAUTHORITY:-/home/opiha-kiosk/.Xauthority}"
-# LightDM owns the graphical session; never start a competing X server.
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
 for _ in $(seq 1 60); do
-  if xset q >/dev/null 2>&1; then break; fi
+  xset q >/dev/null 2>&1 && break
   sleep 2
 done
-xset q >/dev/null 2>&1 || { echo 'No usable X11 session. Check LightDM autologin and XAUTHORITY.' >&2; exit 1; }
+xset q >/dev/null 2>&1 || {
+  echo "No usable existing X11 session" >&2
+  exit 1
+}
+
 xset s off
-xset +dpms
-xset dpms 0 0 600
-profile=/srv/opiha/kiosk/browser
-mkdir -p "$profile"
-/opt/orangepi4pro-homeassistant/scripts/wake-screen.py &
-wake_pid=$!
-trap 'kill "$wake_pid" 2>/dev/null || true' EXIT
-url=http://127.0.0.1:8099/
-if command -v chromium >/dev/null 2>&1; then browser=chromium
-elif command -v chromium-browser >/dev/null 2>&1; then browser=chromium-browser
-elif command -v firefox >/dev/null 2>&1; then
-  firefox --no-remote --profile "$profile" --kiosk "$url"
-  exit $?
-else echo 'Install a working Chromium or Firefox browser in the base OS.' >&2; exit 1
-fi
-# Never --no-sandbox and never embed HA credentials in launch arguments.
-"$browser" --kiosk --no-first-run --no-default-browser-check --disable-session-crashed-bubble \
-  --user-data-dir="$profile" "$url"
+xset -dpms
+
+url=http://127.0.0.1:8123/
+for _ in $(seq 1 90); do
+  curl --fail --silent --show-error --max-time 5 "$url" >/dev/null 2>&1 && break
+  sleep 2
+done
+curl --fail --silent --show-error --max-time 5 "$url" >/dev/null || {
+  echo "Home Assistant did not become ready" >&2
+  exit 1
+}
+
+command -v firefox >/dev/null 2>&1 || {
+  echo "Firefox is not installed" >&2
+  exit 1
+}
+
+profile="$HOME/snap/firefox/common/opiha-kiosk"
+install -d -m 0700 "$profile"
+
+# The profile carries the user's HA session. It is private runtime state and is
+# never embedded in the launch URL, service unit, repository, or public image.
+exec firefox --no-remote --profile "$profile" --kiosk "$url"

@@ -26,6 +26,7 @@ class Layout:
     work_root: Path
     config: Path
     unit: Path
+    kiosk_unit: Path
     manifest: Path
 
     @classmethod
@@ -39,6 +40,7 @@ class Layout:
             work_root=root / "var/lib/orangepi-homeassistant",
             config=root / "etc/orangepi-homeassistant/appliance.json",
             unit=root / "etc/systemd/system/orangepi-homeassistant.service",
+            kiosk_unit=root / "etc/systemd/system/orangepi-homeassistant-kiosk@.service",
             manifest=root / "var/lib/orangepi-homeassistant/deployment.json",
         )
 
@@ -83,10 +85,15 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         layout.work_root,
         layout.config,
         layout.unit,
+        layout.kiosk_unit,
     ):
         _reject_symlink_ancestors(path, layout.root)
     owned = _owned_files(layout)
-    for path, label in ((layout.unit, "unit"), (layout.config, "configuration")):
+    for path, label in (
+        (layout.unit, "unit"),
+        (layout.kiosk_unit, "kiosk unit"),
+        (layout.config, "configuration"),
+    ):
         if path.exists() and _relative(layout, path) not in owned:
             raise ApplianceError(f"Existing Home Assistant {label} is not owned by this installer")
     if (layout.current.exists() or layout.current.is_symlink()) and _relative(layout, layout.current) not in owned:
@@ -113,6 +120,8 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         changes.append("create-appliance-config")
     if not layout.unit.exists():
         changes.append("install-disabled-unit")
+    if not layout.kiosk_unit.exists():
+        changes.append("install-disabled-kiosk-unit")
     selected = Path("releases") / release
     if not layout.current.is_symlink() or Path(os.readlink(layout.current)) != selected:
         changes.append("select-release")
@@ -169,6 +178,10 @@ def _unit_text() -> bytes:
     return (REPO / "systemd/orangepi-homeassistant.service").read_bytes()
 
 
+def _kiosk_unit_text() -> bytes:
+    return (REPO / "systemd/orangepi-homeassistant-kiosk@.service").read_bytes()
+
+
 def install(*, root: Path = Path("/"), release: str) -> dict:
     proposed = plan(root=root, release=release)
     layout = Layout.for_root(root)
@@ -205,6 +218,7 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
         atomic_json(layout.config, cfg, 0o600)
 
     atomic_bytes(layout.unit, _unit_text(), 0o644)
+    atomic_bytes(layout.kiosk_unit, _kiosk_unit_text(), 0o644)
 
     selected = Path("releases") / release
     temporary_link = layout.install_root / ".current.new"
@@ -216,6 +230,7 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
     owned = [
         _relative(layout, layout.config),
         _relative(layout, layout.current),
+        _relative(layout, layout.kiosk_unit),
         _relative(layout, layout.unit),
     ]
     manifest = {

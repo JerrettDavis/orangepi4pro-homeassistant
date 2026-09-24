@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.3
+
+- Added an XFCE/Xorg Firefox kiosk that preserves the working cyberdeck display stack.
+- Added fixed restricted-admin commands for independent kiosk operation.
+
 ## 0.1.0-alpha.2
 
 - Added the non-destructive live-host installer and restricted administrative wrapper.

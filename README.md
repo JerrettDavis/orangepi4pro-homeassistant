@@ -2,7 +2,7 @@
 
 **A rebuildable home-control appliance for the Orange Pi 4 Pro, Allwinner A733.**
 
-Version **0.1.0-alpha.2**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
+Version **0.1.0-alpha.3**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
 
 The current cyberdeck host has been inspected and blank Home Assistant has now
 been runtime-validated on its ARM64 Docker engine, including a persistent
