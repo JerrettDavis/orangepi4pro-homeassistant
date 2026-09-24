@@ -114,12 +114,31 @@ port and probes HA from inside its uniquely named quarantine container. HA
 became healthy, returned HTTP 200, and the test removed its temporary container
 and network without affecting the live appliance project.
 
+## Native household restore rehearsal
+
+A fresh protected HA-only native backup was checksum-verified, discovered by
+Home Assistant Core from its private local backup directory, decrypted through
+the onboarding restore API, and applied while source HA Core was stopped. The
+target returned healthy with onboarding complete and the existing login screen
+visible on the touchscreen kiosk. The restored 11.7 GB SQLite recorder database
+passed `quick_check`. The restored HA version, areas, custom components, and all
+non-Supervisor integration-domain registry counts matched the stopped source.
+
+The expected HAOS-to-Container delta consisted of the removed Supervisor
+config entry/entities/devices and newly generated host `systemmonitor`
+entities. One stale `discovery_keys.hassio` marker caused an initial Supervisor
+dependency cascade; removing only that marker from a stopped, privately backed
+up config-entry registry resolved the cascade. MQTT was temporarily repointed
+to the still-running source broker without changing its credentials. Matter,
+Music Assistant, Z-Wave, and other add-on/device dependencies remain separate
+migration gates. No DNS, reverse-proxy identity, or radio ownership moved.
+
 ## Not executed or not implemented
 
 No privileged image-apply build, spare-media appliance boot, real camera
 stream, physical kiosk touch, real Z-Wave controller, external database
-migration, or production HA restore has been tested. The remaining hardware
-acceptance runbooks remain required.
+migration, production network-identity cutover, or full add-on replacement has
+been tested. The remaining hardware acceptance runbooks remain required.
 
 No A733 NPU inference backend is implemented. HOG is a CPU baseline, not a validated occupancy/security model. HACS releases were not downloaded or authenticated here. Native Home Assistant backup upload is documented as a user-operated supported path; this repository does not implement private HA restore APIs.
 

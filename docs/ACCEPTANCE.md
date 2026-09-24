@@ -13,9 +13,9 @@ unit test.
 | Kiosk stop/start is independent | Pass | Firefox PID ended/restarted while HA stayed healthy |
 | Physical touch input in kiosk | Pending | Human acceptance tap required |
 | Encrypted appliance backup verify | Pass | Signed age bundle created and verified on-device |
-| Applied appliance restore | Pending | Do not replace household state during blank-host testing |
+| Applied native HA restore | Pass | Protected HA-only backup restored through Core onboarding; recorder DB passed SQLite quick check |
 | Production HA native backup staged | Pass | Fresh HA-only backup with database is root-only on the target; source and target SHA-256 matched |
-| Production HA restore | Pending | Source HAOS must remain rollback authority until deliberate cutover |
+| Production HA restore rehearsal | Pass | Restored auth/config/database; source HA Core stopped while HAOS/add-ons remain for rollback |
 | Camera stream | Blocked | No V4L2 or media-controller endpoint enumerates |
 | CPU person detector on real camera | Blocked | Detector code exists; no camera frames are available |
 | Z-Wave JS UI with production stick | Pending | Controller is not attached; preserve keys/store/NVM first |

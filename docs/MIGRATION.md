@@ -20,6 +20,14 @@ and its SHA-256 was verified at both ends. The source remains running and
 authoritative; the target remains at blank onboarding. No household state is
 in this repository.
 
+That final sentence describes the pre-restore checkpoint. The subsequent
+hardware rehearsal stopped source HA Core, restored the protected archive on
+the Orange Pi, and retained the source HAOS host and add-ons for rollback. The
+restored database passed SQLite `quick_check`; auth, configuration, dashboards,
+custom components, entity registry, device registry, and areas were present.
+No production DNS, proxy identity, or Z-Wave ownership moved during this
+rehearsal.
+
 The source is a supervised appliance and has Supervisor add-ons. A native HA
 restore migrates Home Assistant state, not the add-on processes. Before
 cutover, classify every installed add-on as one of:
@@ -34,6 +42,22 @@ cutover, classify every installed add-on as one of:
 Do not copy add-on secrets into Compose files or Git. Put private settings in
 root-owned files below `/srv/homeassistant` or another documented private-state
 directory and back them up in the encrypted recovery set.
+
+### Expected HAOS registry cleanup
+
+On the first Container restart, Home Assistant removes the Supervisor `hassio`
+config entry and its Supervisor/add-on entities and devices. Compare registries
+by integration domain rather than requiring raw counts to remain identical.
+During the hardware rehearsal the entire raw-count difference was accounted
+for by removed `hassio` registry objects plus new host `systemmonitor` entities;
+non-Supervisor integration-domain counts matched.
+
+A retained add-on discovery marker on another config entry can cause Container
+startup to attempt `hassio`, cascading into backup/cloud/USB/Bluetooth failures.
+If logs show `Missing SUPERVISOR environment variable`, stop HA, preserve
+`.storage/core.config_entries`, and inspect `discovery_keys.hassio`. Remove only
+the stale discovery marker—not the integration entry or its credentials—then
+restart and re-check logs. Keep the private pre-edit copy for rollback.
 
 ### A. Native HA backup through onboarding
 
