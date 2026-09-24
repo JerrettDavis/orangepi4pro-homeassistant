@@ -13,8 +13,8 @@ xset q >/dev/null 2>&1 || {
   exit 1
 }
 
-xset s off
-xset -dpms
+xset s off || echo "Display server did not accept screen-saver disable hint" >&2
+xset -dpms || echo "Display server did not accept DPMS disable hint" >&2
 
 url=http://127.0.0.1:8123/
 for _ in $(seq 1 90); do
@@ -36,4 +36,5 @@ install -d -m 0700 "$profile"
 
 # The profile carries the user's HA session. It is private runtime state and is
 # never embedded in the launch URL, service unit, repository, or public image.
+echo "Launching Firefox kiosk against local Home Assistant" >&2
 exec firefox --no-remote --profile "$profile" --kiosk "$url"

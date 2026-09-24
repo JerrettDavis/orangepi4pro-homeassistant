@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.6
+
+- Treat unsupported X11 screen-saver and DPMS controls as non-fatal kiosk hints.
+- Emit a clear launch diagnostic before handing control to Firefox.
+
 ## 0.1.0-alpha.5
 
 - Run the Firefox Snap kiosk in the existing graphical user's systemd manager.
