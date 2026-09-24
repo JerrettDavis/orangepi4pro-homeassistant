@@ -38,6 +38,22 @@ sudo /opt/orangepi-homeassistant/current/bin/opiha \
   --config /etc/orangepi-homeassistant/appliance.json render
 ```
 
+For ongoing automation without disclosing a sudo password, use the reviewed
+one-time bootstrap instead of granting passwordless shell or Docker access:
+
+```bash
+sudo ./scripts/bootstrap-admin.sh "$(id -un)"
+sudo -n /usr/local/sbin/opiha-admin daemon-reload
+```
+
+The bootstrap applies the same guarded host install, installs a root-owned
+wrapper, validates a sudoers drop-in with `visudo`, and grants the invoking SSH
+user passwordless access to that wrapper only. The wrapper accepts exactly one
+fixed command from: `daemon-reload`, `start`, `stop`, `restart`, `status`,
+`render`, `doctor`, `compose-ps`, or `journal`. It cannot run a shell, accept a
+path, install packages, change networking/boot/storage, enable services, or
+reboot the host. Remove `/etc/sudoers.d/orangepi-homeassistant` to revoke it.
+
 At this point no container or appliance service has started. Confirm camera,
 Z-Wave, and MQTT features are false and the rendered Compose document contains
 only `homeassistant`.

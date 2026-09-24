@@ -29,7 +29,8 @@ for target in (zip_path,tar_path):
     if target.exists():
         raise SystemExit(f'Output already exists: {target}')
 def permission(path):
-    return 0o755 if path.relative_to(ROOT).as_posix() == 'bin/opiha' or path.suffix in ('.py','.sh') else 0o644
+    relative = path.relative_to(ROOT).as_posix()
+    return 0o755 if relative.startswith('bin/') or path.suffix in ('.py','.sh') else 0o644
 with zipfile.ZipFile(zip_path,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
     for file in files:
         info = zipfile.ZipInfo(prefix+'/'+file.relative_to(ROOT).as_posix(), (2026,9,23,0,0,0))

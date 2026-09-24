@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from opiha import admin
+from opiha.common import ApplianceError
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        raise ApplianceError("Exactly one fixed administrative command is required")
+    admin.dispatch(sys.argv[1])
+    return 0
+
+
+try:
+    raise SystemExit(main())
+except (ApplianceError, OSError) as exc:
+    print(f"opiha-admin: {exc}", file=sys.stderr)
+    raise SystemExit(2)
