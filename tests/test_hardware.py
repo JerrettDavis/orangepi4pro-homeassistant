@@ -71,3 +71,70 @@ def test_parse_findmnt_maps_only_absolute_targets():
 def test_parse_devices_returns_unique_device_paths_without_missing_globs():
     text = "/dev/video2\n/dev/video0\n/dev/video2\n/dev/video*\n"
     assert hardware.parse_devices(text) == ["/dev/video0", "/dev/video2"]
+
+
+def fixture_rows(with_mounted_sd=False):
+    rows = [
+        {"path": "/dev/nvme0n1", "type": "disk", "parent": None, "mountpoints": []},
+        {"path": "/dev/nvme0n1p1", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/boot/efi"]},
+        {"path": "/dev/nvme0n1p2", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/boot"]},
+        {"path": "/dev/nvme0n1p3", "type": "part", "parent": "/dev/nvme0n1", "mountpoints": ["/"]},
+        {"path": "/dev/mmcblk1", "type": "disk", "parent": None, "mountpoints": []},
+        {
+            "path": "/dev/mmcblk1p1",
+            "type": "part",
+            "parent": "/dev/mmcblk1",
+            "mountpoints": ["/mnt/check"] if with_mounted_sd else [],
+        },
+    ]
+    return rows
+
+
+def test_current_root_boot_and_efi_parent_disk_is_rejected():
+    result = hardware.classify_flash_target(
+        "/dev/nvme0n1",
+        fixture_rows(),
+        {
+            "/": "/dev/nvme0n1p3",
+            "/boot": "/dev/nvme0n1p2",
+            "/boot/efi": "/dev/nvme0n1p1",
+        },
+    )
+    assert not result["safe"]
+    assert result["reasons"] == ["boot", "efi", "mounted", "root"]
+
+
+def test_mounted_sd_is_rejected_even_when_not_boot_disk():
+    result = hardware.classify_flash_target(
+        "/dev/mmcblk1", fixture_rows(with_mounted_sd=True), {"/": "/dev/nvme0n1p3"}
+    )
+    assert not result["safe"]
+    assert result["reasons"] == ["mounted"]
+
+
+def test_unmounted_unprotected_disk_is_safe_candidate():
+    result = hardware.classify_flash_target(
+        "/dev/mmcblk1", fixture_rows(), {"/": "/dev/nvme0n1p3"}
+    )
+    assert result == {"path": "/dev/mmcblk1", "safe": True, "reasons": []}
+
+
+def test_ambiguous_or_non_disk_target_is_rejected():
+    missing = hardware.classify_flash_target("/dev/missing", fixture_rows(), {})
+    partition = hardware.classify_flash_target("/dev/nvme0n1p3", fixture_rows(), {})
+    duplicate = hardware.classify_flash_target(
+        "/dev/mmcblk1", fixture_rows() + [fixture_rows()[4]], {}
+    )
+    assert missing["reasons"] == ["unknown-device"]
+    assert partition["reasons"] == ["not-whole-disk"]
+    assert duplicate["reasons"] == ["ambiguous"]
+
+
+def test_unresolved_protected_device_ancestry_fails_closed():
+    rows = fixture_rows()
+    rows[3]["parent"] = "/dev/device-mapper-missing"
+    result = hardware.classify_flash_target(
+        "/dev/mmcblk1", rows, {"/": "/dev/nvme0n1p3"}
+    )
+    assert not result["safe"]
+    assert result["reasons"] == ["ambiguous"]

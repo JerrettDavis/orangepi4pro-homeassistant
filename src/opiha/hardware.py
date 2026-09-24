@@ -123,3 +123,86 @@ def parse_devices(text: str) -> list[str]:
         if line.strip().startswith("/dev/") and "*" not in line
     }
     return sorted(devices)
+
+
+def _row_index(rows: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    index: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        path = row.get("path")
+        if isinstance(path, str):
+            index.setdefault(path, []).append(row)
+    return index
+
+
+def _parent_disk(
+    source: str, index: dict[str, list[dict[str, Any]]]
+) -> str | None:
+    current = source
+    visited: set[str] = set()
+    while current not in visited:
+        visited.add(current)
+        matches = index.get(current, [])
+        if len(matches) != 1:
+            return None
+        row = matches[0]
+        if row.get("type") == "disk":
+            return current
+        parent = row.get("parent")
+        if not isinstance(parent, str) or not parent:
+            return None
+        current = parent
+    return None
+
+
+def protected_disks(
+    rows: list[dict[str, Any]], mounts: dict[str, str]
+) -> set[str]:
+    index = _row_index(rows)
+    protected: set[str] = set()
+    for target in ("/", "/boot", "/boot/efi"):
+        source = mounts.get(target)
+        if source:
+            disk = _parent_disk(source, index)
+            if disk:
+                protected.add(disk)
+    return protected
+
+
+def classify_flash_target(
+    path: str, rows: list[dict[str, Any]], mounts: dict[str, str]
+) -> dict[str, object]:
+    result: dict[str, object] = {"path": path, "safe": False, "reasons": []}
+    reasons: set[str] = set()
+    index = _row_index(rows)
+    matches = index.get(path, [])
+    if not matches:
+        reasons.add("unknown-device")
+    elif len(matches) != 1:
+        reasons.add("ambiguous")
+    elif matches[0].get("type") != "disk":
+        reasons.add("not-whole-disk")
+
+    role_targets = {"/": "root", "/boot": "boot", "/boot/efi": "efi"}
+    for target, role in role_targets.items():
+        source = mounts.get(target)
+        if not source:
+            continue
+        disk = _parent_disk(source, index)
+        if disk is None:
+            reasons.add("ambiguous")
+        elif disk == path:
+            reasons.add(role)
+
+    if len(matches) == 1 and matches[0].get("type") == "disk":
+        for row in rows:
+            row_path = row.get("path")
+            if not isinstance(row_path, str):
+                continue
+            if row_path == path or _parent_disk(row_path, index) == path:
+                if row.get("mountpoints"):
+                    reasons.add("mounted")
+
+    ordered = sorted(reasons)
+    result["reasons"] = ordered
+    result["safe"] = not ordered
+    return result
