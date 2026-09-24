@@ -1,15 +1,15 @@
-# Delivery validation: 0.1.0-alpha.1
+# Delivery validation: 0.1.0-alpha.8
 
-Prepared for local testing on **September 23, 2026 (America/Chicago)**.
+Updated after live Orange Pi validation on **September 24, 2026
+(America/Chicago)**.
 
 ## Result
 
-The authoritative Linux/WSL command is green for every required source check
-and every pinned image publishes an ARM64 manifest. Optional `age`,
-`age-keygen`, and OpenCV checks are explicitly skipped in the current WSL
-environment because those tools are absent. Generated reports in this
-directory predate the live-host pass and are retained only as alpha-delivery
-artifacts; current command output is authoritative until they are regenerated.
+The authoritative Linux command is green for every required source check and
+every pinned image publishes an ARM64 manifest. The current Docker/Linux run
+passes 149 tests; age and OpenCV are the two optional local skips. Age is now
+installed and runtime-validated on the Orange Pi. OpenCV remains absent because
+the board exposes no camera endpoint.
 
 ```bash
 ./scripts/test.sh --images
@@ -43,31 +43,18 @@ artifacts; current command output is authoritative until they are regenerated.
 Read-only SSH inventory observed the working ARM64 cyberdeck kernel, NVMe
 root/boot/EFI roles, LightDM/Xorg display, and native QDtech touchscreen. It
 also observed that no camera/media or serial-by-id device exists, the SSH
-account cannot access the Docker daemon without interactive elevation, and the
-host lacks `age`, FFmpeg, and OpenCV. Details are in
+account initially lacked a restricted administrative path, and the host did
+not yet have `age`, FFmpeg, or OpenCV. The restricted wrapper and `age` were
+subsequently installed; camera-only dependencies remain deferred. Details are in
 [`docs/LIVE-HARDWARE-BASELINE.md`](../docs/LIVE-HARDWARE-BASELINE.md).
 
-## Live-host deployment staging
+## Live-host deployment
 
-The deterministic public source archive containing the conservative host
-installer was copied to the Orange Pi's `/tmp`, verified against its adjacent
-SHA-256 file, extracted into a new private staging directory, and scanned there
-with zero detected issues. `./bin/opiha host plan` then ran against the live
-root without elevation and reported only the versioned release, marked private
-state, private configuration, disabled unit, and release-selector changes. It
-reported no package installation, service start/enablement, boot change, or
-network change.
-
-No host files have been applied. Direct root SSH authentication is unavailable
-and the administrative account requires interactive sudo, so the session stops
-at the intentional privilege boundary immediately before:
-
-```bash
-cd /tmp/opiha-host-final-20260923T2142/orangepi4pro-homeassistant
-sudo ./bin/opiha host install --apply
-```
-
-This is a staged/read-only validation, not an Orange Pi container runtime pass.
+Versioned releases through `0.1.0-alpha.8` were checksum-verified, installed
+under `/opt/orangepi-homeassistant/releases`, and selected atomically. Private
+state remains under `/srv/homeassistant` and generated deployment state under
+`/var/lib/orangepi-homeassistant`. The installer did not replace boot assets,
+the kernel, device tree, networking, SSH, LightDM, XFCE, or touch support.
 
 ## Live ARM64 Home Assistant runtime
 
@@ -97,6 +84,21 @@ socket is enabled, but host-reboot recovery has not been claimed or tested;
 boot enablement remains a separate reviewed step after kiosk/display behavior
 and rollback are ready.
 
+## Live kiosk and recovery tooling
+
+The existing LightDM/Xorg/XFCE session launches Firefox 152 through a user
+systemd service. The custom kernel lacks SquashFS xattrs, so the unit disables
+snapd self re-execution and uses Ubuntu's capability-bearing distro launcher.
+Firefox remained active, rendered the HA restore screen at 1024x600, and passed
+independent stop/start testing while HA stayed healthy. Physical touch input
+still requires a human acceptance tap.
+
+On-device recovery validation created a signed age-encrypted blank-state
+bundle, verified its signature, decrypted and validated its archive, and
+confirmed HA returned healthy after the coordinated container recreation. The
+test identity and archive remain root-only temporary validation artifacts and
+are not production recovery material.
+
 The host was subsequently moved from the isolated device WLAN to the primary
 trusted WLAN using a staged NetworkManager profile and timed fallback. The new
 profile has higher autoconnect priority while the prior profile remains an
@@ -107,10 +109,10 @@ intentionally omitted from public evidence.
 
 ## Not executed or not implemented
 
-No privileged image-apply build, spare-media appliance boot, real camera stream, kiosk
-session, real Z-Wave controller, external database migration, or production
-HA restore has been tested. The Docker smoke test and hardware acceptance
-runbooks remain required.
+No privileged image-apply build, spare-media appliance boot, real camera
+stream, physical kiosk touch, real Z-Wave controller, external database
+migration, or production HA restore has been tested. The Docker smoke test and
+remaining hardware acceptance runbooks remain required.
 
 No A733 NPU inference backend is implemented. HOG is a CPU baseline, not a validated occupancy/security model. HACS releases were not downloaded or authenticated here. Native Home Assistant backup upload is documented as a user-operated supported path; this repository does not implement private HA restore APIs.
 
@@ -123,4 +125,6 @@ included in this source delivery.
 
 This is a tested **source alpha for local rehearsal and controlled hardware bring-up**, not a certified appliance release. Passing unit/in-process tests does not establish safe operation of the user's existing integrations. Run the real Docker smoke test, a stopped-state import rehearsal, and a spare-media signed recovery drill before decommissioning the Hyper-V VM.
 
-The shipped CI matrix is configured for Python 3.10, 3.12 and 3.13 and installs age for the encryption test. Those GitHub jobs have **not** run merely because their workflow files exist.
+The GitHub CI matrix for Python 3.10, 3.12 and 3.13 has run successfully on the
+public repository. CI installs age for the encryption test; it does not claim
+Orange Pi hardware coverage.
