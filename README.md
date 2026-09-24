@@ -2,7 +2,7 @@
 
 **A rebuildable home-control appliance for the Orange Pi 4 Pro, Allwinner A733.**
 
-Version **0.1.0-alpha.8**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
+Version **0.1.0-alpha.9**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
 
 The current cyberdeck host has been inspected and blank Home Assistant has now
 been runtime-validated on its ARM64 Docker engine, including a persistent
@@ -43,11 +43,15 @@ python -m pip install -e '.[test]'
 ./bin/opiha init --mode lab
 ./bin/opiha render
 ./bin/opiha up
-# Open http://127.0.0.1:18123
 ./bin/opiha down
 ```
 
-The lab starts only HA, binds its UI to loopback, uses a Docker internal network, and passes through no hardware. It deliberately does not expose household integrations to the LAN. This is a migration rehearsal environment, not a substitute for a disconnected VLAN or a security sandbox. Restored integrations needing Internet downloads will not initialize in this quarantine. See [local testing](docs/QUICKSTART.md).
+The lab starts only HA on a Docker internal network, publishes no host port,
+and passes through no hardware. Use `./scripts/docker-smoke.sh` for an
+in-container readiness test. It deliberately cannot expose its UI or household
+integrations to the host, LAN, or Internet. This is an offline migration-state
+rehearsal, not a substitute for a disconnected VLAN when interactive UI testing
+is required. See [local testing](docs/QUICKSTART.md).
 
 For a real migration, **set HA to your source instance's exact version before importing anything**. The shipped `2026.9.3` is an explicit software default, not a claim about your VM.
 

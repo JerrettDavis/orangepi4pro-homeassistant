@@ -16,7 +16,7 @@ Compose is emitted as JSON, a YAML subset. The explicit empty env file avoids lo
 
 | Service | Exposure | Persistence |
 |---|---|---|
-| HA lab | loopback 18123; internal Docker network | private lab `state/ha` |
+| HA lab | no host port; internal Docker network | private lab `state/ha` |
 | HA appliance | host network, normally port 8123 | `/srv/opiha/ha`, `ssl`, `media`, `share` |
 | Z-Wave UI | loopback 8091 and 3000 | stopped/imported JS UI store |
 | MQTT | loopback 1883, authenticated | local broker config and data |

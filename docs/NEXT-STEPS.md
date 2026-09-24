@@ -2,7 +2,11 @@
 
 ## Gate 1: workstation rehearsal
 
-Run the full Python/shell test suite, then the real Docker smoke test. Confirm the lab UI binds only loopback, the network is internal, and no camera/radio is passed through. Import a stopped config copy and compare registries before starting HA. Expect Internet/LAN integrations to be unavailable in quarantine. Review native-extension warnings and list missing external/add-on services.
+Run the full Python/shell test suite, then the real Docker smoke test. Confirm
+the lab publishes no host port, the network is internal, and no camera/radio is
+passed through. Import a stopped config copy and compare registries before
+starting HA. Expect Internet/LAN integrations to be unavailable in quarantine.
+Review native-extension warnings and list missing external/add-on services.
 
 Do not proceed merely because entity counts match. Read actual logs, custom-integration import failures, SQLite checks, restored auth and dashboard availability. Retain the source native HA backup and its emergency kit.
 

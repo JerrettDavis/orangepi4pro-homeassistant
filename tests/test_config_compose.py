@@ -14,7 +14,10 @@ def test_lab_is_quarantined_even_when_features_enabled(cfg):
     assert list(c['services']) == ['homeassistant']
     assert c['networks']['quarantine']['internal'] is True
     s = c['services']['homeassistant']
-    assert s['ports'] == ['127.0.0.1:18123:8123']
+    # Docker suppresses published ports on internal networks. Do not advertise
+    # a host binding that the daemon cannot create or tempt callers to weaken
+    # the quarantine network to make it reachable.
+    assert 'ports' not in s
     assert 'devices' not in s and 'network_mode' not in s
     assert 'privileged' not in s
 

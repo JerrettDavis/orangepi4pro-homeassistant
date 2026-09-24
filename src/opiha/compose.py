@@ -36,7 +36,6 @@ def generate(cfg: dict) -> dict:
     services = {"homeassistant": ha}
     result = {"name": "opiha" if prod else "opiha-lab-" + hashlib.sha256(str(d).encode()).hexdigest()[:8], "services": services}
     if not prod:
-        ha["ports"] = [f"127.0.0.1:{cfg['lab_port']}:8123"]
         ha["networks"] = ["quarantine"]
         result["networks"] = {"quarantine": {"internal": True}}
         return result

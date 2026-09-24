@@ -1,4 +1,4 @@
-# Delivery validation: 0.1.0-alpha.8
+# Delivery validation: 0.1.0-alpha.9
 
 Updated after live Orange Pi validation on **September 24, 2026
 (America/Chicago)**.
@@ -107,12 +107,19 @@ SSH, and the Home Assistant LAN endpoint were validated. Home Assistant stayed
 healthy throughout. SSIDs, credentials, addresses, MACs, and profile UUIDs are
 intentionally omitted from public evidence.
 
+The real Docker smoke test also ran on the ARM64 host. Docker 29.6 was observed
+to suppress host port publication for an internal network even though Compose
+accepted the requested binding. Alpha9 therefore publishes no misleading lab
+port and probes HA from inside its uniquely named quarantine container. HA
+became healthy, returned HTTP 200, and the test removed its temporary container
+and network without affecting the live appliance project.
+
 ## Not executed or not implemented
 
 No privileged image-apply build, spare-media appliance boot, real camera
 stream, physical kiosk touch, real Z-Wave controller, external database
-migration, or production HA restore has been tested. The Docker smoke test and
-remaining hardware acceptance runbooks remain required.
+migration, or production HA restore has been tested. The remaining hardware
+acceptance runbooks remain required.
 
 No A733 NPU inference backend is implemented. HOG is a CPU baseline, not a validated occupancy/security model. HACS releases were not downloaded or authenticated here. Native Home Assistant backup upload is documented as a user-operated supported path; this repository does not implement private HA restore APIs.
 
@@ -123,7 +130,7 @@ included in this source delivery.
 
 ## What these results justify
 
-This is a tested **source alpha for local rehearsal and controlled hardware bring-up**, not a certified appliance release. Passing unit/in-process tests does not establish safe operation of the user's existing integrations. Run the real Docker smoke test, a stopped-state import rehearsal, and a spare-media signed recovery drill before decommissioning the Hyper-V VM.
+This is a tested **source alpha for local rehearsal and controlled hardware bring-up**, not a certified appliance release. Passing unit/in-process and blank-state smoke tests does not establish safe operation of the user's existing integrations. Run a stopped-state import rehearsal and a spare-media signed recovery drill before decommissioning the source appliance.
 
 The GitHub CI matrix for Python 3.10, 3.12 and 3.13 has run successfully on the
 public repository. CI installs age for the encryption test; it does not claim

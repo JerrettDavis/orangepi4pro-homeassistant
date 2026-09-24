@@ -47,22 +47,33 @@ before using the explicit `sudo ... host install --apply` path.
 
 ```bash
 ./bin/opiha up
-# http://127.0.0.1:18123
-./bin/opiha status
 ./bin/opiha down
 ```
 
-Or run `./scripts/docker-smoke.sh`: it creates an independent workspace under `.local/smoke`, uses port 28123, waits for an HTTP response, and stops/removes its containers afterward. That is a container startup test, not an integration or hardware acceptance test.
+Lab mode uses an internal Docker network and deliberately publishes no host
+port. Docker 29 suppresses published ports on internal networks; adding a bridge
+only to make the UI reachable would also give restored integrations a route to
+the LAN/Internet. Use a separately isolated VLAN/VM for interactive UI testing.
 
-To run independent labs:
+Run `./scripts/docker-smoke.sh` for the safe startup check. It creates an
+independent workspace under `.local/smoke`, waits for HA health and probes the
+UI from inside the container, then stops/removes its container and network.
+That is a container startup test, not an integration or hardware acceptance
+test.
+
+Independent labs derive unique Compose project names from their state paths:
 
 ```bash
 ./bin/opiha --config .local/second/appliance.json init --mode lab
-./bin/opiha --config .local/second/appliance.json configure --lab-port 18124
 ./bin/opiha --config .local/second/appliance.json up
 ```
 
-Lab project names include a hash of the data directory so one lab does not replace another. Even when the config contains optional feature settings, lab Compose omits Z-Wave, MQTT and camera hardware services. HA uses an internal bridge and a loopback UI port, never `network_mode: host` in lab mode.
+The retained `lab_port` configuration field is accepted for compatibility with
+older alpha configuration files but is not published while quarantine remains
+an internal network. Lab project names include a hash of the data directory so
+one lab does not replace another. Even when the config contains optional
+feature settings, lab Compose omits Z-Wave, MQTT and camera hardware services.
+HA uses an internal bridge and never `network_mode: host` in lab mode.
 
 Docker's network isolation is a practical rehearsal safeguard, not a guarantee against a malicious container or host-local service interaction. Use a separate disconnected environment for an absolute no-device-side-effects requirement. Never switch a restored lab to appliance mode merely to make unavailable integrations green while production is still running.
 
