@@ -1,6 +1,8 @@
 [Unit]
 Description=Orange Pi Home Assistant touchscreen kiosk
+Wants=orangepi-homeassistant-keyboard.service
 After=graphical-session.target
+After=orangepi-homeassistant-keyboard.service
 
 [Service]
 Type=simple

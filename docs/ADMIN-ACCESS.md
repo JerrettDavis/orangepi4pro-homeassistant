@@ -29,6 +29,7 @@ Available commands:
 | `compose-ps` | List only the fixed `opiha` Compose project |
 | `journal` | Read the last 300 unit log lines from the last 30 minutes |
 | `kiosk-start`, `kiosk-stop`, `kiosk-status` | Operate only the validated `orangepi` XFCE kiosk instance |
+| `keyboard-start`, `keyboard-stop`, `keyboard-restart`, `keyboard-status` | Operate only the validated `orangepi` Onboard instance |
 
 Revocation requires one interactive administrative action:
 

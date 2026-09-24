@@ -13,6 +13,33 @@ The persistent Firefox profile is private runtime state below the user's
 `snap/firefox/common` directory and must be included in the encrypted recovery
 bundle later.
 
+## On-screen keyboard
+
+`orangepi-homeassistant-keyboard.service` runs the host's existing Onboard
+keyboard in the same XFCE/X11 session. It starts hidden, appears when an
+editable control receives focus through AT-SPI, and hides when requested. A
+small floating Onboard button remains above the full-screen browser for manual
+show/hide; the keyboard itself is not permanently visible. The kiosk unit
+starts the keyboard first so Firefox does not retain focus from before Onboard
+began listening.
+
+The live 1024x600 layout uses a 205-pixel-tall keyboard at the bottom of the
+screen. The service is independently controllable:
+
+```bash
+sudo -n /usr/local/sbin/opiha-admin keyboard-start
+sudo -n /usr/local/sbin/opiha-admin keyboard-restart
+sudo -n /usr/local/sbin/opiha-admin keyboard-status
+sudo -n /usr/local/sbin/opiha-admin keyboard-journal
+sudo -n /usr/local/sbin/opiha-admin keyboard-stop
+```
+
+For maintenance, create `~/.config/opiha/keyboard.disabled` as the graphical
+user and stop the service. Remove that marker before starting it again. The
+manual toggle helper is
+`/opt/orangepi-homeassistant/current/scripts/keyboard-toggle.sh` and uses
+Onboard's session D-Bus interface without storing credentials.
+
 For the observed host:
 
 ```bash
@@ -40,6 +67,11 @@ credentials or household state.
 Physical touch interaction has not yet been performed by a human. The service
 also remains deliberately disabled at boot until that acceptance tap is
 complete; manual start and crash recovery are validated.
+
+Onboard 1.4.1 was validated on the live Orange Pi against Firefox: a real
+AT-SPI focus transition to the Home Assistant username field displayed the
+keyboard above the kiosk, and the D-Bus toggle hid it again. Physical tapping
+of the floating toggle remains a human acceptance check.
 
 Stopping the kiosk does not stop Home Assistant, XFCE, touch, or SSH. To prevent
 an intentional start during maintenance, create

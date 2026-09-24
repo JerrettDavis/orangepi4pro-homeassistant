@@ -1,0 +1,16 @@
+[Unit]
+Description=Orange Pi Home Assistant on-screen keyboard
+After=graphical-session.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=%h/.Xauthority
+ExecCondition=/bin/sh -c 'test ! -e "$HOME/.config/opiha/keyboard.disabled"'
+ExecStart=/opt/orangepi-homeassistant/current/scripts/keyboard-session.sh
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

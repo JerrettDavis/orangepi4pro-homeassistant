@@ -24,6 +24,7 @@ def test_layout_uses_dedicated_public_private_and_generated_roots(tmp_path):
     assert layout.config == tmp_path / "etc/orangepi-homeassistant/appliance.json"
     assert layout.unit == tmp_path / "etc/systemd/system/orangepi-homeassistant.service"
     assert layout.kiosk_unit == tmp_path / "etc/systemd/user/orangepi-homeassistant-kiosk.service"
+    assert layout.keyboard_unit == tmp_path / "etc/systemd/user/orangepi-homeassistant-keyboard.service"
 
 
 def test_plan_is_read_only_and_lists_first_install_changes(tmp_path):
@@ -121,11 +122,28 @@ def test_installed_kiosk_user_unit_reuses_existing_xfce_session(tmp_path):
     assert "DISPLAY=:0" in text
     assert "XAUTHORITY=%h/.Xauthority" in text
     assert "Environment=SNAP_REEXEC=0" in text
+    assert "Wants=orangepi-homeassistant-keyboard.service" in text
+    assert "After=orangepi-homeassistant-keyboard.service" in text
     assert "ExecStart=/opt/orangepi-homeassistant/current/scripts/kiosk-session.sh" in text
     assert "NoNewPrivileges" not in text
     assert "WantedBy=" not in text
     assert "openbox" not in text.lower()
     assert not list((root / "etc/systemd/user").glob("*.wants/orangepi-homeassistant-kiosk.service"))
+
+
+def test_installed_keyboard_user_unit_reuses_existing_xfce_session(tmp_path):
+    root = linux_root(tmp_path)
+    host.install(root=root, release="0.1.0a1")
+    layout = host.Layout.for_root(root)
+
+    assert layout.keyboard_unit.is_file()
+    text = layout.keyboard_unit.read_text()
+    assert "DISPLAY=:0" in text
+    assert "XAUTHORITY=%h/.Xauthority" in text
+    assert "ExecStart=/opt/orangepi-homeassistant/current/scripts/keyboard-session.sh" in text
+    assert "Restart=always" in text
+    assert "WantedBy=default.target" in text
+    assert not list((root / "etc/systemd/user").glob("*.wants/orangepi-homeassistant-keyboard.service"))
 
 
 def test_upgrade_removes_installer_owned_legacy_system_kiosk_unit(tmp_path):
