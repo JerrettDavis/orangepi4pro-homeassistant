@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.14
+
+- Align the release and hardware guides with the deployed two-minute X11 DPMS
+  behavior and cover non-fatal failures of each display-power hint.
+
 ## 0.1.0-alpha.13
 
 - Let the X11 touchscreen kiosk display turn off after 120 seconds of inactivity
