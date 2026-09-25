@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.13
+
+- Let the X11 touchscreen kiosk display turn off after 120 seconds of inactivity
+  through DPMS while leaving touch wake as a physical acceptance check.
+
 ## 0.1.0-alpha.12
 
 - Enable Firefox's XInput2 path so one-finger drags on the X11 touchscreen

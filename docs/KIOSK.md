@@ -13,6 +13,13 @@ The persistent Firefox profile is private runtime state below the user's
 `snap/firefox/common` directory and must be included in the encrypted recovery
 bundle later.
 
+At kiosk launch, X11 screen-saver blanking is disabled and DPMS is enabled with
+standby and suspend disabled. DPMS turns the display off after 120 seconds of
+inactivity by default; a touch on the physical touchscreen should wake it.
+Confirm both blanking and touch wake on the actual panel before accepting this
+behavior. An X11 configuration or another session component may override the
+timeout after launch.
+
 ## On-screen keyboard
 
 `orangepi-homeassistant-keyboard.service` runs the host's existing Onboard
