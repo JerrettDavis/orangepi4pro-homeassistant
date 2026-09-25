@@ -41,14 +41,22 @@ def test_kiosk_sets_two_minute_dpms_off_timeout(tmp_path):
     ]
 
 
+@pytest.mark.parametrize(
+    ("failing_command", "diagnostic"),
+    [
+        ("s off", "screen-saver disable hint"),
+        ("+dpms", "DPMS enable hint"),
+        ("dpms 0 0 120", "DPMS timeout hint"),
+    ],
+)
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash is required")
-def test_display_power_hint_failure_does_not_block_firefox(tmp_path):
+def test_display_power_hint_failure_does_not_block_firefox(tmp_path, failing_command, diagnostic):
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()
     calls = tmp_path / "firefox-calls"
 
     commands = {
-        "xset": "#!/bin/sh\n[ \"$*\" = \"s off\" ] && exit 1\nexit 0\n",
+        "xset": f"#!/bin/sh\n[ \"$*\" = \"{failing_command}\" ] && exit 1\nexit 0\n",
         "curl": "#!/bin/sh\nexit 0\n",
         "firefox": f"#!/bin/sh\nprintf '%s\\n' \"$*\" > '{calls}'\n",
     }
@@ -70,6 +78,7 @@ def test_display_power_hint_failure_does_not_block_firefox(tmp_path):
 
     assert result.returncode == 0
     assert "--kiosk http://127.0.0.1:8123/" in calls.read_text()
+    assert diagnostic in result.stderr
 
 
 @pytest.mark.skipif(os.name != "posix", reason="POSIX executable semantics are required")
