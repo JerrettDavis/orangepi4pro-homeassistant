@@ -155,3 +155,21 @@ def test_docker_pull_rejects_wrong_arch(arch):
         if args[:2]==['image','inspect']:return 0,json.dumps([{'Architecture':arch,'Os':'linux','RepoDigests':['nodered/node-red@sha256:'+'a'*64],'Id':'sha256:'+'b'*64}])
         return 0,''
     with pytest.raises(AppError):Docker('x'*32,runner=runner).pull('nodered/node-red:5.0.7','nodered/node-red','arm64')
+
+
+def test_port_check_tolerates_a_just_removed_apps_lingering_listener(manager):
+    import socket, threading, time
+    holder = socket.socket()
+    for port in range(25200, 25300):
+        try:
+            holder.bind(('127.0.0.1', port))
+            break
+        except OSError:
+            continue
+    else:
+        pytest.skip('no free test port')
+    manager.check_port = True
+    threading.Timer(1.0, holder.close).start()
+    started = time.monotonic()
+    plan = manager.plan('nodered', 'install', {'port': port})
+    assert plan['action'] == 'install' and time.monotonic() - started >= 0.5

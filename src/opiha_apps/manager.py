@@ -215,11 +215,16 @@ class Manager:
                     own_ports = (existing or {}).get("HostConfig", {}).get("PortBindings", {}) or {}
                     if existing and any(str(port) == row.get("HostPort") for rows in own_ports.values() for row in rows or []):
                         continue
-                    with socket.socket() as s:
-                        try:
-                            s.bind(("127.0.0.1", port))
-                        except OSError as exc:
-                            raise AppError("Selected loopback port is already in use") from exc
+                    # Docker's userland proxy can hold a just-removed app's port for a moment.
+                    for attempt in range(10):
+                        with socket.socket() as s:
+                            try:
+                                s.bind(("127.0.0.1", port))
+                                break
+                            except OSError as exc:
+                                if attempt == 9:
+                                    raise AppError("Selected loopback port is already in use") from exc
+                        time.sleep(0.5)
         return {"container_id": existing["Id"] if existing else None,
                 "running": bool(existing and existing.get("State", {}).get("Running")),
                 "revision": record.get("revision") if record else None}
