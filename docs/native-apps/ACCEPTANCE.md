@@ -13,7 +13,7 @@ python3 -m compileall -q src homeassistant scripts
 node --check homeassistant/custom_components/opiha_apps/panel.js
 ```
 
-Install `age`/`age-keygen` to run the real encryption roundtrip instead of skipping it. Tests use synthetic credentials. Keep actual secrets outside the checkout. The optional browser test requires Playwright and Chromium; `scripts/browser-test.py --help` describes its in-memory, synthetic scope.
+Install `age`/`age-keygen` to run the real encryption roundtrip instead of skipping it. Tests use synthetic credentials. Keep actual secrets outside the checkout. The optional browser test requires Playwright and Chromium; `scripts/native-apps/browser-test.py --help` describes its in-memory, synthetic scope.
 
 ## Actual Docker smoke test
 
@@ -21,10 +21,10 @@ Use an empty test machine with a native Linux Docker Engine. This command is **n
 
 ```bash
 # Describe the operation without changing Docker.
-python3 scripts/docker-smoke.py
+python3 scripts/native-apps/docker-smoke.py
 
 # Root/Docker privileges and network access are required for the real test.
-sudo python3 scripts/docker-smoke.py --app nodered --apply --confirm-network-access
+sudo python3 scripts/native-apps/docker-smoke.py --app nodered --apply --confirm-network-access
 ```
 
 The command pulls the explicit native image, prepares private state, creates and starts the selected blank app, probes its local HTTP endpoint, then stops/removes only its owned container. State, downloaded images and the network are retained for diagnosis. A local HTTP response is not proof that the application UI or every integration works. Run ESPHome and go2rtc separately after Node-RED.

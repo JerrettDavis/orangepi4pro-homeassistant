@@ -1,8 +1,9 @@
 """Reviewed native-container adapters. This is NOT a Supervisor manifest translator.
 
 Repositories and host capabilities are code-reviewed here, never supplied by a browser.
-A release tag is pulled for the requested native architecture and then locked to its
-content digest before container creation. See docs/native-apps/COMPATIBILITY.md.
+The reviewed release is pinned to its multi-arch index digest (ARM64 and AMD64 verified); an
+explicitly selected other tag is pulled for the native architecture and then locked to its
+resolved content digest before container creation. See docs/native-apps/COMPATIBILITY.md.
 """
 from __future__ import annotations
 import copy
@@ -13,7 +14,7 @@ PREFIX = "/api/opiha_apps/ingress/"
 CATALOG = {
     "nodered": {
         "name": "Node-RED", "summary": "Flow-based automation, with its editor inside Home Assistant.",
-        "repository": "nodered/node-red", "version": "5.0.7", "memory_mib": 768,
+        "repository": "nodered/node-red", "version": "5.0.7", "digest": "sha256:a649dd711d55490151a2c39a8e48ad0c44325488fbc0e66315f2d2e19e5e1ace", "memory_mib": 768,
         "container_port": 1880, "port": 21880, "uid": 1000, "mount": "/data",
         "icon": "mdi:source-branch", "category": "Automation", "ingress": True,
         "source": "https://nodered.org/docs/getting-started/docker",
@@ -21,7 +22,7 @@ CATALOG = {
     },
     "esphome": {
         "name": "ESPHome", "summary": "Build, edit and wirelessly deploy ESP firmware.",
-        "repository": "ghcr.io/esphome/esphome", "version": "2026.9.0", "memory_mib": 1536,
+        "repository": "ghcr.io/esphome/esphome", "version": "2026.9.0", "digest": "sha256:f6509fcf917a732fd80058567b237d5b9286b9dc6c8dde1b655fbb69ebd600ad", "memory_mib": 1536,
         "container_port": 6052, "port": 26052, "uid": 0, "mount": "/config",
         "icon": "mdi:chip", "category": "Devices", "ingress": True,
         "source": "https://esphome.io/guides/getting_started_command_line/",
@@ -29,7 +30,7 @@ CATALOG = {
     },
     "go2rtc": {
         "name": "go2rtc", "summary": "On-demand camera restreaming without requiring a working local CSI driver.",
-        "repository": "alexxit/go2rtc", "version": "1.9.14", "memory_mib": 256,
+        "repository": "alexxit/go2rtc", "version": "1.9.14", "digest": "sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae", "memory_mib": 256,
         "container_port": 1984, "port": 21984, "uid": 0, "mount": "/config",
         "icon": "mdi:cctv", "category": "Camera", "ingress": True,
         "source": "https://github.com/AlexxIT/go2rtc",
@@ -37,7 +38,7 @@ CATALOG = {
     },
     "mosquitto": {
         "name": "Mosquitto", "summary": "Authenticated MQTT broker for HA and native apps.",
-        "repository": "eclipse-mosquitto", "version": "2.0.22", "memory_mib": 128,
+        "repository": "eclipse-mosquitto", "version": "2.0.22", "digest": "sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21", "memory_mib": 128,
         "container_port": 1883, "port": 21883, "uid": 1883, "mount": "/mosquitto",
         "icon": "mdi:hub-outline", "category": "Infrastructure", "ingress": False,
         "source": "https://hub.docker.com/_/eclipse-mosquitto",
@@ -45,7 +46,7 @@ CATALOG = {
     },
     "zwave": {
         "name": "Z-Wave JS UI", "summary": "Native USB radio ownership and the Z-Wave JS server.",
-        "repository": "zwavejs/zwave-js-ui", "version": "11.24.1", "memory_mib": 768,
+        "repository": "zwavejs/zwave-js-ui", "version": "11.24.1", "digest": "sha256:00abebce88205b47c3b611e983bbc692753170e3603c691bc5765f82265cafa4", "memory_mib": 768,
         "container_port": 8091, "port": 28091, "uid": 1000, "mount": "/usr/src/app/store",
         "icon": "mdi:z-wave", "category": "Devices", "ingress": False, "radio": True,
         "source": "https://zwave-js.github.io/zwave-js-ui/#/getting-started/docker",
@@ -97,4 +98,7 @@ def public_catalog() -> list[dict]:
 
 
 def image(slug: str, opts: dict) -> str:
-    return entry(slug)["repository"] + ":" + options(slug, opts)["version"]
+    """The reviewed release is pulled by its multi-arch index digest; other tags remain tag-only until locked."""
+    app, version = entry(slug), options(slug, opts)["version"]
+    reference = app["repository"] + ":" + version
+    return reference + "@" + app["digest"] if version == app["version"] else reference

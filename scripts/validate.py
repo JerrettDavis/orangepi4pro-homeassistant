@@ -155,13 +155,20 @@ def summarize(checks: list[dict]) -> dict:
 def _compile_sources() -> dict:
     try:
         count = 0
-        for root_name in ("src", "scripts", "image"):
+        for root_name in ("src", "scripts", "image", "homeassistant"):
             for path in (ROOT / root_name).rglob("*.py"):
                 compile(path.read_text(encoding="utf-8"), str(path), "exec")
                 count += 1
         return {"name": "python-compilation", "status": "pass", "files": count}
     except (OSError, SyntaxError) as exc:
         return {"name": "python-compilation", "status": "fail", "reason": str(exc)}
+
+
+def _javascript_check() -> dict:
+    panel = ROOT / "homeassistant/custom_components/opiha_apps/panel.js"
+    if not shutil.which("node"):
+        return {"name": "native-panel-javascript", "status": "skip", "reason": "node not installed"}
+    return run_checks([["node", "--check", str(panel)]])[0] | {"name": "native-panel-javascript"}
 
 
 def _package_check() -> dict:
@@ -215,6 +222,7 @@ def validation_checks(include_images: bool, docker_smoke: bool) -> list[dict]:
     ]
     commands.extend([["bash", "-n", str(path)] for path in _shell_files()])
     checks = run_checks(commands)
+    checks.append(_javascript_check())
     checks.append(_compile_sources())
     checks.append(_render_check())
     checks.append(_package_check())
@@ -232,6 +240,10 @@ def validation_checks(include_images: bool, docker_smoke: bool) -> list[dict]:
         checks.append({"name": "opencv", "status": "skip", "reason": "OpenCV not installed"})
     if include_images:
         images = json.loads((ROOT / "config/image-defaults.json").read_text())["images"]
+        sys.path.insert(0, str(ROOT / "src"))
+        from opiha_apps import catalog  # reviewed native app releases must also be ARM64-native
+
+        images = {**images, **{"app-" + slug: catalog.CATALOG[slug]["repository"] + ":" + catalog.CATALOG[slug]["version"] for slug in catalog.CATALOG}}
         image_results = validate_images(images)
         checks.extend(
             {

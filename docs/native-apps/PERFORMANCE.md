@@ -17,13 +17,13 @@ The manager service has its own 160 MiB soft and 256 MiB hard memory limits. It 
 Run the same private, read-only sample before installation, after an idle manager/panel installation, while opening app UIs, and during representative work:
 
 ```bash
-python3 scripts/benchmark.py --seconds 60 \
+python3 scripts/native-apps/benchmark.py --seconds 60 \
   --label before-native-apps --output /private/bench-before.json
 
-python3 scripts/benchmark.py --seconds 60 \
+python3 scripts/native-apps/benchmark.py --seconds 60 \
   --label idle-native-apps --output /private/bench-idle.json
 
-python3 scripts/benchmark.py --seconds 60 \
+python3 scripts/native-apps/benchmark.py --seconds 60 \
   --label esphome-build --output /private/bench-build.json
 ```
 

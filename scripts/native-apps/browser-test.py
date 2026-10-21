@@ -20,7 +20,7 @@ def main():
     except ImportError:
         parser.error('Install the optional browser dependencies: pip install -e ".[browser]"; playwright install chromium')
     from opiha_apps.catalog import public_catalog
-    html = (ROOT / 'examples/panel-demo.html').read_text()
+    html = (ROOT / 'examples/native-apps/panel-demo.html').read_text()
     script = re.search(r'<script type="module">(.*?)</script>', html, re.S).group(1)
     script = script.replace("import '/panel.js';", '')
     script = script.replace("const response=await fetch('/catalog.json');const apps=await response.json();",

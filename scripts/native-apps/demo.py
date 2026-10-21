@@ -13,7 +13,7 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self,*_):pass
     def do_GET(self):
         path=self.path.split('?',1)[0]
-        if path=='/':body=(ROOT/'examples/panel-demo.html').read_bytes();kind='text/html'
+        if path=='/':body=(ROOT/'examples/native-apps/panel-demo.html').read_bytes();kind='text/html'
         elif path=='/panel.js':body=(ROOT/'homeassistant/custom_components/opiha_apps/panel.js').read_bytes();kind='application/javascript'
         elif path=='/catalog.json':body=json.dumps(public_catalog()).encode();kind='application/json'
         elif path.startswith('/api/opiha_apps/ingress/'):
