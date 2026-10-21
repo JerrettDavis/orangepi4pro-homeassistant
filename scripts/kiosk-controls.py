@@ -111,12 +111,14 @@ class Strip(Gtk.Window):
         for b in self.actions:
             b.hide()
         self.resize(1, 1)
+        self.place()  # move in the same step as the shrink so the handle never flashes at the old edge
         GLib.idle_add(self.place)
 
     def expand(self):
         for b in self.actions:
             b.show()
         self.resize(1, 1)
+        self.place()
         GLib.idle_add(self.place)
         self.timer = GLib.timeout_add_seconds(8, self.auto_collapse)
 
