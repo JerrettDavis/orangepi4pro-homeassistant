@@ -14,7 +14,10 @@ Observed 2026-10-21 on the live appliance (HA 2026.9.3 Container, Docker 29.6, k
 | Node-RED | Installed and started from the panel; editor opened inside HA (HTTP + WebSocket); flow deployed; container removed and recreated (new container ID); flow persisted | real |
 | ESPHome | Installed and started; ESP-IDF toolchain downloaded; ESP32 firmware compiled with one ninja job | real (CLI; same manager) |
 | Encrypted restore rehearsal | age + Ed25519 backup/restore of disposable data; content identical; tampered archive rejected with nothing staged | real age/openssl |
-| Not exercised | Z-Wave, camera/go2rtc, Mosquitto start; physical touch on the kiosk panel; non-admin HA user through the production panel; image build/flash | not tested |
+| Mosquitto | Installed, started, loopback-only listener, anonymous MQTT CONNECT refused (not authorised); stopped afterwards | real |
+| Kiosk Firefox 1024x600 | Panel rendered correctly in the real kiosk browser (navigated with synthetic X key events); a synthetic pointer click did not open an app in the screenshot, so interaction there is unproven | real display, not touch |
+| HA regression | Entity registry 3675 -> 3687, none removed; the 12 additions are auto-discovered `system_monitor` disk/bridge sensors for the new backups mount and the apps Docker network plus one unrelated device tracker. No Lovelace storage files modified; HTTPS route, proxy and panel asset return 200 | real |
+| Not exercised | Z-Wave and camera/go2rtc; physical touch on the kiosk; non-admin user through the production panel (covered only on the disposable real HA); image build/flash | not tested |
 
 ## Defects found on the device and fixed
 
