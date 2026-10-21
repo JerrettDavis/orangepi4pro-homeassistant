@@ -18,12 +18,12 @@ from opiha import kiosk_controls  # noqa: E402
 
 CSS = b"""
 window { background: #111111; border: 1px solid #3a3f45; border-radius: 10px; }
-button { min-width: 92px; min-height: 56px; font-size: 15px; color: #e1e1e1;
+button { min-width: 92px; min-height: 56px; padding: 0 8px; font-size: 15px; color: #e1e1e1;
          background: #262a2e; background-image: none; border: 1px solid #3a3f45; border-radius: 8px;
          box-shadow: none; text-shadow: none; }
 button:hover { background: #2e3136; }
 button:active { background: #03a9f4; color: #ffffff; border-color: #03a9f4; }
-button.handle { min-width: 22px; min-height: 48px; padding: 0 4px; font-size: 20px; color: #03a9f4; }
+button.handle { min-width: 22px; padding: 0 4px; font-size: 20px; color: #03a9f4; }
 """
 
 
@@ -50,7 +50,7 @@ class Strip(Gtk.Window):
         self.pos = kiosk_controls.load_position()
         self.box.pack_start(self.handle, False, False, 0)
         self.actions = []
-        for label, action in (("Reload", "reload"), ("Home", "home"), ("Restart\nbrowser", "restart")):
+        for label, action in (("Reload", "reload"), ("Home", "home"), ("Restart", "restart")):
             button = Gtk.Button(label=label)
             button.connect("clicked", self.on_action, action)
             self.actions.append(button)
