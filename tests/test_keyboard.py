@@ -37,6 +37,7 @@ def test_keyboard_session_enables_focus_show_and_starts_hidden(tmp_path):
     env.update(
         GSETTINGS_COMMAND=bash_path(gsettings),
         ONBOARD_COMMAND=bash_path(onboard),
+        ONBOARD_THEME_DIR=bash_path(tmp_path / "themes"),
     )
     result = subprocess.run(
         ["bash", "scripts/keyboard-session.sh"],
@@ -60,6 +61,10 @@ def test_keyboard_session_enables_focus_show_and_starts_hidden(tmp_path):
     assert "gsettings set org.onboard.window.landscape y 395" in recorded
     assert "gsettings set org.onboard.window.landscape width 1024" in recorded
     assert "onboard --not-show-in=" in recorded
+    assert (tmp_path / "themes" / "OrangePiHA.theme").is_file()
+    assert (tmp_path / "themes" / "OrangePiHA.colors").is_file()
+    assert f"gsettings set org.onboard theme {bash_path(tmp_path / 'themes')}/OrangePiHA.theme" in recorded
+    assert "gsettings set org.onboard.window background-transparency 0.0" in recorded
 
 
 @pytest.mark.skipif(os.name != "posix", reason="POSIX executable semantics are required")

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!-- Dark on-screen keyboard colours matched to the Home Assistant dark theme. -->
+<color_scheme name="OrangePiHA" format="2.1">
+    <window type="key-popup">
+        <color element="border" rgb="#03a9f4" opacity="1.0"/>
+    </window>
+
+    <layer> <color element="background" rgb="#111111" opacity="1.0"/> </layer>
+    <layer> <color element="background" rgb="#111111" opacity="1.0"/> </layer>
+    <layer> <color element="background" rgb="#111111" opacity="1.0"/> </layer>
+
+    <key_group>
+        <color element="fill"   rgb="#03a9f4" opacity="1.0" pressed="true"/>
+        <color element="fill"   rgb="#0288d1" opacity="1.0" active="true"/>
+        <color element="fill"   rgb="#ff9800" opacity="1.0" locked="true"/>
+        <color element="fill"   rgb="#2e3136" opacity="1.0" prelight="true"/>
+        <color element="fill"   rgb="#262a2e" opacity="1.0"/>
+
+        <color element="stroke" rgb="#3a3f45" opacity="1.0"/>
+
+        <color element="label"  rgb="#ffffff" opacity="1.0" pressed="true"/>
+        <color element="label"  rgb="#ffffff" opacity="1.0" active="true"/>
+        <color element="label"  rgb="#000000" opacity="1.0" locked="true"/>
+        <color element="label"  rgb="#e1e1e1" opacity="1.0"/>
+
+        <color element="dwell-progress" rgb="#03a9f4" opacity="1.0"/>
+
+        <key_group>
+            <color element="fill"  rgb="#1c1e21"/>
+            RCTL, LCTL, RALT, LALT, LWIN, RWIN, MENU, CAPS,
+            LFSH, RTSH, NMLK, TAB, ESC, BKSP, DELE, INS,
+            LEFT, RGHT, UP, DOWN, HOME, END, PGUP, PGDN,
+            inputline
+        </key_group>
+        <key_group>
+            <color element="fill"  rgb="#0288d1"/>
+            <color element="label" rgb="#ffffff"/>
+            RTRN, KPEN
+        </key_group>
+        <key_group>
+            <color element="fill"  rgb="#1c1e21"/>
+            <color element="label" rgb="#03a9f4"/>
+            m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15,
+            settings
+        </key_group>
+        <key_group>
+            <color element="fill"  rgb="#262a2e"/>
+            <color element="label" rgb="#ff9800"/>
+            correctionsbg,
+            correction
+        </key_group>
+    </key_group>
+</color_scheme>

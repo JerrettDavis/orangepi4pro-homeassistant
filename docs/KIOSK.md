@@ -63,6 +63,14 @@ sets `SNAP_REEXEC=0` so Firefox uses Ubuntu's capability-bearing distro
 This is a host-specific compatibility setting, not a relaxation of Firefox's
 Snap confinement.
 
+## On-screen keyboard theme
+
+The keyboard uses the repository's `OrangePiHA` Onboard theme (`config/onboard/`), a dark flat style that
+matches Home Assistant's dark mode. The keyboard session script copies it to
+`~/.local/share/onboard/themes` and selects it on each start. To tweak colours edit
+`OrangePiHA.colors`; to fall back to stock Onboard run
+`gsettings set org.onboard theme ''`.
+
 ## Touch controls (reload, home, restart)
 
 The full-screen browser has no address bar, reload button or update control.

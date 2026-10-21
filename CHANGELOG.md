@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-alpha.4
+
+- On-screen keyboard: new `OrangePiHA` Onboard theme (dark, flat rounded keys, Ubuntu font, Home Assistant
+  blue accent, orange for locked modifiers) in `config/onboard/`. `keyboard-session.sh` installs it for the
+  session user and selects it, and sets background transparency to 0 so the page no longer shows through.
+
 ## 0.2.0-alpha.3
 
 - Kiosk touch strip: narrower minimized handle, and the handle can be dragged to reposition the strip
