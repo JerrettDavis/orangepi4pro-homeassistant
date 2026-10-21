@@ -87,9 +87,9 @@ without stopping HA; starting it created a new Firefox process and HA remained
 healthy. A captured X11 screenshot provides visual evidence without containing
 credentials or household state.
 
-Physical touch interaction has not yet been performed by a human. The service
-also remains deliberately disabled at boot until that acceptance tap is
-complete; manual start and crash recovery are validated.
+Physical touch interaction was performed by the operator on the Orange Pi on
+2026-10-21. The services remain deliberately disabled at boot until the operator
+chooses to enable them; manual start and crash recovery are validated.
 
 Onboard 1.4.1 was validated on the live Orange Pi against Firefox: a real
 AT-SPI focus transition to the Home Assistant username field displayed the

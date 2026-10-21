@@ -11,7 +11,7 @@ unit test.
 | Persistent config survives recreation | Pass | Container down/recreate/start retained the bind-mounted config |
 | Local kiosk renders HA | Pass | 1024x600 X11 screenshot shows HA onboarding/restore UI |
 | Kiosk stop/start is independent | Pass | Firefox PID ended/restarted while HA stayed healthy |
-| Physical touch input in kiosk | Pending | Human acceptance tap required |
+| Physical touch input in kiosk | Pass | Operator tested the kiosk by hand on the Orange Pi (2026-10-21); controls strip not yet installed as a unit |
 | Encrypted appliance backup verify | Pass | Signed age bundle created and verified on-device |
 | Applied native HA restore | Pass | Protected HA-only backup restored through Core onboarding; recorder DB passed SQLite quick check |
 | Production HA native backup staged | Pass | Fresh HA-only backup with database is root-only on the target; source and target SHA-256 matched |
