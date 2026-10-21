@@ -49,6 +49,13 @@ def clamp(x: int, y: int, width: int, height: int, screen_w: int, screen_h: int)
     return max(0, min(int(x), max(0, screen_w - width))), max(0, min(int(y), max(0, screen_h - height)))
 
 
+def expanded_x(x: int, collapsed_w: int, width: int, screen_w: int) -> int:
+    """Left edge for the strip: grow rightwards from the handle, or leftwards when it sits in the right half."""
+    if x + collapsed_w / 2 > screen_w / 2:
+        return int(x) + collapsed_w - width
+    return int(x)
+
+
 def load_position(path: Path | None = None) -> tuple[int, int] | None:
     try:
         data = json.loads((path or position_file()).read_text())

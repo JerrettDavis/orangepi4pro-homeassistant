@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0-alpha.6
+
+- Kiosk touch strip is position aware: it grows rightwards from the handle in the left half of the screen and
+  leftwards in the right half, so the handle no longer jumps when it is dragged near an edge.
+
 ## 0.2.0-alpha.5
 
 - Kiosk touch strip restyled to match the dark Home Assistant theme: `#111111` tile, `#262a2e` keys with

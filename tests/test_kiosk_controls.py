@@ -51,3 +51,8 @@ def test_position_round_trip_and_bad_files(tmp_path):
     f.write_text("not json")
     assert kiosk_controls.load_position(f) is None
     kiosk_controls.save_position(1, 2, tmp_path / "pos.json" / "x")  # unwritable: must not raise
+
+
+def test_strip_expands_away_from_the_nearer_edge():
+    assert kiosk_controls.expanded_x(100, 30, 400, 1024) == 100  # left half: grow right
+    assert kiosk_controls.expanded_x(900, 30, 400, 1024) == 530  # right half: grow left, handle stays put
