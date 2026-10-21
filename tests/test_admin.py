@@ -67,3 +67,11 @@ def test_native_app_manager_commands_are_fixed_and_cannot_touch_ha_or_apps():
     for rejected in ("apps-install", "apps", "apps-start nodered"):
         with pytest.raises(ApplianceError):
             admin.dispatch(rejected, runner=runner)
+
+
+def test_kiosk_controls_commands_are_fixed():
+    calls = []
+    runner = lambda argv: calls.append(argv) or subprocess.CompletedProcess(argv, 0)
+    for command in ("controls-start", "controls-stop", "controls-restart", "controls-status"):
+        admin.dispatch(command, runner=runner)
+    assert all("orangepi-homeassistant-kiosk-controls.service" in call for call in calls)

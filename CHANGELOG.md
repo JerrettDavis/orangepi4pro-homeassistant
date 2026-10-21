@@ -11,6 +11,7 @@
 - Add the native Docker app manager (`opiha-apps`, also `opiha apps`) and the admin-only
   `opiha_apps` Home Assistant panel/ingress integration for a reviewed catalog:
   Node-RED, ESPHome, Mosquitto, Z-Wave JS UI and go2rtc, pinned by multi-arch index digest.
+- Add kiosk touch controls (Reload, Home, Restart browser) with `controls-*` admin commands.
 - Add fixed `apps-*` restricted-admin commands, image overlay/audit coverage and CI checks.
 - Z-Wave and camera apps remain inactive pending hardware verification.
 

@@ -12,6 +12,7 @@ WORK = "/var/lib/orangepi-homeassistant"
 UNIT = "orangepi-homeassistant.service"
 KIOSK_UNIT = "orangepi-homeassistant-kiosk.service"
 KEYBOARD_UNIT = "orangepi-homeassistant-keyboard.service"
+CONTROLS_UNIT = "orangepi-homeassistant-kiosk-controls.service"
 APPS_UNIT = "orangepi-apps.service"
 APPS_CLI = "/opt/orangepi-apps/current/bin/opiha-apps"
 APPS_CONFIG = "/etc/orangepi-apps/config.json"
@@ -46,6 +47,10 @@ COMMANDS = {
         "/bin/journalctl", f"_SYSTEMD_USER_UNIT={KIOSK_UNIT}",
         "--since", "-30 minutes", "--no-pager", "-n", "300",
     ],
+    "controls-start": KIOSK_SYSTEMCTL + ["start", CONTROLS_UNIT],
+    "controls-stop": KIOSK_SYSTEMCTL + ["stop", CONTROLS_UNIT],
+    "controls-restart": KIOSK_SYSTEMCTL + ["restart", CONTROLS_UNIT],
+    "controls-status": KIOSK_SYSTEMCTL + ["status", CONTROLS_UNIT, "--no-pager"],
     "keyboard-start": KIOSK_SYSTEMCTL + ["start", KEYBOARD_UNIT],
     "keyboard-stop": KIOSK_SYSTEMCTL + ["stop", KEYBOARD_UNIT],
     "keyboard-restart": KIOSK_SYSTEMCTL + ["restart", KEYBOARD_UNIT],

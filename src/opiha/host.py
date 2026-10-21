@@ -28,6 +28,7 @@ class Layout:
     unit: Path
     kiosk_unit: Path
     keyboard_unit: Path
+    controls_unit: Path
     legacy_kiosk_unit: Path
     manifest: Path
 
@@ -44,6 +45,7 @@ class Layout:
             unit=root / "etc/systemd/system/orangepi-homeassistant.service",
             kiosk_unit=root / "etc/systemd/user/orangepi-homeassistant-kiosk.service",
             keyboard_unit=root / "etc/systemd/user/orangepi-homeassistant-keyboard.service",
+            controls_unit=root / "etc/systemd/user/orangepi-homeassistant-kiosk-controls.service",
             legacy_kiosk_unit=root / "etc/systemd/system/orangepi-homeassistant-kiosk@.service",
             manifest=root / "var/lib/orangepi-homeassistant/deployment.json",
         )
@@ -91,6 +93,7 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         layout.unit,
         layout.kiosk_unit,
         layout.keyboard_unit,
+        layout.controls_unit,
         layout.legacy_kiosk_unit,
     ):
         _reject_symlink_ancestors(path, layout.root)
@@ -99,6 +102,7 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         (layout.unit, "unit"),
         (layout.kiosk_unit, "kiosk unit"),
         (layout.keyboard_unit, "keyboard unit"),
+        (layout.controls_unit, "kiosk controls unit"),
         (layout.config, "configuration"),
     ):
         if path.exists() and _relative(layout, path) not in owned:
@@ -131,6 +135,8 @@ def plan(*, root: Path = Path("/"), release: str) -> dict:
         changes.append("install-disabled-kiosk-unit")
     if not layout.keyboard_unit.exists():
         changes.append("install-disabled-keyboard-unit")
+    if not layout.controls_unit.exists():
+        changes.append("install-disabled-kiosk-controls-unit")
     if layout.legacy_kiosk_unit.exists() and _relative(layout, layout.legacy_kiosk_unit) in owned:
         changes.append("remove-legacy-kiosk-unit")
     selected = Path("releases") / release
@@ -197,6 +203,10 @@ def _keyboard_unit_text() -> bytes:
     return (REPO / "systemd/orangepi-homeassistant-keyboard.service").read_bytes()
 
 
+def _controls_unit_text() -> bytes:
+    return (REPO / "systemd/orangepi-homeassistant-kiosk-controls.service").read_bytes()
+
+
 def install(*, root: Path = Path("/"), release: str) -> dict:
     proposed = plan(root=root, release=release)
     layout = Layout.for_root(root)
@@ -238,6 +248,7 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
     atomic_bytes(layout.unit, _unit_text(), 0o644)
     atomic_bytes(layout.kiosk_unit, _kiosk_unit_text(), 0o644)
     atomic_bytes(layout.keyboard_unit, _keyboard_unit_text(), 0o644)
+    atomic_bytes(layout.controls_unit, _controls_unit_text(), 0o644)
     if layout.legacy_kiosk_unit.exists() and _relative(layout, layout.legacy_kiosk_unit) in _owned_files(layout):
         layout.legacy_kiosk_unit.unlink()
 
@@ -253,6 +264,7 @@ def install(*, root: Path = Path("/"), release: str) -> dict:
         _relative(layout, layout.current),
         _relative(layout, layout.kiosk_unit),
         _relative(layout, layout.keyboard_unit),
+        _relative(layout, layout.controls_unit),
         _relative(layout, layout.unit),
     ]
     manifest = {

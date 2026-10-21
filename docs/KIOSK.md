@@ -56,6 +56,22 @@ sets `SNAP_REEXEC=0` so Firefox uses Ubuntu's capability-bearing distro
 This is a host-specific compatibility setting, not a relaxation of Firefox's
 Snap confinement.
 
+## Touch controls (reload, home, restart)
+
+The full-screen browser has no address bar, reload button or update control.
+`orangepi-homeassistant-kiosk-controls.service` (a user unit, installed disabled
+like the keyboard) shows a small always-on-top handle at the bottom centre of
+the screen. Tapping it reveals **Reload** (hard reload, which also picks up a
+new custom panel script), **Home** (back to the local HA URL) and **Restart
+browser** (restarts the kiosk unit, which also lets snapd apply a pending
+Firefox update). The strip never takes keyboard focus and collapses after eight
+seconds. It runs only fixed command vectors (`xdotool`, `systemctl --user`) and
+silences the snapd "update available" popup through XFCE's do-not-disturb so it
+cannot cover the page header. Disable it by creating
+`~/.config/opiha/kiosk-controls.disabled`. Control it with
+`opiha-admin controls-start|controls-stop|controls-restart|controls-status`.
+It needs `xdotool` and `python3-gi` (listed in `image/install-dependencies.sh`).
+
 ## Validation on the live Orange Pi
 
 The Firefox process remained active across multiple observations and rendered

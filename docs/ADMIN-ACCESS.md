@@ -29,6 +29,7 @@ Available commands:
 | `compose-ps` | List only the fixed `opiha` Compose project |
 | `journal` | Read the last 300 unit log lines from the last 30 minutes |
 | `apps-start`, `apps-stop`, `apps-restart`, `apps-status`, `apps-journal`, `apps-doctor` | Operate only the native app manager `orangepi-apps.service` (see [Native apps](native-apps/INSTALL.md)); app lifecycle itself is performed from the admin-only HA panel |
+| `controls-start`, `controls-stop`, `controls-restart`, `controls-status` | Operate only the kiosk touch-control strip |
 | `kiosk-start`, `kiosk-stop`, `kiosk-status` | Operate only the validated `orangepi` XFCE kiosk instance |
 | `keyboard-start`, `keyboard-stop`, `keyboard-restart`, `keyboard-status` | Operate only the validated `orangepi` Onboard instance |
 

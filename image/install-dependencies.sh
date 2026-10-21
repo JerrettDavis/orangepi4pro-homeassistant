@@ -9,7 +9,7 @@ case "$ID" in ubuntu|debian) ;; *) echo 'Only Ubuntu/Debian are supported' >&2; 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends python3 python3-opencv ca-certificates curl gnupg age openssl \
-  rsync ffmpeg v4l-utils openssh-server mosquitto-clients x11-xserver-utils lightdm openbox xserver-xorg
+  rsync ffmpeg v4l-utils openssh-server mosquitto-clients x11-xserver-utils xdotool python3-gi gir1.2-gtk-3.0 lightdm openbox xserver-xorg
 # Docker's official apt repository, not a curl | sh installer.
 install -m 0755 -d /etc/apt/keyrings
 curl --fail --silent --show-error --location "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc
