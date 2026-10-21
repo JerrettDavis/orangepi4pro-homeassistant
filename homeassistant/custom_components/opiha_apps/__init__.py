@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     websocket_api.async_register_command(hass, ws_request)
     await panel_custom.async_register_panel(hass, frontend_url_path="opiha-apps",
         webcomponent_name="opiha-apps-panel", sidebar_title="Orange Pi Apps", sidebar_icon="mdi:apps",
-        module_url="/api/opiha_apps/panel.js?v=0.2.0-alpha.2", require_admin=True)
+        module_url="/api/opiha_apps/panel.js?v=0.2.0-alpha.3", require_admin=True)
 
     async def stop(_event):
         await ingress.close()

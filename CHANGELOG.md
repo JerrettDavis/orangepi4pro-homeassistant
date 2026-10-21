@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-alpha.3
+
+- Kiosk touch strip: narrower minimized handle, and the handle can be dragged to reposition the strip
+  (a tap still expands it). The position is kept on screen and remembered in
+  `~/.config/opiha/kiosk-controls-position.json`; delete that file to return to bottom centre.
+
 ## 0.2.0-alpha.2
 
 - Forward Node-RED's `Node-RED-API-Version` and `Node-RED-Deployment-Type` request headers through the

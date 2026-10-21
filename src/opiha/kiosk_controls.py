@@ -1,7 +1,10 @@
 """Fixed touch actions for the full-screen kiosk browser, which has no address bar or reload button."""
 from __future__ import annotations
 
+import json
+import os
 import subprocess
+from pathlib import Path
 from typing import Callable
 
 HOME_URL = "http://127.0.0.1:8123/"
@@ -32,3 +35,32 @@ def run(action: str, runner: Callable = subprocess.run) -> bool:
         completed = runner(argv, check=False, timeout=15, capture_output=True)
         ok = ok and completed.returncode == 0
     return ok
+
+
+DRAG_THRESHOLD = 12  # pixels of travel before a touch on the handle is a drag rather than a tap
+
+
+def position_file() -> Path:
+    return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "opiha" / "kiosk-controls-position.json"
+
+
+def clamp(x: int, y: int, width: int, height: int, screen_w: int, screen_h: int) -> tuple[int, int]:
+    """Keep the whole strip on screen."""
+    return max(0, min(int(x), max(0, screen_w - width))), max(0, min(int(y), max(0, screen_h - height)))
+
+
+def load_position(path: Path | None = None) -> tuple[int, int] | None:
+    try:
+        data = json.loads((path or position_file()).read_text())
+        return int(data["x"]), int(data["y"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def save_position(x: int, y: int, path: Path | None = None) -> None:
+    target = path or position_file()
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps({"x": int(x), "y": int(y)}))
+    except OSError:
+        pass  # a position that cannot be remembered must never break the strip

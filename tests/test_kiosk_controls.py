@@ -35,3 +35,19 @@ def test_failure_is_reported_and_unknown_actions_rejected():
     assert kiosk_controls.run("reload", runner) is False
     with pytest.raises(ValueError):
         kiosk_controls.run("reboot", runner)
+
+
+def test_clamp_keeps_strip_on_screen():
+    assert kiosk_controls.clamp(-50, 9999, 300, 60, 1024, 600) == (0, 540)
+    assert kiosk_controls.clamp(900, 10, 300, 60, 1024, 600) == (724, 10)
+    assert kiosk_controls.clamp(5, 5, 2000, 700, 1024, 600) == (0, 0)
+
+
+def test_position_round_trip_and_bad_files(tmp_path):
+    f = tmp_path / "sub" / "pos.json"
+    assert kiosk_controls.load_position(f) is None
+    kiosk_controls.save_position(12, 34, f)
+    assert kiosk_controls.load_position(f) == (12, 34)
+    f.write_text("not json")
+    assert kiosk_controls.load_position(f) is None
+    kiosk_controls.save_position(1, 2, tmp_path / "pos.json" / "x")  # unwritable: must not raise

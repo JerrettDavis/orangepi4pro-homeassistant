@@ -68,7 +68,8 @@ Snap confinement.
 The full-screen browser has no address bar, reload button or update control.
 `orangepi-homeassistant-kiosk-controls.service` (a user unit, installed disabled
 like the keyboard) shows a small always-on-top handle at the bottom centre of
-the screen. Tapping it reveals **Reload** (hard reload, which also picks up a
+the screen. Drag the handle to move the strip anywhere on screen (the position is remembered in
+`~/.config/opiha/kiosk-controls-position.json`; delete it to return to bottom centre). Tapping it reveals **Reload** (hard reload, which also picks up a
 new custom panel script), **Home** (back to the local HA URL) and **Restart
 browser** (restarts the kiosk unit, which also lets snapd apply a pending
 Firefox update). The strip never takes keyboard focus and collapses after eight

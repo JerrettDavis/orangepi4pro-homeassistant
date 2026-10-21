@@ -20,7 +20,7 @@ CSS = b"""
 window { background: rgba(20,20,20,0.92); border-radius: 10px; }
 button { min-width: 92px; min-height: 56px; font-size: 15px; color: #f0f0f0;
          background: #2c2c2c; border: 1px solid #555; border-radius: 8px; }
-button.handle { min-width: 52px; min-height: 52px; font-size: 22px; }
+button.handle { min-width: 22px; min-height: 48px; padding: 0 4px; font-size: 20px; }
 """
 
 
@@ -38,7 +38,13 @@ class Strip(Gtk.Window):
         self.add(self.box)
         self.handle = Gtk.Button(label="⋮")
         self.handle.get_style_context().add_class("handle")
-        self.handle.connect("clicked", lambda *_: self.toggle())
+        # Tap toggles; dragging the handle moves the strip and the spot is remembered.
+        self.handle.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
+        self.handle.connect("button-press-event", self.on_press)
+        self.handle.connect("motion-notify-event", self.on_motion)
+        self.handle.connect("button-release-event", self.on_release)
+        self.drag = None
+        self.pos = kiosk_controls.load_position()
         self.box.pack_start(self.handle, False, False, 0)
         self.actions = []
         for label, action in (("Reload", "reload"), ("Home", "home"), ("Restart\nbrowser", "restart")):
@@ -51,11 +57,45 @@ class Strip(Gtk.Window):
         self.collapse()
 
     def place(self):
-        _, h = self.get_size()
+        w, h = self.get_size()
         screen = self.get_screen()
-        w, _ = self.get_size()
-        # Bottom centre: clear of the sidebar profile entry and the on-screen keyboard button.
-        self.move((screen.get_width() - w) // 2, screen.get_height() - h - 8)
+        if self.pos is None:
+            # Bottom centre: clear of the sidebar profile entry and the on-screen keyboard button.
+            self.pos = ((screen.get_width() - w) // 2, screen.get_height() - h - 8)
+        # Clamp only for display so a strip that expanded near an edge returns to its saved spot.
+        self.move(*kiosk_controls.clamp(*self.pos, w, h, screen.get_width(), screen.get_height()))
+
+    def on_press(self, _widget, event):
+        self.drag = {"rx": event.x_root, "ry": event.y_root, "start": self.pos or self.get_position(), "moved": False}
+        return True
+
+    def on_motion(self, _widget, event):
+        d = self.drag
+        if not d:
+            return False
+        dx, dy = event.x_root - d["rx"], event.y_root - d["ry"]
+        if not d["moved"] and max(abs(dx), abs(dy)) < kiosk_controls.DRAG_THRESHOLD:
+            return True
+        if not d["moved"]:
+            d["moved"] = True
+            if self.timer:
+                GLib.source_remove(self.timer)
+                self.timer = None
+        w, h = self.get_size()
+        screen = self.get_screen()
+        self.pos = kiosk_controls.clamp(d["start"][0] + dx, d["start"][1] + dy, w, h, screen.get_width(), screen.get_height())
+        self.place()
+        return True
+
+    def on_release(self, _widget, _event):
+        d, self.drag = self.drag, None
+        if d and d["moved"]:
+            kiosk_controls.save_position(*self.pos)
+            if self.actions[0].get_visible():
+                self.timer = GLib.timeout_add_seconds(8, self.auto_collapse)
+        elif d:
+            self.toggle()
+        return True
 
     def collapse(self):
         for b in self.actions:
