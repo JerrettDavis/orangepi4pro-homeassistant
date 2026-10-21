@@ -17,10 +17,13 @@ from gi.repository import GLib, Gdk, Gtk  # noqa: E402
 from opiha import kiosk_controls  # noqa: E402
 
 CSS = b"""
-window { background: rgba(20,20,20,0.92); border-radius: 10px; }
-button { min-width: 92px; min-height: 56px; font-size: 15px; color: #f0f0f0;
-         background: #2c2c2c; border: 1px solid #555; border-radius: 8px; }
-button.handle { min-width: 22px; min-height: 48px; padding: 0 4px; font-size: 20px; }
+window { background: #111111; border: 1px solid #3a3f45; border-radius: 10px; }
+button { min-width: 92px; min-height: 56px; font-size: 15px; color: #e1e1e1;
+         background: #262a2e; background-image: none; border: 1px solid #3a3f45; border-radius: 8px;
+         box-shadow: none; text-shadow: none; }
+button:hover { background: #2e3136; }
+button:active { background: #03a9f4; color: #ffffff; border-color: #03a9f4; }
+button.handle { min-width: 22px; min-height: 48px; padding: 0 4px; font-size: 20px; color: #03a9f4; }
 """
 
 

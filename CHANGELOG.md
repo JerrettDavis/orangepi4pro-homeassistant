@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0-alpha.5
+
+- Kiosk touch strip restyled to match the dark Home Assistant theme: `#111111` tile, `#262a2e` keys with
+  `#3a3f45` borders, blue accent handle and pressed state (same palette as the on-screen keyboard).
+
 ## 0.2.0-alpha.4
 
 - On-screen keyboard: new `OrangePiHA` Onboard theme (dark, flat rounded keys, Ubuntu font, Home Assistant
