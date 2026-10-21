@@ -71,6 +71,10 @@ For a real migration, **set HA to your source instance's exact version before im
 
 **Not claimed:** A733 NPU support, vendor CSI/ISP driver bring-up, hardware video acceleration, Supervisor/add-on conversion, unattended initial OAuth enrollment, raw encrypted native-HA-backup extraction, production reliability, or boot-tested image artifacts. These are explicit boundaries, not hidden TODO implementations.
 
+## Native Apps panel (Node-RED, ESPHome, Mosquitto, Z-Wave JS UI, go2rtc)
+
+An optional, administrator-only **Orange Pi Apps** panel runs inside Home Assistant Container. A small loopback-only root service (`orangepi-apps.service`) manages a reviewed catalog of digest-pinned native ARM64 Docker apps; Home Assistant never receives the Docker socket, and the browser never receives the manager credential. It is an HAOS-like custom panel, not the Supervisor or the official add-on store. Z-Wave and camera apps stay inactive until their hardware is verified. See [docs/native-apps](docs/native-apps/INSTALL.md) and `bin/opiha apps --help`.
+
 ## The two restore paths
 
 **First migration:** use Home Assistant's supported onboarding backup upload, or import a complete, consistently stopped `/config` copy. Native HA backups and this repo's appliance bundles are different formats. An HAOS add-on backup does not become a Compose service automatically.

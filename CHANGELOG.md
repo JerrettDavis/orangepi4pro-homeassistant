@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-alpha.1
+
+- Add the native Docker app manager (`opiha-apps`, also `opiha apps`) and the admin-only
+  `opiha_apps` Home Assistant panel/ingress integration for a reviewed catalog:
+  Node-RED, ESPHome, Mosquitto, Z-Wave JS UI and go2rtc, pinned by multi-arch index digest.
+- Add fixed `apps-*` restricted-admin commands, image overlay/audit coverage and CI checks.
+- Z-Wave and camera apps remain inactive pending hardware verification.
+
 ## 0.1.0-alpha.12
 
 - Enable Firefox's XInput2 path so one-finger drags on the X11 touchscreen
