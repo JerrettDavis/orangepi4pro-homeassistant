@@ -17,7 +17,7 @@ Observed 2026-10-21 on the live appliance (HA 2026.9.3 Container, Docker 29.6, k
 | Mosquitto | Installed, started, loopback-only listener, anonymous MQTT CONNECT refused (not authorised); stopped afterwards | real |
 | Kiosk Firefox 1024x600 | Panel rendered correctly in the real kiosk browser (navigated with synthetic X key events); a synthetic pointer click did not open an app in the screenshot, so interaction there is unproven | real display, not touch |
 | HA regression | Entity registry 3675 -> 3687, none removed; the 12 additions are auto-discovered `system_monitor` disk/bridge sensors for the new backups mount and the apps Docker network plus one unrelated device tracker. No Lovelace storage files modified; HTTPS route, proxy and panel asset return 200 | real |
-| Kiosk touch controls | Reload/Home/Restart strip rendered in the real kiosk; run live from a temporary location (not yet installed as a unit) | real display |
+| Kiosk touch controls | Reload/Home/Restart strip rendered in the real kiosk; installed as the disabled-at-boot `orangepi-homeassistant-kiosk-controls` user unit with release 0.2.0-alpha.2 and started via `opiha-admin controls-start` (2026-10-21) | real display |
 | Native panel on kiosk | The operator reported Orange Pi Apps working on the kiosk (Node-RED editor open on screen) | operator observation |
 | Not exercised | Z-Wave and camera/go2rtc; physical touch on the kiosk; non-admin user through the production panel (covered only on the disposable real HA); image build/flash | not tested |
 
