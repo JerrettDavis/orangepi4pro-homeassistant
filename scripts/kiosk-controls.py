@@ -18,7 +18,7 @@ from opiha import kiosk_controls  # noqa: E402
 
 CSS = b"""
 window { background: #111111; border: 1px solid #3a3f45; border-radius: 10px; }
-button { min-width: 92px; min-height: 56px; padding: 0 8px; font-size: 15px; color: #e1e1e1;
+button { min-width: 64px; min-height: 56px; padding: 0 6px; font-size: 11px; color: #e1e1e1;
          background: #262a2e; background-image: none; border: 1px solid #3a3f45; border-radius: 8px;
          box-shadow: none; text-shadow: none; }
 button:hover { background: #2e3136; }
@@ -50,8 +50,12 @@ class Strip(Gtk.Window):
         self.pos = kiosk_controls.load_position()
         self.box.pack_start(self.handle, False, False, 0)
         self.actions = []
-        for label, action in (("Reload", "reload"), ("Home", "home"), ("Restart", "restart")):
-            button = Gtk.Button(label=label)
+        for label, icon, action in (("Refresh", "view-refresh-symbolic", "reload"), ("Home", "go-home-symbolic", "home"), ("Restart", "system-reboot-symbolic", "restart")):
+            button = Gtk.Button()
+            tile = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            tile.pack_start(Gtk.Image.new_from_icon_name(icon, Gtk.IconSize.LARGE_TOOLBAR), False, False, 0)
+            tile.pack_start(Gtk.Label(label=label), False, False, 0)
+            button.add(tile)
             button.connect("clicked", self.on_action, action)
             self.actions.append(button)
             self.box.pack_start(button, False, False, 0)

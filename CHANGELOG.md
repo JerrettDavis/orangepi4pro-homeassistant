@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0-alpha.8
+
+- Touch strip buttons are now an icon over a small label (Refresh, Home, Restart) instead of large text, and
+  the strip no longer flickers open on the wrong side when it closes.
+
 ## 0.2.0-alpha.7
 
 - Touch strip: the handle stays put when the strip opens (it moves to the end the strip grows away from),
