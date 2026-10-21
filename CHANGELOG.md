@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-alpha.2
+
+- Forward Node-RED's `Node-RED-API-Version` and `Node-RED-Deployment-Type` request headers through the
+  reviewed ingress allowlist. Found on-device: without them the editor received the legacy `/flows`
+  format and failed with "Error adding flows".
+
 ## 0.2.0-alpha.1
 
 - Add the native Docker app manager (`opiha-apps`, also `opiha apps`) and the admin-only

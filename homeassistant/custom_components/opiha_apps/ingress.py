@@ -23,7 +23,9 @@ COOKIE_PREFIX = "opiha_auth_"
 BODY_LIMIT = 8 * 1024 * 1024
 RESPONSE_LIMIT = 128 * 1024 * 1024
 SESSION_SECONDS = 300
-REQUEST_HEADERS = {"accept", "accept-language", "content-type", "if-none-match", "if-modified-since", "cache-control", "range"}
+REQUEST_HEADERS = {"accept", "accept-language", "content-type", "if-none-match", "if-modified-since", "cache-control", "range",
+                   # Node-RED editor API negotiation; without it the editor receives the legacy /flows format.
+                   "node-red-api-version", "node-red-deployment-type"}
 RESPONSE_HEADERS = {"content-type", "content-disposition", "etag", "last-modified", "cache-control", "content-range", "accept-ranges"}
 
 

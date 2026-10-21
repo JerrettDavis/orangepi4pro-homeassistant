@@ -171,10 +171,11 @@ def test_real_ingress_cookie_http_and_websocket(component):
                 async with client.post(base+'/api/opiha_apps/session',json={'app':'nodered'},headers={'Authorization':'Bearer SYNTHETIC_HA_TOKEN'}) as res:
                     assert res.status==200
                     cookie=res.headers['Set-Cookie'];assert 'HttpOnly' in cookie and 'SameSite=Strict' in cookie
-                async with client.get(base+PREFIX+'nodered/status?x=%23value',headers={'Authorization':'Bearer DO_NOT_FORWARD'}) as res:
+                async with client.get(base+PREFIX+'nodered/status?x=%23value',headers={'Authorization':'Bearer DO_NOT_FORWARD','Node-RED-API-Version':'v2','X-Arbitrary':'drop-me'}) as res:
                     assert res.status==200
                     result=await res.json();assert result['path']==PREFIX+'nodered/status' and result['query']['x']=='#value'
                 assert 'Authorization' not in seen[-1][1] and 'opiha_auth' not in seen[-1][1].get('Cookie','')
+                assert seen[-1][1].get('Node-RED-API-Version')=='v2' and 'X-Arbitrary' not in seen[-1][1]
                 async with client.post(base+PREFIX+'nodered/action',json={},headers={'Origin':'https://evil.example'}) as res:assert res.status==403
                 async with client.ws_connect(base+PREFIX+'nodered/ws',origin=base) as ws:
                     await ws.send_str('hello');response=await ws.receive(timeout=3);assert response.data=='echo:hello'

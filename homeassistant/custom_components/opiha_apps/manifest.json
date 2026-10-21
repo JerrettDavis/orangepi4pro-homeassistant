@@ -1,7 +1,7 @@
 {
   "domain": "opiha_apps",
   "name": "Orange Pi Native Apps",
-  "version": "0.2.0-alpha.1",
+  "version": "0.2.0-alpha.2",
   "documentation": "https://github.com/JerrettDavis/orangepi4pro-homeassistant",
   "issue_tracker": "https://github.com/JerrettDavis/orangepi4pro-homeassistant/issues",
   "codeowners": ["@JerrettDavis"],

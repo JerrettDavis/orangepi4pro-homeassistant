@@ -24,7 +24,7 @@ Pass `--appliance-config /actual/path/appliance.json` to both installation comma
 The default installed paths are:
 
 ```text
-/opt/orangepi-apps/releases/0.2.0-alpha.1/  immutable installed source
+/opt/orangepi-apps/releases/0.2.0-alpha.2/  immutable installed source
 /opt/orangepi-apps/current                owned release selector
 /etc/orangepi-apps/config.json            manager settings
 /etc/orangepi-apps/token                  private manager credential
