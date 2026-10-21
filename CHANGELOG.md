@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.0-alpha.2
+
+- Forward Node-RED's `Node-RED-API-Version` and `Node-RED-Deployment-Type` request headers through the
+  reviewed ingress allowlist. Found on-device: without them the editor received the legacy `/flows`
+  format and failed with "Error adding flows".
+- Add kiosk touch controls (Reload, Home, Restart browser) with `controls-*` admin commands.
+- Includes the kiosk display-sleep releases 0.1.0-alpha.13 and 0.1.0-alpha.14 (below).
+
+## 0.2.0-alpha.1
+
+- Add the native Docker app manager (`opiha-apps`, also `opiha apps`) and the admin-only
+  `opiha_apps` Home Assistant panel/ingress integration for a reviewed catalog:
+  Node-RED, ESPHome, Mosquitto, Z-Wave JS UI and go2rtc, pinned by multi-arch index digest.
+- Add fixed `apps-*` restricted-admin commands, image overlay/audit coverage and CI checks.
+- Z-Wave and camera apps remain inactive pending hardware verification.
+
+## 0.1.0-alpha.14
+
+- Align the release and hardware guides with the deployed two-minute X11 DPMS
+  behavior and cover non-fatal failures of each display-power hint.
+
+## 0.1.0-alpha.13
+
+- Let the X11 touchscreen kiosk display turn off after 120 seconds of inactivity
+  through DPMS while leaving touch wake as a physical acceptance check.
+
 ## 0.1.0-alpha.12
 
 - Enable Firefox's XInput2 path so one-finger drags on the X11 touchscreen

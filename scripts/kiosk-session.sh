@@ -15,7 +15,8 @@ xset q >/dev/null 2>&1 || {
 }
 
 xset s off || echo "Display server did not accept screen-saver disable hint" >&2
-xset -dpms || echo "Display server did not accept DPMS disable hint" >&2
+xset +dpms || echo "Display server did not accept DPMS enable hint" >&2
+xset dpms 0 0 120 || echo "Display server did not accept DPMS timeout hint" >&2
 
 url=http://127.0.0.1:8123/
 for _ in $(seq 1 90); do

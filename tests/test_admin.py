@@ -53,3 +53,25 @@ def test_admin_runner_failure_is_reported_without_fallback_shell():
 
     with pytest.raises(ApplianceError, match="failed with exit code 5"):
         admin.dispatch("status", runner=failed)
+
+
+def test_native_app_manager_commands_are_fixed_and_cannot_touch_ha_or_apps():
+    calls = []
+    runner = lambda argv: calls.append(argv) or subprocess.CompletedProcess(argv, 0)
+    for command in ("apps-start", "apps-stop", "apps-restart", "apps-status", "apps-doctor", "apps-journal"):
+        admin.dispatch(command, runner=runner)
+    assert all(call[0] in {"/bin/systemctl", "/usr/bin/python3", "/bin/journalctl"} for call in calls)
+    assert calls[0] == ["/bin/systemctl", "start", "orangepi-apps.service"]
+    assert calls[4][-1] == "doctor" and calls[4][2] == "--config"
+    assert all("orangepi-homeassistant.service" not in call for call in calls)
+    for rejected in ("apps-install", "apps", "apps-start nodered"):
+        with pytest.raises(ApplianceError):
+            admin.dispatch(rejected, runner=runner)
+
+
+def test_kiosk_controls_commands_are_fixed():
+    calls = []
+    runner = lambda argv: calls.append(argv) or subprocess.CompletedProcess(argv, 0)
+    for command in ("controls-start", "controls-stop", "controls-restart", "controls-status"):
+        admin.dispatch(command, runner=runner)
+    assert all("orangepi-homeassistant-kiosk-controls.service" in call for call in calls)

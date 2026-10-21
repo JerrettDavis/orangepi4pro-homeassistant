@@ -8,16 +8,15 @@ The September 23 live inventory confirms the custom cyberdeck kernel,
 LightDM/Xorg/XFCE, and native QDtech HID touch are active. It also confirms
 there is currently no V4L2/media device and no GPU/NPU inference node. Treat
 the [live baseline](LIVE-HARDWARE-BASELINE.md) as the current hardware truth;
-the Openbox kiosk target below must be reconciled with the working XFCE session
-before installation.
+the kiosk below reuses the working XFCE session.
 
 ## Kiosk
 
-The current implementation targets LightDM + Openbox + X11 and an installed Chromium/Chromium-browser or Firefox. The kiosk runs as an unprivileged locked local user. It starts at the local read-only status page and forwards to a local HA dashboard when the HTTP service responds. The browser's sandbox is not disabled.
+The current kiosk runs Firefox Snap in the existing LightDM/Xorg `:0`/XFCE graphical user's session. Its static user service waits for local Home Assistant and opens the credential-free loopback URL in kiosk mode. The browser's sandbox is not disabled.
 
 Login once using a dedicated non-admin HA user. A persistent private browser profile supports subsequent restarts and is backed up, but vendor browser/keyring changes or revoked sessions may require reauthentication. No admin password, tokenized URL or default HA account is baked into the image.
 
-X11 DPMS defaults to screen-off after ten minutes. Fresh person presence issues an X11 display-wake command. Touch input naturally wakes supported displays. DPMS and brightness behavior depend on your panel/driver; this alpha does not implement panel-specific backlight registers, a fade animation, or a Wayland compositor integration.
+At kiosk launch, X11 DPMS is enabled with standby and suspend disabled and display-off set to 120 seconds of inactivity. The live panel reached DPMS `Monitor is Off` after that interval. Physical touchscreen wake still requires a human acceptance tap. DPMS and brightness behavior depend on the panel/driver; this alpha does not implement panel-specific backlight registers, a fade animation, or a Wayland compositor integration.
 
 On a restored household, `dashboard_path` should point at an existing dashboard, usually `/lovelace`. The repository's `/dashboard-orangepi` dashboard only exists in fresh seeded config unless you explicitly add it to the restored config. The code never silently replaces your restored YAML to insert appliance cards.
 

@@ -11,7 +11,8 @@ r = a.root.resolve()
 findings = []
 for pattern in ('srv/opiha/ha/.storage/*', 'root/.ssh/id_*', 'home/*/.ssh/id_*',
                 'etc/ssh/ssh_host_*_key', 'etc/NetworkManager/system-connections/*',
-                'etc/opiha/appliance.json', 'etc/opiha/backup.json', 'var/lib/docker/containers/*',
+                'etc/orangepi-apps/*', 'srv/orangepi-apps/*', 'srv/homeassistant/ha/opiha-apps-connection.json',
+                'etc/opiha/appliance.json','etc/opiha/backup.json', 'var/lib/docker/containers/*',
                 'etc/apt/auth.conf', 'etc/apt/auth.conf.d/*'):
     findings += [str(f.relative_to(r)) for f in r.glob(pattern) if f.is_file()]
 for folder in ('etc/netplan', 'etc/cloud/cloud.cfg.d'):

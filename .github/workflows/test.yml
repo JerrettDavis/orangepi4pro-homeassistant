@@ -19,3 +19,15 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y age openssl
       - run: python -m pip install -e '.[test]'
       - run: ./scripts/test.sh --images
+      - run: python -m compileall -q src homeassistant scripts
+      - run: node --check homeassistant/custom_components/opiha_apps/panel.js
+  native-panel:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[test,browser]'
+      - run: playwright install --with-deps chromium
+      - run: python scripts/native-apps/browser-test.py

@@ -63,7 +63,10 @@ def apply(root: Path, live: bool, kiosk: bool, public_defaults: Path, trust_key:
         link = wants / name
         if not link.exists():
             link.symlink_to('../' + name)
-    atomic_bytes(root / 'usr/local/bin/opiha', b'#!/bin/sh\nexec /opt/orangepi4pro-homeassistant/bin/opiha --config /etc/opiha/appliance.json "$@"\n', 0o755)
+    # Native apps ship as code only. Tokens, the manager unit and the HA panel connection are created by an
+    # explicit `opiha-apps install-host --apply` on the running appliance, never baked into an image.
+    atomic_bytes(root / 'usr/local/bin/opiha-apps', b'#!/bin/sh\nexec /usr/bin/python3 /opt/orangepi4pro-homeassistant/bin/opiha-apps "$@"\n', 0o755)
+    atomic_bytes(root / 'usr/local/bin/opiha',b'#!/bin/sh\nexec /opt/orangepi4pro-homeassistant/bin/opiha --config /etc/opiha/appliance.json "$@"\n', 0o755)
 
 
 def main():

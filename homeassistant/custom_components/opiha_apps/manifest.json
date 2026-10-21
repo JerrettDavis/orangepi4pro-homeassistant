@@ -1,0 +1,11 @@
+{
+  "domain": "opiha_apps",
+  "name": "Orange Pi Native Apps",
+  "version": "0.2.0-alpha.2",
+  "documentation": "https://github.com/JerrettDavis/orangepi4pro-homeassistant",
+  "issue_tracker": "https://github.com/JerrettDavis/orangepi4pro-homeassistant/issues",
+  "codeowners": ["@JerrettDavis"],
+  "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],
+  "iot_class": "local_polling",
+  "requirements": []
+}

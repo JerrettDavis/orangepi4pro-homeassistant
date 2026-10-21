@@ -33,6 +33,31 @@ def test_overlay_never_copies_local_state(tmp_path):
     assert (root / 'etc/systemd/system/multi-user.target.wants/opiha-firstboot.service').is_symlink()
 
 
+def test_overlay_ships_native_apps_code_without_tokens_or_enabled_units(tmp_path):
+    module = module_at('overlay_apps', REPO / 'image/overlay.py')
+    root = tmp_path / 'rootfs'
+    (root / 'etc').mkdir(parents=True)
+    (root / 'etc/os-release').write_text('ID=ubuntu\n')
+    module.apply(root, False, False, REPO / 'config/image-defaults.json')
+    dest = root / 'opt/orangepi4pro-homeassistant'
+    assert (dest / 'bin/opiha-apps').exists()
+    assert (dest / 'src/opiha_apps/catalog.py').exists()
+    assert (dest / 'homeassistant/custom_components/opiha_apps/panel.js').exists()
+    assert 'opiha-apps' in (root / 'usr/local/bin/opiha-apps').read_text()
+    assert not (root / 'etc/orangepi-apps').exists() and not (root / 'srv/orangepi-apps').exists()
+    assert not (root / 'etc/systemd/system/orangepi-apps.service').exists()
+    assert not list(root.rglob('opiha-apps-connection.json')) and not list(root.rglob('token'))
+    assert not any('orangepi-apps' in p.name for p in (root / 'etc/systemd/system').rglob('*.wants/*'))
+    subprocess.run([sys.executable, str(REPO / 'image/audit-rootfs.py'), str(root)], check=True)
+
+
+def test_audit_rejects_native_app_runtime_secrets(tmp_path):
+    root = tmp_path / 'rootfs'
+    (root / 'etc/orangepi-apps').mkdir(parents=True)
+    (root / 'etc/orangepi-apps/token').write_text('fixture')
+    assert subprocess.run([sys.executable, str(REPO / 'image/audit-rootfs.py'), str(root)], capture_output=True).returncode == 1
+
+
 def test_overlay_live_root_guard():
     module = module_at('overlay_guard', REPO / 'image/overlay.py')
     with pytest.raises(ApplianceError): module.apply(Path('/'), False, False, REPO / 'config/image-defaults.json')

@@ -13,6 +13,13 @@ The persistent Firefox profile is private runtime state below the user's
 `snap/firefox/common` directory and must be included in the encrypted recovery
 bundle later.
 
+At kiosk launch, X11 screen-saver blanking is disabled and DPMS is enabled with
+standby and suspend disabled. DPMS turns the display off after 120 seconds of
+inactivity by default; a touch on the physical touchscreen should wake it.
+Confirm both blanking and touch wake on the actual panel before accepting this
+behavior. An X11 configuration or another session component may override the
+timeout after launch.
+
 ## On-screen keyboard
 
 `orangepi-homeassistant-keyboard.service` runs the host's existing Onboard
@@ -55,6 +62,22 @@ sets `SNAP_REEXEC=0` so Firefox uses Ubuntu's capability-bearing distro
 `snap-confine` instead of re-executing the copy inside the newer `snapd` snap.
 This is a host-specific compatibility setting, not a relaxation of Firefox's
 Snap confinement.
+
+## Touch controls (reload, home, restart)
+
+The full-screen browser has no address bar, reload button or update control.
+`orangepi-homeassistant-kiosk-controls.service` (a user unit, installed disabled
+like the keyboard) shows a small always-on-top handle at the bottom centre of
+the screen. Tapping it reveals **Reload** (hard reload, which also picks up a
+new custom panel script), **Home** (back to the local HA URL) and **Restart
+browser** (restarts the kiosk unit, which also lets snapd apply a pending
+Firefox update). The strip never takes keyboard focus and collapses after eight
+seconds. It runs only fixed command vectors (`xdotool`, `systemctl --user`) and
+silences the snapd "update available" popup through XFCE's do-not-disturb so it
+cannot cover the page header. Disable it by creating
+`~/.config/opiha/kiosk-controls.disabled`. Control it with
+`opiha-admin controls-start|controls-stop|controls-restart|controls-status`.
+It needs `xdotool` and `python3-gi` (listed in `image/install-dependencies.sh`).
 
 ## Validation on the live Orange Pi
 

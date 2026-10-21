@@ -19,6 +19,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--version", action="version", version=__version__)
     p.add_argument("--config", type=Path, default=Path(os.environ.get("OPIHA_CONFIG", ".local/appliance.json")))
     sub = p.add_subparsers(dest="command", required=True)
+    a = sub.add_parser("apps", help="Native Docker app manager (see docs/native-apps); arguments are passed to opiha-apps")
+    a.add_argument("apps_args", nargs=argparse.REMAINDER)
     a = sub.add_parser("init", help="Initialize empty local state; never touches an existing installation")
     a.add_argument("--mode", choices=("lab", "appliance"), default="lab")
     a.add_argument("--data-dir")
@@ -375,6 +377,10 @@ def recover(args, cfg: dict, path: Path) -> None:
 def dispatch(args) -> int:
     path = args.config.resolve()
     command = args.command
+    if command == "apps":
+        # Delegate without loading appliance state: the manager has its own private configuration.
+        from opiha_apps.cli import main as apps_main
+        return apps_main(args.apps_args)
     if command == "hardware":
         if args.hardware_command == "inventory":
             if args.private and not args.output:
@@ -508,6 +514,12 @@ def dispatch(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     os.umask(0o077)
+    argv = sys.argv[1:] if argv is None else argv
+    rest = argv[2:] if argv[:1] == ["--config"] else argv
+    if rest[:1] == ["apps"]:
+        # argparse cannot pass leading options through a REMAINDER subcommand.
+        from opiha_apps.cli import main as apps_main
+        return apps_main(rest[1:])
     try:
         return dispatch(parser().parse_args(argv))
     except KeyboardInterrupt:

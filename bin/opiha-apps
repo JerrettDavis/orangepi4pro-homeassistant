@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+"""Native app manager. Does not replace the legacy opiha command."""
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from opiha_apps.cli import main
+raise SystemExit(main())

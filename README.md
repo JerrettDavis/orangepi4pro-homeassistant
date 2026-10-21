@@ -2,7 +2,7 @@
 
 **A rebuildable home-control appliance for the Orange Pi 4 Pro, Allwinner A733.**
 
-Version **0.1.0-alpha.12**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
+Version **0.2.0-alpha.2**. This is a complete source repository for local evaluation, migration rehearsals, a guarded image-overlay build, and subsequent recovery. It is **not a prebuilt, board-validated disk image**. Read [the validation report](reports/VALIDATION.md) before using it as the only controller for a home.
 
 The current cyberdeck host has been inspected and blank Home Assistant has now
 been runtime-validated on its ARM64 Docker engine, including a persistent
@@ -70,6 +70,10 @@ For a real migration, **set HA to your source instance's exact version before im
 | Development | Automated tests, CI, Docker smoke script, allowlisted source packaging, runbooks and hardware acceptance checklist |
 
 **Not claimed:** A733 NPU support, vendor CSI/ISP driver bring-up, hardware video acceleration, Supervisor/add-on conversion, unattended initial OAuth enrollment, raw encrypted native-HA-backup extraction, production reliability, or boot-tested image artifacts. These are explicit boundaries, not hidden TODO implementations.
+
+## Native Apps panel (Node-RED, ESPHome, Mosquitto, Z-Wave JS UI, go2rtc)
+
+An optional, administrator-only **Orange Pi Apps** panel runs inside Home Assistant Container. A small loopback-only root service (`orangepi-apps.service`) manages a reviewed catalog of digest-pinned native ARM64 Docker apps; Home Assistant never receives the Docker socket, and the browser never receives the manager credential. It is an HAOS-like custom panel, not the Supervisor or the official add-on store. Z-Wave and camera apps stay inactive until their hardware is verified. See [docs/native-apps](docs/native-apps/INSTALL.md) and `bin/opiha apps --help`.
 
 ## The two restore paths
 
