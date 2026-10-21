@@ -9,6 +9,9 @@
     <layer> <color element="background" rgb="#111111" opacity="1.0"/> </layer>
     <layer> <color element="background" rgb="#111111" opacity="1.0"/> </layer>
 
+    <!-- Floating toggle button: a dark tile with a two-by-two key glyph. -->
+    <icon> <color element="background" rgb="#111111" opacity="1.0"/> </icon>
+
     <key_group>
         <color element="fill"   rgb="#03a9f4" opacity="1.0" pressed="true"/>
         <color element="fill"   rgb="#0288d1" opacity="1.0" active="true"/>
@@ -42,6 +45,25 @@
             <color element="label" rgb="#03a9f4"/>
             m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15,
             settings
+        </key_group>
+        <!-- Icon tiles; the label matches the fill so the built-in "O"/"B" letters are not drawn. -->
+        <key_group>
+            <color element="fill"   rgb="#03a9f4"/>
+            <color element="stroke" rgb="#111111"/>
+            <color element="label"  rgb="#03a9f4"/>
+            icon0
+        </key_group>
+        <key_group>
+            <color element="fill"   rgb="#3a3f45"/>
+            <color element="stroke" rgb="#111111"/>
+            <color element="label"  rgb="#3a3f45"/>
+            icon1, icon2
+        </key_group>
+        <key_group>
+            <color element="fill"   rgb="#0288d1"/>
+            <color element="stroke" rgb="#111111"/>
+            <color element="label"  rgb="#0288d1"/>
+            icon3
         </key_group>
         <key_group>
             <color element="fill"  rgb="#262a2e"/>

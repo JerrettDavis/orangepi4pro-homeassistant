@@ -5,6 +5,8 @@
 - On-screen keyboard: new `OrangePiHA` Onboard theme (dark, flat rounded keys, Ubuntu font, Home Assistant
   blue accent, orange for locked modifiers) in `config/onboard/`. `keyboard-session.sh` installs it for the
   session user and selects it, and sets background transparency to 0 so the page no longer shows through.
+- The floating keyboard toggle button follows the theme too (dark tile, blue/grey key glyph, no "O"/"B"
+  letters). Onboard fixes that button's overall opacity in code, so it stays slightly translucent.
 
 ## 0.2.0-alpha.3
 
