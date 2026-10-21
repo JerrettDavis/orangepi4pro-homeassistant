@@ -111,6 +111,60 @@ part of the public release. Enable it only after restoring that private state
 and configuring Home Assistant to trust the loopback proxy. The feature binds
 ports 80, 81, and 443 and therefore requires those host ports to be free.
 
+### Automatic certificate renewal
+
+Nginx Proxy Manager owns renewal: its built-in timer checks at startup and
+hourly, renewing active Let's Encrypt certificates within 30 days of expiry.
+Keep the certificate registered as a Let's Encrypt certificate in its database,
+with the DNS provider plugin, credentials, ACME account, and renewal settings
+in the persistent private state. A copied custom certificate alone cannot renew.
+The live installation uses Cloudflare DNS-01, so renewal does not require an
+inbound port-80 challenge. Its saved renewal configuration uses a 120-second
+DNS propagation wait; the provider's default 10 seconds failed validation.
+
+The pinned proxy's renewal path does not reload Nginx. Install the included
+Certbot deploy hook in its persistent volume so successful renewals validate
+the configuration and gracefully reload Nginx to serve the new certificate:
+
+```bash
+sudo install -d -m 0755 /srv/homeassistant/proxy/data/letsencrypt/renewal-hooks/deploy
+sudo install -o root -g root -m 0755 scripts/proxy-cert-deploy.sh \
+  /srv/homeassistant/proxy/data/letsencrypt/renewal-hooks/deploy/20-opiha-nginx-reload
+sudo systemctl enable docker.service
+```
+
+The proxy container uses `restart: unless-stopped`; enabling Docker makes it
+start after host boot unless explicitly stopped. Do not add a second renewal
+scheduler. Keep backups outside Certbot's `renewal/*.conf` scan (for example,
+use a `.conf.bak` suffix), and keep DNS credentials root-only.
+
+Verify the actual certificate name in the private proxy configuration, then
+test it with the same options used by the proxy, plus the staging dry-run flags:
+
+```bash
+sudo docker exec opiha-proxy-1 certbot renew \
+  --force-renewal --config /etc/letsencrypt.ini \
+  --work-dir /tmp/letsencrypt-lib --logs-dir /data/logs \
+  --cert-name npm-CERTIFICATE_ID --preferred-challenges dns \
+  --disable-hook-validation --no-random-sleep-on-renew \
+  --dry-run --run-deploy-hooks
+sudo docker logs --since 2h opiha-proxy-1
+sudo systemctl is-enabled docker.service
+```
+
+The dry run obtains a staging certificate, exercises DNS creation/cleanup and
+the deploy hook, and leaves the trusted production certificate in place. Check
+for successful simulated renewal, the hook's graceful-reload message, continued
+HTTPS health, and hourly renewal messages. Certbot logs are private operational
+data and should not be committed. See the [Certbot renewal documentation](https://eff-certbot.readthedocs.io/en/stable/using.html#renewing-certificates)
+for deploy-hook and dry-run behavior.
+
+Live verification on 2026-09-24 passed DNS-01 staging renewal for both proxy
+hostnames, including challenge cleanup and the deploy hook. Nginx gracefully
+reloaded, HTTPS continued returning `200`, and the production certificate
+fingerprint remained unchanged. Docker was enabled at boot; no host reboot was
+performed during this check.
+
 The live Orange Pi uses Chrony. On 2026-09-24 it reported stratum 3, normal leap
 status, and approximately 1 ms system offset; the domain controller comparison
 was within 40 ms. The board does not expose a usable RTC, so network time must
