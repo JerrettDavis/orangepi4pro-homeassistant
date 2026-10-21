@@ -54,5 +54,12 @@ def test_position_round_trip_and_bad_files(tmp_path):
 
 
 def test_strip_expands_away_from_the_nearer_edge():
-    assert kiosk_controls.expanded_x(100, 30, 400, 1024) == 100  # left half: grow right
-    assert kiosk_controls.expanded_x(900, 30, 400, 1024) == 530  # right half: grow left, handle stays put
+    assert kiosk_controls.strip_x(100, 30, 400, 1024) == (100, False)
+    assert kiosk_controls.strip_x(900, 30, 400, 1024) == (530, True)
+    assert kiosk_controls.strip_x(300, 30, 400, 1024) == (300, False)
+
+
+def test_strip_falls_back_to_the_side_that_fits():
+    assert kiosk_controls.strip_x(600, 30, 500, 1024) == (130, True)  # right half but also fits left
+    assert kiosk_controls.strip_x(450, 30, 600, 1024) == (450, False)  # left half, fits right
+    assert kiosk_controls.strip_x(900, 30, 1000, 1024)[1] is True  # fits neither side: stays right-anchored, display clamp handles it

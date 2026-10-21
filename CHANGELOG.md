@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-alpha.7
+
+- Touch strip: the handle stays put when the strip opens (it moves to the end the strip grows away from),
+  the strip falls back to the side that fits instead of overflowing, and the collapsed width is measured
+  rather than the stale window size, which fixes the jump on collapse and the snap-back when dragging.
+
 ## 0.2.0-alpha.6
 
 - Kiosk touch strip is position aware: it grows rightwards from the handle in the left half of the screen and

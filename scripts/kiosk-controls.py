@@ -60,19 +60,20 @@ class Strip(Gtk.Window):
         self.collapse()
 
     def place(self):
-        w, h = self.get_size()
+        w, h = self.get_preferred_size()[1].width, self.get_preferred_size()[1].height
         screen = self.get_screen()
         cw = self.collapsed_width()
         if self.pos is None:
             # Bottom centre: clear of the sidebar profile entry and the on-screen keyboard button.
             self.pos = ((screen.get_width() - cw) // 2, screen.get_height() - h - 8)
-        # self.pos is the handle's spot; the strip grows away from the nearer screen edge so the handle stays put.
-        x = kiosk_controls.expanded_x(self.pos[0], cw, w, screen.get_width())
+        x, right = kiosk_controls.strip_x(self.pos[0], cw, w, screen.get_width())
+        # Keep the handle under the finger: it sits at the end the strip grows away from.
+        self.box.reorder_child(self.handle, -1 if right else 0)
         # Clamp only for display so a strip that expanded near an edge returns to its saved spot.
         self.move(*kiosk_controls.clamp(x, self.pos[1], w, h, screen.get_width(), screen.get_height()))
 
     def collapsed_width(self):
-        return self.handle.get_preferred_width()[0] + 2 * self.box.get_margin_start()
+        return self.handle.get_preferred_width()[1] + 2 * self.box.get_margin_start()
 
     def on_press(self, _widget, event):
         self.drag = {"rx": event.x_root, "ry": event.y_root, "start": self.pos or self.get_position(), "moved": False}
@@ -90,7 +91,7 @@ class Strip(Gtk.Window):
             if self.timer:
                 GLib.source_remove(self.timer)
                 self.timer = None
-        w, h = self.collapsed_width(), self.get_size()[1]
+        w, h = self.collapsed_width(), self.get_preferred_size()[1].height
         screen = self.get_screen()
         self.pos = kiosk_controls.clamp(d["start"][0] + dx, d["start"][1] + dy, w, h, screen.get_width(), screen.get_height())
         self.place()

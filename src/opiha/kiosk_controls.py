@@ -49,11 +49,18 @@ def clamp(x: int, y: int, width: int, height: int, screen_w: int, screen_h: int)
     return max(0, min(int(x), max(0, screen_w - width))), max(0, min(int(y), max(0, screen_h - height)))
 
 
-def expanded_x(x: int, collapsed_w: int, width: int, screen_w: int) -> int:
-    """Left edge for the strip: grow rightwards from the handle, or leftwards when it sits in the right half."""
-    if x + collapsed_w / 2 > screen_w / 2:
-        return int(x) + collapsed_w - width
-    return int(x)
+def strip_x(x: int, collapsed_w: int, width: int, screen_w: int) -> tuple[int, bool]:
+    """Window left edge and whether the strip grows leftwards (handle at its right end).
+
+    Grows away from the nearer screen edge, falling back to the other side when that is the only one it fits.
+    """
+    right = x + collapsed_w / 2 > screen_w / 2
+    left_x, right_x = int(x), int(x) + collapsed_w - width
+    if right and right_x < 0 <= screen_w - (left_x + width):
+        right = False
+    elif not right and left_x + width > screen_w and right_x >= 0:
+        right = True
+    return (right_x if right else left_x), right
 
 
 def load_position(path: Path | None = None) -> tuple[int, int] | None:
