@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Return to Home Assistant kiosk
+Comment=Start the full-screen Home Assistant kiosk again
+Exec=/bin/sh /opt/orangepi-homeassistant/current/scripts/kiosk-return.sh
+Icon=go-home
+Terminal=false
+Categories=Utility;System;

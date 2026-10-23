@@ -27,6 +27,9 @@ def parser():
     a.add_argument("--port", type=int, default=8098)
     for name in ("catalog", "doctor", "overview", "metrics", "serve"):
         sub.add_parser(name)
+    a = sub.add_parser("host-terminal", help="Allow or forbid the admin-only host terminal in the Orange Pi panel (needs a manager restart)")
+    a.add_argument("state", choices=("on", "off"))
+    a.add_argument("--user", help="Host account the terminal runs as (default: orangepi)")
     a = sub.add_parser("app", help="Plan one app operation; --apply executes the reviewed plan")
     a.add_argument("action", choices=("install", "update", "start", "stop", "restart", "remove"))
     a.add_argument("app")
@@ -80,6 +83,14 @@ def main(argv=None):
             from .backup import restore
             emit(restore(args.bundle, args.destination, identity=args.identity, signature=args.signature,
                          trust_key=args.trust_key, apply=args.apply)); return 0
+        if args.command == "host-terminal":
+            current = validate_config(read_json(args.config.absolute()))
+            current["host_terminal"] = args.state == "on"
+            if args.user:
+                current["host_user"] = args.user
+            write_json(args.config.absolute(), validate_config(current))
+            emit({"host_terminal": current["host_terminal"], "host_user": current["host_user"],
+                  "next": "sudo systemctl restart orangepi-apps.service"}); return 0
         cfg = validate_config(read_json(args.config.absolute()))
         from .manager import Manager
         manager = Manager(cfg)

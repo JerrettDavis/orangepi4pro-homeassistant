@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0-alpha.1
+
+- The Home Assistant sidebar entry is now **Orange Pi** with tabs: Overview (live CPU, memory, temperature,
+  storage and network), Host (systemd services, journal, hardware), Docker (containers, logs, images),
+  Apps (the existing native-app manager), Updates (apt and snap, run as host jobs that survive a restart),
+  Terminal (xterm.js shell as the kiosk user) and Desktop (switch the kiosk to the XFCE desktop and back,
+  choose the boot default, blank the screen).
+- New `/v1/host/*` operations on the loopback manager, reached only through an admin-only HA WebSocket command.
+  Destructive actions need `confirm: true`; stop/disable of SSH, the manager, D-Bus and networking is refused.
+- The terminal is off until `opiha-apps host-terminal on`, because it is a shell on the host.
+- Host install adds a "Return to Home Assistant kiosk" application-menu launcher for desktop mode.
+
 ## 0.2.0-alpha.8
 
 - Touch strip buttons are now an icon over a small label (Refresh, Home, Restart) instead of large text, and

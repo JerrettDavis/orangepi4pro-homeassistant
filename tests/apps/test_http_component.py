@@ -187,3 +187,48 @@ def test_real_ingress_cookie_http_and_websocket(component):
         finally:
             await ingress.close();await ar.cleanup();await br.cleanup()
     asyncio.run(scenario())
+
+
+def test_host_routes_require_auth_and_validate(api):
+    url,token=api
+    assert http(url,path='/v1/host/stats',payload={})[0]==401
+    status,body=http(url,token,'/v1/host/stats',{});assert status==200 and 'memory' in body and token not in json.dumps(body)
+    assert http(url,token,'/v1/host/nope',{})[0]==404
+    assert http(url,token,'/v1/host/stats',{'x':1})[0]==400
+    assert http(url,token,'/v1/host/service',{'unit':'ssh.service','action':'stop','confirm':True})[0]==400
+    assert http(url,token,'/v1/host/power',{'action':'reboot'})[0]==400
+    assert http(url,token,'/v1/host/term_open',{})[0]==400
+    assert http(url,token,'/v1/host/stats',{'x':1},extra={'Origin':'https://example.test'})[0]==403
+
+def test_ha_host_ws_admin_boundary_and_contract(component):
+    client=FakeManagerClient();hass=types.SimpleNamespace(data={'opiha_apps':{'client':client}})
+    denied=Connection(False)
+    asyncio.run(component.ws_host(hass,denied,{'id':1,'operation':'power','data':{'action':'reboot','confirm':True}}))
+    assert denied.error[1]=='unauthorized' and not client.calls
+    ok=Connection()
+    asyncio.run(component.ws_host(hass,ok,{'id':2,'operation':'term_io','data':{'id':'x','cursor':0}}))
+    assert ok.result and client.calls[0]==('POST','/v1/host/term_io',{'id':'x','cursor':0},component.TERMINAL_TIMEOUT)
+    asyncio.run(component.ws_host(hass,Connection(),{'id':3,'operation':'updates','data':{}}))
+    assert client.calls[1][3]==component.HOST_TIMEOUT
+
+def test_component_and_manager_agree_on_host_operations(component):
+    from opiha_apps.hostctl import OPERATIONS
+    assert list(OPERATIONS)==component.HOST_OPERATIONS
+
+def test_panel_assets_served_from_a_fixed_set(component):
+    async def scenario():
+        view=component.PanelAsset({'panel.js':b'export{}','xterm.css':b'a{}'})
+        js=await view.get(None,'panel.js');css=await view.get(None,'xterm.css')
+        assert js.content_type=='application/javascript' and css.content_type=='text/css' and js.headers['X-Content-Type-Options']=='nosniff'
+        with pytest.raises(web.HTTPNotFound):await view.get(None,'ingress.py')
+    asyncio.run(scenario())
+
+def test_every_panel_module_ships_and_imports_resolve():
+    import re
+    directory=ROOT/'homeassistant/custom_components/opiha_apps'
+    panel=(directory/'panel.js').read_text()
+    for module in re.findall(r'module: "\./([a-z]+\.js)"',panel):
+        source=(directory/module).read_text()
+        assert 'customElements.define' in source
+        for dep in re.findall(r'from "\./([a-z-]+\.js)"',source):assert (directory/dep).is_file()
+    for name in ('xterm.js','xterm.css','xterm-addon-fit.js'):assert (directory/name).stat().st_size>1000

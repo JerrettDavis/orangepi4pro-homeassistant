@@ -1,6 +1,7 @@
-"""Admin-only native app management for Home Assistant Container.
+"""Admin-only Orange Pi host and native app management for Home Assistant Container.
 
-This integration neither impersonates Supervisor nor mounts the Docker socket.
+This integration neither impersonates Supervisor nor mounts the Docker socket. Host control, Docker and the terminal
+are performed by the separate root manager on loopback; its credential never reaches browser JavaScript.
 API compatibility target: Home Assistant 2026.9.3.
 """
 from __future__ import annotations
@@ -15,6 +16,12 @@ from homeassistant.core import HomeAssistant
 from .client import Client, NativeError, read_connection
 
 DOMAIN = "opiha_apps"
+# Kept in step with opiha_apps.hostctl.OPERATIONS (a test compares them); the manager validates every field.
+HOST_OPERATIONS = ["overview", "stats", "hardware", "services", "service", "logs", "power", "docker", "container", "container_logs",
+                   "images", "image", "docker_prune", "updates", "update_start", "update_job", "desktop", "desktop_mode", "display",
+                   "term_open", "term_io", "term_close"]
+HOST_TIMEOUT = 60
+TERMINAL_TIMEOUT = 10
 CONFIG_SCHEMA = vol.Schema({vol.Optional(DOMAIN): vol.Any(None, vol.Schema({}))}, extra=vol.ALLOW_EXTRA)
 
 
@@ -61,16 +68,41 @@ async def ws_request(hass, connection, msg):
         connection.send_error(msg["id"], "native_apps_error", str(exc))
 
 
+@websocket_api.websocket_command({vol.Required("type"): "opiha_apps/host",
+                                 vol.Required("operation"): vol.In(HOST_OPERATIONS),
+                                 vol.Optional("data", default={}): dict})
+@websocket_api.async_response
+async def ws_host(hass, connection, msg):
+    if not _admin(connection):
+        connection.send_error(msg["id"], "unauthorized", "An active Home Assistant administrator is required")
+        return
+    op = msg["operation"]
+    try:
+        result = await hass.data[DOMAIN]["client"].request(
+            "POST", "/v1/host/" + op, msg["data"], TERMINAL_TIMEOUT if op.startswith("term_") else HOST_TIMEOUT)
+        connection.send_result(msg["id"], result)
+    except NativeError as exc:
+        connection.send_error(msg["id"], "host_error", str(exc))
+
+
+ASSET_TYPES = {".js": "application/javascript", ".css": "text/css"}
+
+
 class PanelAsset(HomeAssistantView):
-    url = "/api/opiha_apps/panel.js"
+    """The panel's own code and vendored terminal library. Public source only; every data call is authenticated."""
+    url = r"/api/opiha_apps/{name:[A-Za-z0-9._-]+\.(?:js|css)}"
     name = "api:opiha_apps:panel"
     requires_auth = False
 
-    def __init__(self, source: bytes):
-        self.source = source
+    def __init__(self, assets: dict[str, bytes]):
+        self.assets = assets
 
-    async def get(self, request):
-        return web.Response(body=self.source, content_type="application/javascript", headers={"Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff"})
+    async def get(self, request, name):
+        body = self.assets.get(name)
+        if body is None:
+            raise web.HTTPNotFound()
+        return web.Response(body=body, content_type=ASSET_TYPES[Path(name).suffix],
+                            headers={"Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff"})
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -89,14 +121,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     from .ingress import Ingress, SessionView
     ingress = Ingress(hass, client)
     hass.data[DOMAIN] = {"client": client, "ingress": ingress}
-    source = await hass.async_add_executor_job((Path(__file__).parent / "panel.js").read_bytes)
-    hass.http.register_view(PanelAsset(source))
+    assets = await hass.async_add_executor_job(
+        lambda: {p.name: p.read_bytes() for p in sorted(Path(__file__).parent.iterdir()) if p.suffix in ASSET_TYPES})
+    hass.http.register_view(PanelAsset(assets))
     hass.http.register_view(SessionView(ingress))
     hass.http.register_view(ingress)
     websocket_api.async_register_command(hass, ws_request)
+    websocket_api.async_register_command(hass, ws_host)
     await panel_custom.async_register_panel(hass, frontend_url_path="opiha-apps",
-        webcomponent_name="opiha-apps-panel", sidebar_title="Orange Pi Apps", sidebar_icon="mdi:apps",
-        module_url="/api/opiha_apps/panel.js?v=0.2.0-alpha.8", require_admin=True)
+        webcomponent_name="opiha-apps-panel", sidebar_title="Orange Pi", sidebar_icon="mdi:chip",
+        module_url="/api/opiha_apps/panel.js?v=0.3.0-alpha.1", require_admin=True)
 
     async def stop(_event):
         await ingress.close()

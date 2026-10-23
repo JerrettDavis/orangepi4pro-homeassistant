@@ -115,3 +115,20 @@ No HA token, password, or authenticated URL is stored in the unit or process
 arguments. Complete login once with a dedicated non-administrator HA account;
 the browser profile retains that session. Browser/keyring changes can still
 require reauthentication after restore.
+
+## Boot enablement on the live Pi (2026-10-21)
+
+Both units ship static, so a reboot left Home Assistant and the kiosk stopped (a clean
+shutdown also runs `opiha down`). On the live Pi they were enabled with reversible
+wants-links, without editing the shipped units:
+
+    sudo systemctl add-wants multi-user.target orangepi-homeassistant.service
+    systemctl --user add-wants default.target orangepi-homeassistant-kiosk.service   # as the kiosk user
+
+Undo by deleting the links in `/etc/systemd/system/multi-user.target.wants/` and
+`~/.config/systemd/user/default.target.wants/`. Not yet proven across a reboot.
+`orangepi-homeassistant-kiosk-controls.service` is still disabled.
+
+## Orange Pi panel, desktop mode
+
+The kiosk account must be a Home Assistant administrator to open the **Orange Pi** panel. Its Desktop tab stops the kiosk to reveal XFCE and starts it again; see [HOST-PANEL.md](HOST-PANEL.md).

@@ -32,9 +32,9 @@ ProtectHome=true
 ReadWritePaths=/srv/orangepi-apps /etc/orangepi-apps
 ReadOnlyPaths=/etc/orangepi-homeassistant
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
-MemoryHigh=160M
-MemoryMax=256M
-TasksMax=128
+MemoryHigh=320M
+MemoryMax=512M
+TasksMax=256
 CPUWeight=25
 
 [Install]
@@ -52,7 +52,7 @@ def source_files() -> list[tuple[Path, Path]]:
              for p in sorted((SOURCE / "src/opiha_apps").rglob("*")) if p.is_file() and p.suffix == ".py" and "__pycache__" not in p.parts]
     files += [(p, Path("homeassistant/custom_components/opiha_apps") / p.relative_to(SOURCE / "homeassistant/custom_components/opiha_apps"))
               for p in sorted((SOURCE / "homeassistant/custom_components/opiha_apps").rglob("*"))
-              if p.is_file() and p.suffix in {".py", ".js", ".json"} and "__pycache__" not in p.parts]
+              if p.is_file() and p.suffix in {".py", ".js", ".json", ".css"} and "__pycache__" not in p.parts]
     files.append((SOURCE / "bin/opiha-apps", Path("bin/opiha-apps")))
     return files
 
@@ -81,7 +81,7 @@ def preview(root: Path, appliance: str, adopt_restored=False) -> dict:
     if adopt_restored and not old and component.is_dir():
         source = SOURCE / "homeassistant/custom_components/opiha_apps"
         expected = {p.relative_to(source).as_posix(): p.read_bytes() for p in source.rglob("*")
-                    if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".js", ".json"}}
+                    if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".py", ".js", ".json", ".css"}}
         actual = {p.relative_to(component).as_posix(): checked_path(p).read_bytes() for p in component.rglob("*")
                   if p.is_file() and "__pycache__" not in p.parts and p.suffix not in {".pyc", ".pyo"}}
         if actual != expected:
@@ -165,7 +165,7 @@ def install(*, root=Path("/"), appliance="/etc/orangepi-homeassistant/appliance.
     for p in sorted((SOURCE / "homeassistant/custom_components/opiha_apps").rglob("*")):
         if not p.is_file() or "__pycache__" in p.parts:
             continue
-        if p.suffix not in {".py", ".js", ".json"}:
+        if p.suffix not in {".py", ".js", ".json", ".css"}:
             continue
         target = checked_path(component / p.relative_to(SOURCE / "homeassistant/custom_components/opiha_apps"))
         atomic(target, p.read_bytes())

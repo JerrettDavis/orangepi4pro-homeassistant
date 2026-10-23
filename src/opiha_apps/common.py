@@ -101,8 +101,13 @@ def defaults() -> dict:
             "appliance_config": "/etc/orangepi-homeassistant/appliance.json"}
 
 
+# Added after the first release: absent from older config.json files, which stay valid.
+OPTIONAL = {"host_terminal": False, "host_user": "orangepi"}
+
+
 def validate_config(c: dict) -> dict:
-    if set(c) != set(defaults()) or c.get("schema") != 1:
+    c = {**OPTIONAL, **c}
+    if set(c) != set(defaults()) | set(OPTIONAL) or c.get("schema") != 1:
         raise AppError("Unknown or missing native-manager configuration fields")
     for key in ("data_dir", "token_file", "appliance_config"):
         checked_path(c[key], directory=key == "data_dir")
@@ -114,6 +119,8 @@ def validate_config(c: dict) -> dict:
                         ("minimum_available_mib", 128, 65536)):
         if type(c[key]) is not int or not lo <= c[key] <= hi:
             raise AppError("Invalid host port or memory budget")
+    if type(c["host_terminal"]) is not bool or not isinstance(c["host_user"], str) or not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", c["host_user"]):
+        raise AppError("Invalid host terminal settings")
     return c
 
 

@@ -6,12 +6,14 @@ import json
 import re
 import socket
 from .common import AppError, read_token
+from .hostctl import Host, OPERATIONS, dispatch
 
 MAX_BODY = 128 * 1024
 
 
 def make_server(manager, port: int | None = None):
     token = read_token(manager.config)
+    host = Host(manager.config)
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "OPIHA-Native/1"
@@ -92,6 +94,11 @@ def make_server(manager, port: int | None = None):
                     if set(document) != {"id", "confirm"} or not isinstance(document["id"], str):
                         raise AppError("Invalid plan approval")
                     value = manager.submit(document["id"], document["confirm"])
+                elif match := re.fullmatch(r"/v1/host/([a-z_]{1,32})", self.path):
+                    if match[1] not in OPERATIONS:
+                        self.reply(404, {"error": "No such API route"})
+                        return
+                    value = dispatch(host, match[1], document)
                 elif self.path == "/v1/apps/mosquitto/credentials":
                     if document != {"confirm": True}:
                         raise AppError("Confirm before revealing a private generated credential")
@@ -109,6 +116,10 @@ def make_server(manager, port: int | None = None):
 
     class Server(ThreadingHTTPServer):
         daemon_threads = True
-        request_queue_size = 8
+        request_queue_size = 16
+
+        def server_close(self):
+            host.close()
+            super().server_close()
 
     return Server(("127.0.0.1", manager.config["port"] if port is None else port), Handler)

@@ -39,12 +39,13 @@ class Client:
     async def close(self):
         await self.session.close()
 
-    async def request(self, method: str, path: str, body: dict | None = None) -> dict:
+    async def request(self, method: str, path: str, body: dict | None = None, timeout: int | None = None) -> dict:
         if method not in {"GET", "POST"} or not re.fullmatch(r"/v1/[a-zA-Z0-9_/-]+", path):
             raise NativeError("Invalid manager request")
         try:
             async with self.session.request(method, self.url + path, json=body,
-                      headers={"Authorization": "Bearer " + self.token}, allow_redirects=False) as response:
+                      headers={"Authorization": "Bearer " + self.token}, allow_redirects=False,
+                      **({"timeout": aiohttp.ClientTimeout(total=timeout)} if timeout else {})) as response:
                 raw = await response.content.read(2 * 1024 * 1024 + 1)
                 if len(raw) > 2 * 1024 * 1024:
                     raise NativeError("Manager response exceeded its limit")
