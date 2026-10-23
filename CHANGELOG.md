@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-alpha.2
+
+- Deferred reboot/restart actions fire within a second (transient timers defaulted to one-minute accuracy), a failed
+  update job no longer blocks the next one, and the Desktop tab no longer errors while loading.
+- The seed dashboard is titled "Orange Pi Home" so it does not duplicate the new sidebar entry.
+
 ## 0.3.0-alpha.1
 
 - The Home Assistant sidebar entry is now **Orange Pi** with tabs: Overview (live CPU, memory, temperature,

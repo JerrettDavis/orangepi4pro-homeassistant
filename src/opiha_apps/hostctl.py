@@ -173,7 +173,7 @@ class Host:
 
     def later(self, argv: list[str], seconds: int = 2):
         """Run after the HTTP reply has left, so a restart or reboot cannot swallow its own answer."""
-        self.run(["systemd-run", "--quiet", f"--on-active={seconds}s", "--collect"] + argv, check=True)
+        self.run(["systemd-run", "--quiet", f"--on-active={seconds}s", "--timer-property=AccuracySec=100ms", "--collect"] + argv, check=True)
 
     def read(self, path: Path, limit: int = 1 << 20) -> str | None:
         try:
@@ -545,6 +545,7 @@ class Host:
         if self.update_job({}).get("state") == "running":
             raise AppError("Another host update is still running")
         self.run(["systemctl", "stop", JOB_UNIT + ".service"], timeout=30)
+        self.run(["systemctl", "reset-failed", JOB_UNIT + ".service"], timeout=30)  # a failed run stays loaded otherwise
         argv, description = JOB_KINDS[data["kind"]]
         self.run(["systemd-run", "--quiet", f"--unit={JOB_UNIT}", f"--description={description}", "-p", "RemainAfterExit=yes",
                   "-E", "DEBIAN_FRONTEND=noninteractive", "-E", "LC_ALL=C"] + argv, check=True, timeout=30)

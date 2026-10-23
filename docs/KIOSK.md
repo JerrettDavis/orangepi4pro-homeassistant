@@ -112,7 +112,7 @@ next start. The service is initially static and is not enabled at boot until a
 display/reboot acceptance test is explicitly approved.
 
 No HA token, password, or authenticated URL is stored in the unit or process
-arguments. Complete login once with a dedicated non-administrator HA account;
+arguments. Complete login once with a dedicated HA account (it must be an administrator to open the Orange Pi panel, see HOST-PANEL.md);
 the browser profile retains that session. Browser/keyring changes can still
 require reauthentication after restore.
 

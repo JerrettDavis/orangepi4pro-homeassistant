@@ -77,6 +77,7 @@ def test_own_unit_restart_is_deferred_not_immediate(host, runner):
     assert result["deferred"] is True
     call = runner.ran("orangepi-apps.service")[0]
     assert call[0] == "systemd-run" and any(a.startswith("--on-active=") for a in call)
+    assert "--timer-property=AccuracySec=100ms" in call  # transient timers otherwise fire up to a minute late
 
 
 def test_destructive_service_actions_need_confirmation(host, runner):
@@ -214,6 +215,7 @@ def test_update_job_lifecycle(host, runner):
     start = runner.ran("--unit=" + hostctl.JOB_UNIT)[0]
     assert start[0] == "systemd-run" and "DEBIAN_FRONTEND=noninteractive" in start and start[-1] == "upgrade"
     assert "--force-confold" in " ".join(start)
+    assert runner.ran("reset-failed", hostctl.JOB_UNIT + ".service")
 
 
 def test_update_job_refuses_when_running_and_reports_outcome(host, runner):

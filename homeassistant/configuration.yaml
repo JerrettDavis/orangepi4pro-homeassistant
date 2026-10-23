@@ -16,7 +16,7 @@ lovelace:
   dashboards:
     dashboard-orangepi:
       mode: yaml
-      title: Orange Pi
+      title: Orange Pi Home
       icon: mdi:home-automation
       show_in_sidebar: true
       filename: dashboards/orangepi.yaml
