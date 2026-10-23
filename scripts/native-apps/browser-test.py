@@ -22,7 +22,7 @@ def main():
     from opiha_apps.catalog import public_catalog
     html = (ROOT / 'examples/native-apps/panel-demo.html').read_text()
     script = re.search(r'<script type="module">(.*?)</script>', html, re.S).group(1)
-    script = script.replace("import '/panel.js';", '')
+    script = script.replace("import '/apps.js';", '')
     script = script.replace("const response=await fetch('/catalog.json');const apps=await response.json();",
                             'const apps=' + json.dumps(public_catalog()) + ';')
     base = re.sub(r'<script type="module">.*?</script>', '', html, flags=re.S)
@@ -38,7 +38,7 @@ def main():
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.set_content(base)
-        page.add_script_tag(content=(ROOT / 'homeassistant/custom_components/opiha_apps/panel.js').read_text())
+        page.add_script_tag(content=(ROOT / 'homeassistant/custom_components/opiha_apps/apps.js').read_text())
         page.evaluate('async()=>{' + script + '}')
         page.get_by_role('heading', name='ESPHome', exact=True).wait_for()
         if args.output:
