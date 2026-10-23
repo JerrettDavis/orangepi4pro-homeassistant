@@ -31,7 +31,7 @@ class OrangePiPanel extends HTMLElement {
       this.shadowRoot.innerHTML = `<p style="padding:24px;color:var(--error-color,#b00020)">Administrator access is required.</p>`; return;
     }
     this.shadowRoot.innerHTML = `<style>
-      :host{display:flex;flex-direction:column;height:100%;background:var(--primary-background-color,#f3f6fa);color:var(--primary-text-color,#172b41)}
+      :host{container-type:inline-size;display:flex;flex-direction:column;height:100%;background:var(--primary-background-color,#f3f6fa);color:var(--primary-text-color,#172b41)}
       *{box-sizing:border-box}
       header{display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--app-header-background-color,var(--card-background-color,#fff));border-bottom:1px solid var(--divider-color,#d9e1e8);min-height:56px;flex:none}
       h1{font-size:19px;font-weight:500;margin:0 14px 0 6px;white-space:nowrap}
@@ -41,7 +41,7 @@ class OrangePiPanel extends HTMLElement {
       #menu{padding:0 8px;border:0}ha-icon{--mdc-icon-size:20px}
       #content{flex:1;min-height:0;overflow:auto}#content>*{display:block}#content>[hidden]{display:none}
       #content>opiha-apps-tab{height:100%}
-      @media(max-width:760px){nav button span{display:none}nav button{padding:0 12px}h1{display:none}}
+      @container (max-width:860px){nav button[aria-selected=false] span{display:none}nav button{padding:0 12px}h1{display:none}}
     </style>
     <header><button id="menu" aria-label="Open sidebar" ${this._narrow ? "" : "hidden"}><ha-icon icon="mdi:menu"></ha-icon></button><h1>Orange Pi</h1>
       <nav role="tablist">${TABS.map(t => `<button role="tab" data-tab="${t.id}" aria-selected="false" title="${t.label}"><ha-icon icon="${t.icon}"></ha-icon><span>${t.label}</span></button>`).join("")}</nav></header>

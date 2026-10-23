@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.3
+
+- Panel tab bar collapses unselected tabs to icons when the panel is narrow, so all seven tabs fit the 1024 px kiosk.
+
 ## 0.3.0-alpha.2
 
 - Deferred reboot/restart actions fire within a second (transient timers defaulted to one-minute accuracy), a failed
