@@ -198,3 +198,29 @@ def test_port_conflicts_and_lan_rules(manager, repo):
 def test_reviewed_catalog_cannot_be_shadowed():
     with pytest.raises(AppError):
         catalog.register("nodered", {"x": 1})
+
+
+def test_planning_and_overview_do_not_block_while_an_addon_installs(manager, repo):
+    import threading
+    gate, entered = threading.Event(), threading.Event()
+    real_pull = manager.engine.pull
+
+    def slow_pull(*args):
+        entered.set()
+        assert gate.wait(10)
+        return real_pull(*args)
+    manager.engine.pull = slow_pull
+    plan = manager.plan_addon(repo, "mosquitto", {"grants": ["ha_api"]})
+    job = manager.submit(plan["id"], True)
+    assert entered.wait(5)
+    done = []
+    worker = threading.Thread(target=lambda: done.append((manager.overview(), manager.plan_addon(repo, "built"))))
+    worker.start()
+    worker.join(5)
+    try:
+        assert done, "planning/overview blocked behind a running add-on job"
+        # Another thread must never see the job's private view of a not-yet-installed add-on.
+        assert slug(repo, "mosquitto") not in [a["id"] for a in done[0][0]["apps"]]
+    finally:
+        gate.set()
+    assert wait(manager, job)["status"] == "succeeded"

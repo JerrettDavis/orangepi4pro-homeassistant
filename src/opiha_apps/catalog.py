@@ -62,60 +62,83 @@ ADDON_OPTIONS = COMMON_OPTIONS | {"config", "grants", "host_ports", "lan", "devi
 # Add-ons from administrator-added repositories, registered from their frozen manifests.
 # The reviewed CATALOG above always wins and cannot be shadowed.
 DYNAMIC: dict[str, dict] = {}
-_LOCK = threading.RLock()
+_LOCK = threading.Lock()  # guards DYNAMIC mutation/snapshots only; never held across a yield or I/O
+_LOCAL = threading.local()  # per-thread plan/job overrides, invisible to other threads
 
 
 def register(slug: str, app: dict) -> None:
     if slug in CATALOG:
         raise AppError("Add-on slug collides with a reviewed application")
-    DYNAMIC[slug] = copy.deepcopy(app)
+    with _LOCK:
+        DYNAMIC[slug] = copy.deepcopy(app)
 
 
 @contextlib.contextmanager
 def override(slug: str, app: dict):
-    """Resolve `slug` to `app` for the duration of a plan/preflight without installing it."""
+    """Resolve `slug` to `app` for the calling thread only, without installing it or blocking anyone."""
+    if slug in CATALOG:
+        raise AppError("Add-on slug collides with a reviewed application")
+    table = getattr(_LOCAL, "table", None)
+    if table is None:
+        table = _LOCAL.table = {}
+    previous = table.get(slug)
+    table[slug] = copy.deepcopy(app)
+    try:
+        yield
+    finally:
+        if previous is None:
+            table.pop(slug, None)
+        else:
+            table[slug] = previous
+
+
+def _dynamic(slug) -> dict | None:
+    if not isinstance(slug, str):
+        return None
+    local = getattr(_LOCAL, "table", None)
+    if local and slug in local:
+        return local[slug]
     with _LOCK:
-        if slug in CATALOG:
-            raise AppError("Add-on slug collides with a reviewed application")
-        previous = DYNAMIC.get(slug)
-        DYNAMIC[slug] = copy.deepcopy(app)
-        try:
-            yield
-        finally:
-            if previous is None:
-                DYNAMIC.pop(slug, None)
-            else:
-                DYNAMIC[slug] = previous
+        return DYNAMIC.get(slug)
 
 
 def forget(slug: str) -> None:
-    DYNAMIC.pop(slug, None)
+    with _LOCK:
+        DYNAMIC.pop(slug, None)
 
 
 def clear_dynamic() -> None:
-    DYNAMIC.clear()
+    with _LOCK:
+        DYNAMIC.clear()
 
 
 def is_addon(slug: str) -> bool:
-    return isinstance(slug, str) and slug in DYNAMIC
+    return _dynamic(slug) is not None
+
+
+def _snapshot() -> dict[str, dict]:
+    with _LOCK:
+        return dict(DYNAMIC)
 
 
 def all_slugs() -> list[str]:
-    return [*CATALOG, *DYNAMIC]
+    return [*CATALOG, *_snapshot()]
 
 
 def entry(slug: str) -> dict:
     if isinstance(slug, str) and slug in CATALOG:
         return copy.deepcopy(CATALOG[slug])
-    if isinstance(slug, str) and slug in DYNAMIC:
-        return copy.deepcopy(DYNAMIC[slug])
+    app = _dynamic(slug)
+    if app is not None:
+        return copy.deepcopy(app)
     raise AppError("Unknown application; only the reviewed catalog and added repositories are accepted")
 
 
 def wanted_ports(slug: str, opts: dict) -> set[int]:
     """Host ports an app will bind, for conflict checks."""
     if is_addon(slug):
-        return {opts["port"]} | set(opts["host_ports"].values()) if DYNAMIC[slug].get("container_port") else set(opts["host_ports"].values())
+        extra = set(opts["host_ports"].values())
+        return {opts["port"]} | extra if _dynamic(slug).get("container_port") else extra
     return {opts["port"]} | ({28554} if slug == "go2rtc" else {23000} if slug == "zwave" else set())
 
 
@@ -157,7 +180,7 @@ def public_catalog() -> list[dict]:
     from . import addon_runtime
     rows += [{"id": slug, **copy.deepcopy(app), "defaults": addon_runtime.defaults(app), "kind": "addon",
               "compatibility": "unreviewed-addon", "hardware_validated": False}
-             for slug, app in DYNAMIC.items()]
+             for slug, app in _snapshot().items()]
     return rows
 
 

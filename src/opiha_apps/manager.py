@@ -281,8 +281,15 @@ class Manager:
         info = {"raw": raw, "repo": repository, "folder": folder,
                 "source_hash": addon_runtime.tree_hash(source)}
         with self.guard, catalog.override(slug, app):
-            action = "update" if self.record(slug) else "install"
+            old = self.record(slug)
+            action = "update" if old else "install"
             options = {**(supplied or {}), "version": app["version"]}
+            if "port" not in options and not old:
+                taken = {p for r in self.records().values() if r.get("installed") for p in [r["options"]["port"]]}
+                port = app["port"]
+                while port in taken or port in addon_runtime.RESERVED_UI_PORTS:
+                    port += 1
+                options["port"] = port
             value = self.plan(slug, action, options, addon=info)
         return value
 

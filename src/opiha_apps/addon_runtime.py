@@ -28,8 +28,15 @@ def slug_for(repo_id: str, manifest_slug: str) -> str:
     return ("x" + repo_id[:6] + "-" + re.sub(r"[^a-z0-9-]", "-", manifest_slug.lower()))[:32].rstrip("-")
 
 
+# Loopback ports the reviewed apps and the manager already use.
+RESERVED_UI_PORTS = {21880, 26052, 21984, 21883, 28091, 28554, 23000}
+
+
 def _ui_port(slug: str) -> int:
-    return 22000 + int(hashlib.sha256(slug.encode()).hexdigest(), 16) % 7000
+    port = 22000 + int(hashlib.sha256(slug.encode()).hexdigest(), 16) % 7000
+    while port in RESERVED_UI_PORTS:
+        port += 1
+    return port
 
 
 def image_repository(manifest: dict) -> str | None:
