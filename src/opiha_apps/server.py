@@ -5,7 +5,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import re
 import socket
-from .common import AppError, read_token
+from . import addon_repos
+from .common import AppError, atomic, read_token
 from .hostctl import Host, OPERATIONS, dispatch
 
 MAX_BODY = 128 * 1024
@@ -63,6 +64,11 @@ def make_server(manager, port: int | None = None):
                     value = manager.job(match[1])
                 elif match := re.fullmatch(r"/v1/apps/([a-z0-9_-]{1,32})/(logs|ingress)", self.path):
                     value = getattr(manager, match[2])(match[1])
+                elif self.path == "/v1/repos":
+                    value = {"repositories": manager.repos.list(), "suggested": addon_repos.SUGGESTED,
+                             "ha_token_configured": (manager.root / "ha-token").is_file()}
+                elif match := re.fullmatch(r"/v1/repos/([0-9a-f]{8})/addons", self.path):
+                    value = {"repository": match[1], "addons": manager.repos.addons(match[1])}
                 else:
                     self.reply(404, {"error": "No such API route"})
                     return
@@ -90,6 +96,27 @@ def make_server(manager, port: int | None = None):
                     if set(document) - {"app", "action", "options"}:
                         raise AppError("Unknown planning fields")
                     value = manager.plan(document["app"], document["action"], document.get("options"))
+                elif self.path == "/v1/repos/add":
+                    if set(document) != {"url"}:
+                        raise AppError("Send only the repository URL")
+                    value = manager.repos.add(document["url"])
+                elif self.path in {"/v1/repos/refresh", "/v1/repos/remove"}:
+                    if set(document) != {"id"} or not isinstance(document["id"], str):
+                        raise AppError("Send only the repository id")
+                    if self.path.endswith("remove"):
+                        manager.repos.remove(document["id"])
+                        value = {"removed": document["id"]}
+                    else:
+                        value = manager.repos.refresh(document["id"])
+                elif self.path == "/v1/addon/plan":
+                    if set(document) - {"repository", "folder", "options"} or not {"repository", "folder"} <= set(document):
+                        raise AppError("Unknown add-on planning fields")
+                    value = manager.plan_addon(document["repository"], document["folder"], document.get("options"))
+                elif self.path == "/v1/addons/ha-token":
+                    if set(document) != {"token"} or not isinstance(document["token"], str) or not re.fullmatch(r"[A-Za-z0-9._-]{20,4096}", document["token"]):
+                        raise AppError("Send a Home Assistant long-lived access token")
+                    atomic(manager.root / "ha-token", (document["token"] + "\n").encode())
+                    value = {"ha_token_configured": True}
                 elif self.path == "/v1/apply":
                     if set(document) != {"id", "confirm"} or not isinstance(document["id"], str):
                         raise AppError("Invalid plan approval")

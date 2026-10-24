@@ -31,8 +31,17 @@ def parser():
     a.add_argument("state", choices=("on", "off"))
     a.add_argument("--user", help="Host account the terminal runs as (default: orangepi)")
     a = sub.add_parser("app", help="Plan one app operation; --apply executes the reviewed plan")
-    a.add_argument("action", choices=("install", "update", "start", "stop", "restart", "remove"))
+    a.add_argument("action", choices=("install", "update", "start", "stop", "restart", "remove", "configure"))
     a.add_argument("app")
+    a.add_argument("--options-file", type=Path)
+    a.add_argument("--apply", action="store_true")
+    a.add_argument("--confirm-network-access", action="store_true")
+    a = sub.add_parser("repo", help="Manage Home Assistant add-on repositories (git, https only)")
+    a.add_argument("verb", choices=("list", "add", "refresh", "remove", "addons"))
+    a.add_argument("value", nargs="?", help="URL for add, repository id otherwise")
+    a = sub.add_parser("addon", help="Plan installing an add-on from an added repository; --apply executes the plan")
+    a.add_argument("repository")
+    a.add_argument("folder")
     a.add_argument("--options-file", type=Path)
     a.add_argument("--apply", action="store_true")
     a.add_argument("--confirm-network-access", action="store_true")
@@ -96,12 +105,44 @@ def main(argv=None):
         manager = Manager(cfg)
         try:
             if args.command == "serve":
+                import threading
                 from .server import make_server
+                from .supervisor_api import Shim, run_forever
                 server = make_server(manager, port=cfg["port"])
+                stop = threading.Event()
+                threading.Thread(target=run_forever, args=(Shim(manager), stop), daemon=True, name="opiha-supervisor-shim").start()
                 try:
                     server.serve_forever()
                 finally:
+                    stop.set()
                     server.server_close()
+            elif args.command == "repo":
+                if args.verb == "list":
+                    emit(manager.repos.list())
+                elif not args.value:
+                    raise AppError("A URL or repository id is required")
+                elif args.verb == "add":
+                    emit(manager.repos.add(args.value))
+                elif args.verb == "refresh":
+                    emit(manager.repos.refresh(args.value))
+                elif args.verb == "remove":
+                    manager.repos.remove(args.value); emit({"removed": args.value})
+                else:
+                    emit([{"folder": r["folder"], "name": r.get("manifest", {}).get("name"), "version": r.get("manifest", {}).get("version"),
+                           "status": r.get("report", {}).get("status", "invalid"), "error": r.get("error")}
+                          for r in manager.repos.addons(args.value)])
+            elif args.command == "addon":
+                opts = read_json(args.options_file.absolute()) if args.options_file else None
+                plan = manager.plan_addon(args.repository, args.folder, opts)
+                emit(plan)
+                if args.apply:
+                    if not args.confirm_network_access:
+                        raise AppError("Execution requires --confirm-network-access; add-ons are third-party code that can reach your LAN")
+                    job = manager.submit(plan["id"], True)
+                    while manager.job(job["id"])["status"] in {"queued", "running"}:
+                        time.sleep(.5)
+                    result = manager.job(job["id"]); emit(result)
+                    return 0 if result["status"] == "succeeded" else 1
             elif args.command in {"overview", "metrics", "doctor"}:
                 value = manager.overview(include_stats=args.command == "metrics")
                 if args.command == "doctor":
