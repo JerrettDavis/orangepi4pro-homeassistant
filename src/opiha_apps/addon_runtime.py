@@ -28,6 +28,7 @@ RESERVED_LAN_PORTS = {22, 80, 443, 3389, 5900, 8098, 8123, 18123}
 SHARED = {"share": "/share", "media": "/media", "ssl": "/ssl", "backup": "/backup", "addons": "/addons"}
 CONFIG_TYPES = {"config", "homeassistant_config"}
 MAX_SOURCE_BYTES = 150 * 1024 * 1024
+DOCKER_SOCK = "/var/run/docker.sock"  # handed to add-ons that declare `docker_api` and are granted it
 DBUS_DIR = "/run/dbus"  # the host's system bus, handed to add-ons that declare `host_dbus` and are granted it
 SND = "/dev/snd"  # host ALSA devices handed to add-ons that declare `audio` and are granted it
 
@@ -266,6 +267,8 @@ def spec(mgr, slug: str, record: dict) -> dict:
     udp = [] if host_net else [(h, int(k.split("/")[0])) for k, h in sorted(opts["host_ports"].items()) if k.endswith("/udp")]
     loopback = [] if host_net or app["ingress"] or not app["container_port"] or app["container_port"] in published else [(opts["port"], app["container_port"])]
     environment = dict(m["environment"])
+    if "docker_api" in opts["grants"]:
+        mounts.append((DOCKER_SOCK, DOCKER_SOCK, False))
     if "host_dbus" in opts["grants"]:
         mounts.append((DBUS_DIR, DBUS_DIR, False))
         environment["DBUS_SYSTEM_BUS_ADDRESS"] = "unix:path=" + DBUS_DIR + "/system_bus_socket"

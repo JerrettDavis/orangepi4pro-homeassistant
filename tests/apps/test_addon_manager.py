@@ -361,3 +361,16 @@ def test_host_dbus_grant_mounts_the_system_bus(manager, repo):
     create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
     assert ("/run/dbus", "/run/dbus", False) in create["mounts"]
     assert create["environment"]["DBUS_SYSTEM_BUS_ADDRESS"] == "unix:path=/run/dbus/system_bus_socket"
+
+
+def test_docker_api_grant_mounts_the_socket(manager, repo):
+    dk = MOSQ.replace("slug: mosquitto", "slug: dk").replace("hassio_api: true", "hassio_api: true\ndocker_api: true")
+    d = manager.repos.addon_dir(repo, "mosquitto").parent / "dk"
+    d.mkdir()
+    (d / "config.yaml").write_text(dk)
+    with pytest.raises(AppError, match="Docker"):
+        manager.plan_addon(repo, "dk", {"grants": ["ha_api"]})
+    plan = manager.plan_addon(repo, "dk", {"grants": ["ha_api", "docker_api"]})
+    assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
+    create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
+    assert ("/var/run/docker.sock", "/var/run/docker.sock", False) in create["mounts"]
