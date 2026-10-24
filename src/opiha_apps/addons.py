@@ -194,8 +194,6 @@ def report(manifest: dict) -> dict:
         notes.append("The Supervisor's own D-Bus services (NetworkManager/rauc) are not here; the host's system bus is")
     if manifest["host_pid"]:
         blocked.append("Needs the host process namespace")
-    if manifest["docker_api"]:
-        blocked.append("Wants the Docker API, which would let it replace this manager's safeguards")
     if manifest["hassio_role"] in {"manager", "admin"}:
         reduced.append("Asks for Supervisor " + manifest["hassio_role"] + " API access; only the endpoints this project emulates answer")
     if manifest["apparmor"] not in (False, "false"):
@@ -226,6 +224,8 @@ def report(manifest: dict) -> dict:
         privileges.append({"id": "audio", "label": "Use the host's sound devices (ALSA)", "risk": "medium"})
     if manifest["host_dbus"]:
         privileges.append({"id": "host_dbus", "label": "Talk to the host's system D-Bus (it can manage services, network and Bluetooth)", "risk": "high"})
+    if manifest["docker_api"]:
+        privileges.append({"id": "docker_api", "label": "Control Docker on this host (equivalent to root; it can start, stop and replace any container, including this manager's)", "risk": "high"})
     if manifest["kernel_modules"]:
         privileges.append({"id": "kernel_modules", "label": "Load kernel modules", "risk": "high"})
     if manifest["devices"]:

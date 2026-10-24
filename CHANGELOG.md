@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.16
+
+- `docker_api` add-ons (SSH & Web Terminal) are installable behind an explicit high-risk grant that mounts the Docker socket (root-equivalent, and able to replace this manager's containers). Only the host PID namespace stays refused.
+
 ## 0.3.0-alpha.15
 
 - Host-networked add-ons are told the bridge gateway as their `ip_address` (an empty address made Matter Server listen twice on 127.0.0.1 and fail to start).
