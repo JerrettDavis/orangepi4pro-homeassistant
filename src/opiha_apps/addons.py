@@ -227,7 +227,12 @@ def report(manifest: dict) -> dict:
     if manifest["devices"]:
         privileges.append({"id": "devices", "label": "Host devices: " + ", ".join(manifest["devices"]), "risk": "medium"})
     for entry in manifest["map"]:
-        if entry["type"] in {"config", "homeassistant_config", "ssl", "addons", "backup"} and not entry["read_only"]:
+        if entry["type"] in {"config", "homeassistant_config"}:
+            # Even read-only, this directory holds secrets.yaml and .storage (auth tokens, credentials).
+            verb = "Read" if entry["read_only"] else "Write"
+            privileges.append({"id": verb.lower() + "_" + entry["type"], "risk": "high",
+                               "label": f"{verb} access to Home Assistant's configuration directory, including secrets and stored credentials"})
+        elif entry["type"] in {"ssl", "addons", "backup"} and not entry["read_only"]:
             privileges.append({"id": "write_" + entry["type"], "label": "Write access to Home Assistant's " + entry["type"] + " directory", "risk": "medium"})
     if manifest["homeassistant_api"] or manifest["hassio_api"]:
         privileges.append({"id": "ha_api", "label": "Act as a Home Assistant client through the Supervisor-style API", "risk": "medium"})

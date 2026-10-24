@@ -130,7 +130,7 @@ def test_lifecycle_and_configure(manager, repo):
 
 
 def test_write_access_to_ha_config_and_ingress_need_grants(manager, repo):
-    with pytest.raises(AppError, match="homeassistant_config"):
+    with pytest.raises(AppError, match="configuration directory"):
         manager.plan_addon(repo, "configurator")
     job = execute_addon(manager, repo, "configurator", {"grants": ["write_homeassistant_config"]})
     assert job["status"] == "succeeded", job["stage"]

@@ -78,6 +78,12 @@ def test_report_lists_privileges_for_approval():
     assert ids["capabilities"]["risk"] == "high" and ids["host_network"]["risk"] == "high"
 
 
+def test_reading_the_ha_config_directory_needs_approval_too():
+    m = addons.parse({**FILE_EDITOR, "map": ["homeassistant_config:ro", "config", "ssl"]})
+    ids = {p["id"]: p for p in addons.report(m)["privileges"]}
+    assert ids["read_homeassistant_config"]["risk"] == "high" and "read_config" in ids and "read_ssl" not in ids
+
+
 def test_schema_validation_accepts_good_options_and_applies_optionals():
     schema = addons.parse(MOSQUITTO)["schema"]
     good = {"logins": [{"username": "u"}], "require_certificate": True, "certfile": "x.pem",

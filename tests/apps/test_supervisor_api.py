@@ -22,7 +22,7 @@ services: ['mqtt:want']
 options: {a: 1}
 schema: {a: 'int(0,5)'}
 """
-PROVIDER = MOSQ.replace("hassio_api: true\n", "hassio_api: true\nservices: ['mqtt:provide']\n")
+PROVIDER = MOSQ.replace("hassio_api: true\n", "hassio_api: true\nservices: ['mqtt:provide']\ndiscovery: [mqtt]\n")
 
 
 @pytest.fixture
@@ -88,10 +88,11 @@ def test_unimplemented_paths_are_honest_and_recorded(world):
     manager, shim, _, tokens = world
     status, payload = call(shim, "GET", "/addons/self/changelog", tokens["consumer"])
     assert status == 404 and payload["result"] == "error"
-    assert call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "mqtt"})[0] == 501
-    assert call(shim, "GET", "/core/websocket", tokens["consumer"])[0] == 501
+    assert call(shim, "POST", "/discovery", tokens["consumer"], {"service": "mqtt", "config": {}})[0] == 403  # not declared
+    assert call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "zigbee", "config": {}})[0] == 403
+    assert call(shim, "GET", "/core/websocket", tokens["consumer"])[0] == 426  # a plain GET needs an upgrade
     recorded = json.loads((manager.root / "shim-unimplemented.json").read_text())
-    assert recorded["GET /addons/self/changelog"] == 1 and "POST /discovery" in recorded
+    assert recorded["GET /addons/self/changelog"] == 1
 
 
 def test_core_api_proxy_needs_declaration_and_token_then_forwards_with_query(world):
