@@ -146,6 +146,8 @@ class Docker:
         if spec.get("device"):
             args += ["--device", spec["device"] + ":/dev/zwave:rwm",
                      "--group-add", str(os.stat(spec["device"]).st_gid)]
+        for gid in spec.get("group_add", []):
+            args += ["--group-add", str(gid)]
         for path in spec.get("devices", []):
             args += ["--device", f"{path}:{path}:rwm"]
         args += [spec["image"], *spec.get("command", [])]

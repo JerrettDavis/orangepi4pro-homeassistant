@@ -28,6 +28,7 @@ RESERVED_LAN_PORTS = {22, 80, 443, 3389, 5900, 8098, 8123, 18123}
 SHARED = {"share": "/share", "media": "/media", "ssl": "/ssl", "backup": "/backup", "addons": "/addons"}
 CONFIG_TYPES = {"config", "homeassistant_config"}
 MAX_SOURCE_BYTES = 150 * 1024 * 1024
+SND = "/dev/snd"  # host ALSA devices handed to add-ons that declare `audio` and are granted it
 
 
 def slug_for(repo_id: str, manifest_slug: str) -> str:
@@ -269,9 +270,19 @@ def spec(mgr, slug: str, record: dict) -> dict:
               "mounts": mounts, "environment": environment, "command": [], "cap_add": sorted(set(caps)),
               "privileged_mode": "full_access" in opts["grants"], "init": m["init"] is not False,
               "tmpfs": m["tmpfs"], "env_file": str(checked_path(root / "private.env")),
-              "devices": [d for d in opts["devices"] if os.path.exists(d)] if "devices" in opts["grants"] else [],
+              "devices": ([d for d in opts["devices"] if os.path.exists(d)] if "devices" in opts["grants"] else [])
+                         + (audio_access()[0] if "audio" in opts["grants"] else []),
+              "group_add": audio_access()[1] if "audio" in opts["grants"] else [],
               "extra_hosts": [("supervisor", SUPERVISOR_IP)]}
     return result
+
+
+def audio_access() -> tuple[list[str], list[int]]:
+    """Device paths and the group that owns them, when the host has ALSA sound devices."""
+    if not os.path.isdir(SND):
+        return [], []
+    cards = sorted(Path(SND).glob("controlC*"))
+    return [SND], [cards[0].stat().st_gid] if cards else []
 
 
 def write_options(mgr, slug: str, opts: dict) -> None:

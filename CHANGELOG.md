@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.10
+
+- Host audio: add-ons that declare `audio` can be granted the host's ALSA devices (`/dev/snd`) and its audio group.
+
 ## 0.3.0-alpha.9
 
 - Per-add-on **backup and restore** (Add-ons tab and `opiha-apps app backup|restore`): stop, hash-checked private archive of the add-on's data and options, start again; restore keeps the previous data as a rollback copy and refuses tampered or unsafe archives.

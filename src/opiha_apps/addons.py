@@ -201,7 +201,7 @@ def report(manifest: dict) -> dict:
     if manifest["apparmor"] not in (False, "false"):
         notes.append("The add-on's own AppArmor profile is not applied (Docker's default profile still is)")
     if manifest["audio"]:
-        reduced.append("Host audio (PulseAudio) is not provided")
+        notes.append("Audio uses the host's ALSA sound devices directly; there is no PulseAudio server")
     if manifest["video"]:
         reduced.append("Host video devices are not passed through automatically")
     if manifest["udev"]:
@@ -222,6 +222,8 @@ def report(manifest: dict) -> dict:
         privileges.append({"id": "full_access", "label": "Full hardware access to every host device", "risk": "high"})
     if any(manifest["privileged"]):
         privileges.append({"id": "capabilities", "label": "Extra Linux capabilities: " + ", ".join(manifest["privileged"]), "risk": "high" if set(manifest["privileged"]) & {"SYS_ADMIN", "SYS_MODULE", "SYS_RAWIO", "SYS_PTRACE", "DAC_READ_SEARCH"} else "medium"})
+    if manifest["audio"]:
+        privileges.append({"id": "audio", "label": "Use the host's sound devices (ALSA)", "risk": "medium"})
     if manifest["kernel_modules"]:
         privileges.append({"id": "kernel_modules", "label": "Load kernel modules", "risk": "high"})
     if manifest["devices"]:
