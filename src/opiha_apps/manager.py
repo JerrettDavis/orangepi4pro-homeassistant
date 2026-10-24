@@ -381,6 +381,9 @@ class Manager:
             write_json(self.root / "jobs" / (job_id + ".json"), self.jobs[job_id])
 
     def _job(self, job_id: str, plan: dict):
+        # The terminal status is published only after the worker is free again: anyone who sees "succeeded" or
+        # "failed" must be able to submit the next plan immediately.
+        final = ("Unexpected failure; inspect transaction state locally before retrying", "failed")
         try:
             entry = self._addon_entry(plan["addon"]) if plan.get("addon") else None
             with operation_lock(self.root), (catalog.override(plan["app"], entry) if entry else contextlib.nullcontext()):
@@ -391,18 +394,20 @@ class Manager:
                 self._execute(plan, lambda message: self._job_stage(job_id, message))
             if entry and (self.root / "apps" / plan["app"] / "addon.json").is_file():
                 catalog.register(plan["app"], entry)
-            self._job_stage(job_id, "Completed", status="succeeded", finished=time.time())
+            final = ("Completed", "succeeded")
         except (AppError, OSError, ValueError) as exc:
             message = str(exc) if isinstance(exc, AppError) else "Host operation failed; review local permissions and storage"
-            self._job_stage(job_id, message, status="failed", finished=time.time())
+            final = (message, "failed")
         except Exception:
-            self._job_stage(job_id, "Unexpected failure; inspect transaction state locally before retrying", status="failed", finished=time.time())
+            pass
         finally:
             with self.guard:
                 self.active = False
                 # Keep a bounded in-memory history. Private files remain for diagnostics.
                 for key in list(self.jobs)[:-64]:
-                    del self.jobs[key]
+                    if key != job_id:
+                        del self.jobs[key]
+            self._job_stage(job_id, final[0], status=final[1], finished=time.time())
 
     def job(self, identifier: str) -> dict:
         with self.guard:

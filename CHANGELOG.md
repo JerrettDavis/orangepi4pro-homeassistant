@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-alpha.11
+
+- A finished job no longer blocks the next submit: the terminal status ("succeeded"/"failed") is published only after the
+  worker is free. Previously a fast follow-up could be refused with "Another app job is already running" (seen as an
+  intermittent CI failure).
+
 ## 0.3.0-alpha.10
 
 - Host audio: add-ons that declare `audio` can be granted the host's ALSA devices (`/dev/snd`) and its audio group.
