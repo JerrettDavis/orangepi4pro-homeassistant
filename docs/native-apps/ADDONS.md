@@ -11,7 +11,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Supervisor feature | Here |
 |---|---|
 | Repositories | Add any `https://` git repository. Suggested: official add-ons, Community Hass.io Add-ons, ESPHome, Zigbee2MQTT. Shallow clone, no submodules, no hooks, refreshed only when you ask. |
-| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Checked on all 24 official add-ons on the Orange Pi: 14 work, 7 run with reduced capability, 2 are refused (host D-Bus / Docker API). |
+| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Checked on all 24 official add-ons on the Orange Pi: 4 work fully, 18 run with reduced capability (each names why: no Supervisor discovery, REST-only API, hardware you must grant, ...), 2 are refused (host D-Bus / Docker API). Real runs on the device: File editor (ingress), Mosquitto (publishes its MQTT service) and a Dockerfile-only add-on built on the device, all under the production service sandbox. |
 | Images | `image:` add-ons are pulled for `linux/arm64` and locked to their digest. Add-ons with only a `Dockerfile` are built on the device with `BUILD_FROM`/`BUILD_ARCH` (needs 4 GiB free). |
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
