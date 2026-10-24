@@ -248,28 +248,45 @@ def fill_form(schema: list, supplied: dict) -> dict:
     return out
 
 
-def discover_mqtt(ha_url: str, token: str, host: str, port: int, username: str | None, password: str | None,
-                  protocol: str | None = None) -> str:
-    """Register a broker with Home Assistant's MQTT integration. Returns a short outcome string."""
-    if not re.fullmatch(r"[A-Za-z0-9.:-]{1,100}", host) or not 1 <= port <= 65535:
-        raise AppError("Invalid broker address")
+def discover_flow(ha_url: str, token: str, handler: str, supplied: dict, menu_step: str | None = None) -> str:
+    """Drive one Home Assistant config flow to completion with the form filled from HA's own schema.
+    Returns "created" or the abort reason (for example already_configured)."""
     base = ha_url.rstrip("/")
-    flow = _rest(base, token, "/api/config/config_entries/flow", {"handler": "mqtt", "show_advanced_options": False})
+    flow = _rest(base, token, "/api/config/config_entries/flow", {"handler": handler, "show_advanced_options": False})
     if flow.get("type") == "abort":
         return flow.get("reason", "aborted")
-    if flow.get("type") == "menu":
-        flow = _rest(base, token, "/api/config/config_entries/flow/" + flow["flow_id"], {"next_step_id": "broker"})
+    if flow.get("type") == "menu" and menu_step:
+        flow = _rest(base, token, "/api/config/config_entries/flow/" + flow["flow_id"], {"next_step_id": menu_step})
     if flow.get("type") != "form":
-        raise AppError("Unexpected Home Assistant MQTT setup step")
-    supplied = {"broker": host, "port": port, "protocol": protocol if protocol in {"5", "3.1.1", "3.1"} else None}
-    if username:
-        supplied.update(username=username, password=password or "")
+        raise AppError(f"Unexpected Home Assistant {handler} setup step")
     data = fill_form(flow.get("data_schema") or [], supplied)
-    data.setdefault("broker", host)
-    data.setdefault("port", port)
+    for key, value in supplied.items():
+        if value is not None:
+            data.setdefault(key, value)
     done = _rest(base, token, "/api/config/config_entries/flow/" + flow["flow_id"], data)
     if done.get("type") == "create_entry":
         return "created"
     if done.get("type") == "abort":
         return done.get("reason", "aborted")
-    raise AppError("Home Assistant did not accept the MQTT broker: " + str(done.get("errors") or done.get("reason") or done.get("type")))
+    raise AppError(f"Home Assistant did not accept the {handler} service: " + str(done.get("errors") or done.get("reason") or done.get("type")))
+
+
+def _address(host: str, port) -> None:
+    if not re.fullmatch(r"[A-Za-z0-9.:-]{1,100}", host) or type(port) is not int or not 1 <= port <= 65535:
+        raise AppError("Invalid service address")
+
+
+def discover_mqtt(ha_url: str, token: str, host: str, port: int, username: str | None, password: str | None,
+                  protocol: str | None = None) -> str:
+    """Register a broker with Home Assistant's MQTT integration. Returns a short outcome string."""
+    _address(host, port)
+    supplied = {"broker": host, "port": port, "protocol": protocol if protocol in {"5", "3.1.1", "3.1"} else None}
+    if username:
+        supplied.update(username=username, password=password or "")
+    return discover_flow(ha_url, token, "mqtt", supplied, menu_step="broker")
+
+
+def discover_wyoming(ha_url: str, token: str, host: str, port: int) -> str:
+    """Register a Wyoming voice service (Piper, Whisper, openWakeWord, ...) with Home Assistant."""
+    _address(host, port)
+    return discover_flow(ha_url, token, "wyoming", {"host": host, "port": port})
