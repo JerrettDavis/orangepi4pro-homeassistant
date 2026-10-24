@@ -16,7 +16,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
 | Ports | Published to `127.0.0.1` only, unless you tick "reachable from my LAN". |
-| `http://supervisor/` | A shim on the add-on network answers `addons/self/{info,options,options/config,options/validate,stats}`, `info`, `core/info`, `host/info`, `supervisor/info`, `network/info`, `services/{mqtt,mysql}` (publish and read) and `core/api/...` (proxied to Home Assistant). Each add-on has its own `SUPERVISOR_TOKEN`. |
+| `http://supervisor/` | A shim on the add-on network answers `addons/self/{info,options,options/config,options/validate,stats}`, `info`, `core/info`, `host/info`, `supervisor/info`, `network/info`, `services/{mqtt,mysql}` (publish and read) and `core/api/...` (proxied to Home Assistant), `core/websocket` (a real WebSocket relay: the add-on authenticates with its own `SUPERVISOR_TOKEN`, the relay authenticates to Home Assistant with your token, and frames flow both ways) and MQTT `discovery` (the broker is registered through Home Assistant's own config-flow API). Each add-on has its own `SUPERVISOR_TOKEN`. |
 | Add-on to add-on names | Each add-on gets the Supervisor's hostname (`core-mosquitto`, `<hash>-<slug>`), so existing configs that point at those names keep working. |
 | Ingress | Add-ons that declare `ingress` open inside the panel through the same admin-only proxy as the reviewed apps. The mount prefix is stripped and `X-Ingress-Path` is supplied. Add-ons that allow only `172.30.32.2` work because the host side of the add-on bridge *is* `172.30.32.2`. Dynamic ingress ports (`ingress_port: 0`) are supported. |
 | Lifecycle | Install, start, stop, restart, configure, update and remove use the same plan, approval, journal and rollback flow as the reviewed apps. A failed update restores the previous image, manifest and data. |
@@ -24,9 +24,9 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 
 ## What does not, and what is said instead
 
-* **`/discovery`** returns an explicit error: it needs the Supervisor integration inside Home Assistant.
-  Add-ons that announce themselves (Mosquitto) still run and publish their MQTT service; add the integration in HA by hand.
-* **`/core/websocket`** is not implemented (501). Add-ons that need it (Node-RED community add-on, AppDaemon) will not fully work.
+* **Discovery** works for MQTT only (needs the Home Assistant access token). Other discovery services answer 501;
+  add that integration in Home Assistant by hand.
+* The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
 * No HAOS, host D-Bus, host audio, AppArmor profiles, Supervisor backups or add-on store auto-updates.
 * Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked
   **Unsupported** and cannot be installed. Everything else is **Works** or **Reduced**, with the reasons shown first.
@@ -37,8 +37,8 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 
 Repositories are executable code you chose to run. Nothing is granted implicitly:
 
-* Anything beyond a plain container (`host_network`, `full_access`, extra capabilities, devices, write access to
-  Home Assistant's config/ssl/backup/addons folders, Home Assistant API use) is listed and each item must be ticked
+* Anything beyond a plain container (`host_network`, `full_access`, extra capabilities, devices, any access to
+  Home Assistant's config folder even read-only (it holds secrets), write access to ssl/backup/addons, Home Assistant API use) is listed and each item must be ticked
   before a plan can be reviewed. Without the grant the install is refused server-side too.
 * The plan is bound to the exact source: if the repository changes between planning and approval, the job refuses.
 * Containers run as root inside Docker with Docker's default capability set (minus `NET_RAW`), `no-new-privileges`

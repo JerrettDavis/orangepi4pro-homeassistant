@@ -21,7 +21,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from . import addon_runtime, addons, catalog
+from . import addon_runtime, addons, catalog, supervisor_ws
 from .common import AppError, atomic, read_json, write_json
 
 SUBNET = ipaddress.ip_network("172.30.32.0/23")
@@ -150,8 +150,7 @@ class Shim:
                     return (*self.error(403, "This add-on has not declared homeassistant_api"), "json")
                 return self.proxy_core(method, raw_path, body, content_type)
             if path in {"/core/websocket", "/homeassistant/websocket"}:
-                self.record_unimplemented(method, path)
-                return (*self.error(501, "The Home Assistant WebSocket proxy is not implemented by the Orange Pi shim"), "json")
+                return (*self.error(426, "Open this endpoint with a WebSocket upgrade"), "json")
             payload = self.route(method, path, slug, app, body)
             return (*payload, "json")
         except AppError as exc:
@@ -192,9 +191,10 @@ class Shim:
             return self.ok({"interfaces": [], "host_internet": True, "supervisor_internet": True})
         if m_ := re.fullmatch(r"/services/(mqtt|mysql)", path):
             return self.service(method, m_[1], slug, app, body)
+        if path == "/discovery" and method == "POST":
+            return self.discovery(slug, app, body)
         if path == "/discovery" or path.startswith("/discovery/"):
-            self.record_unimplemented(method, path)
-            return self.error(501, "Discovery needs the Supervisor integration inside Home Assistant, which a Container install does not have")
+            return self.ok({"discovery": []}) if method == "GET" else self.ok()
         self.record_unimplemented(method, path)
         return self.error(404, "Not implemented by the Orange Pi Supervisor shim")
 
@@ -260,6 +260,46 @@ class Shim:
             return self.ok()
         return self.error(405, "Unsupported method")
 
+    def ha_access(self) -> tuple[str, str] | None:
+        token_file = self.m.root / "ha-token"
+        if not token_file.is_file():
+            return None
+        return self.appliance().get("ha_url", "http://127.0.0.1:8123").rstrip("/"), token_file.read_text().strip()
+
+    def discovery(self, slug: str, app: dict, body: bytes):
+        """Supervisor discovery needs HA's hassio integration; MQTT is instead registered through the config-flow API."""
+        try:
+            doc = json.loads(body or b"{}")
+        except ValueError as exc:
+            raise AppError("Request body is not valid JSON") from exc
+        service, config = doc.get("service"), doc.get("config")
+        if not isinstance(doc, dict) or service not in app["manifest"]["discovery"] or not isinstance(config, dict):
+            return self.error(403, "This add-on has not declared that discovery service")
+        if service != "mqtt":
+            self.record_unimplemented("POST", "/discovery:" + str(service))
+            return self.error(501, "Only MQTT discovery is implemented; add the " + str(service) + " integration in Home Assistant by hand")
+        access = self.ha_access()
+        if access is None:
+            return self.error(503, "No Home Assistant access token is configured (Add-ons tab), so the broker cannot be registered automatically")
+        port = config.get("port", 1883)
+        host_port = self.m.record(slug)["options"]["host_ports"].get(f"{port}/tcp")
+        if type(port) is not int or host_port is None:
+            return self.error(400, "The add-on's broker port is not published to the host")
+        outcome = supervisor_ws.discover_mqtt(access[0], access[1], "127.0.0.1", host_port,
+                                              config.get("username"), config.get("password"))
+        return self.ok({"uuid": slug, "outcome": outcome})
+
+    def websocket(self, sock) -> None:
+        access = self.ha_access()
+        if access is None:
+            supervisor_ws.send_json(sock, {"type": "auth_invalid", "message": "No Home Assistant access token is configured"}, False)
+            supervisor_ws.close_politely(sock, 1008)
+            return
+        def valid(token: str) -> bool:
+            slug = self.slug_for_token(token)
+            return bool(slug and catalog.entry(slug)["manifest"]["homeassistant_api"])
+        supervisor_ws.relay(sock, access[1], access[0], valid)
+
     def proxy_core(self, method: str, path: str, body: bytes, content_type: str):
         token_file = self.m.root / "ha-token"
         if not token_file.is_file():
@@ -300,11 +340,25 @@ def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int =
                 return header[7:].strip()
             return (self.headers.get("X-Supervisor-Token") or self.headers.get("X-Hassio-Key") or "").strip()
 
+        def upgrade(self):
+            key = self.headers.get("Sec-WebSocket-Key", "")
+            if not re.fullmatch(r"[A-Za-z0-9+/]{22}==", key):
+                self.send_error(400)
+                return
+            self.connection.sendall(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                                     f"Sec-WebSocket-Accept: {supervisor_ws.accept_key(key)}\r\n\r\n").encode())
+            self.connection.settimeout(None)
+            shim.websocket(self.connection)
+            self.close_connection = True
+
         def serve(self):
             try:
                 if not allow_any_peer and ipaddress.ip_address(self.client_address[0]) not in SUBNET:
                     self.send_error(403)
                     return
+                if (self.headers.get("Upgrade", "").lower() == "websocket"
+                        and self.path.split("?")[0].rstrip("/") in {"/core/websocket", "/homeassistant/websocket"}):
+                    return self.upgrade()
                 length = int(self.headers.get("Content-Length", "0") or 0)
                 if length < 0 or length > MAX_BODY or self.headers.get("Transfer-Encoding"):
                     self.send_error(413)

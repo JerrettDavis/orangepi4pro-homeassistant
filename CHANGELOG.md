@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-alpha.6
+
+- Add-ons: Home Assistant WebSocket relay (`ws://supervisor/core/websocket`) with token swap, and MQTT discovery that
+  registers the add-on's broker through Home Assistant's config-flow API.
+- Reading Home Assistant's config directory (even read-only) now needs explicit approval, because it holds secrets.
+
 ## 0.3.0-alpha.5
 
 - The Add-ons tab no longer warns that the add-on API is unavailable before any add-on has been installed.
