@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-alpha.13
+
+- Installed add-ons show "update X available" when their repository offers a newer version.
+- Discovery for Z-Wave JS, Matter Server and the OpenThread border router (registered by URL through Home Assistant's own form).
+- `host_dbus` add-ons (for example Matter Server) are installable behind an explicit high-risk grant that mounts the host's system bus; the Docker API and host PID namespace stay refused.
+
 ## 0.3.0-alpha.12
 
 - Add-on options you leave out take the add-on's defaults (a partial `config` no longer fails with "Option X is required").

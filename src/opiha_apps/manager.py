@@ -141,7 +141,7 @@ class Manager:
                 state = "data_retained"
             if (self.app_dir(slug) / "transaction.json").exists():
                 state = "recovery_required"
-            entries.append({**app, "state": state,
+            entries.append({**app, "state": state, "update_available": self._addon_update(app, record),
                             "installed": bool(owned), "options": record["options"] if record else app["defaults"],
                             "locked_image": record.get("image") if record else None,
                             "external_count": len(external), "data_retained": bool(record)})
@@ -158,6 +158,16 @@ class Manager:
                    and c.get("State", {}).get("Running")]
             result["container_stats"] = self.engine.stats(ids)
         return result
+
+    def _addon_update(self, app: dict, record: dict | None) -> str | None:
+        """The version the add-on's repository now offers, if newer than the installed one."""
+        if app.get("kind") != "addon" or not record or not record.get("installed"):
+            return None
+        try:
+            offered = str(self.repos.raw(app["repo"], app["folder"]).get("version", ""))
+            return offered if self._version_tuple(offered) > self._version_tuple(record["options"]["version"]) else None
+        except (AppError, OSError, ValueError, KeyError):
+            return None
 
     @staticmethod
     def _canonical_image(value: str) -> str:

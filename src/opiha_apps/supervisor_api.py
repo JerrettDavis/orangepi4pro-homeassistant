@@ -286,13 +286,13 @@ class Shim:
         service, config = doc.get("service"), doc.get("config")
         if not isinstance(doc, dict) or service not in app["manifest"]["discovery"] or not isinstance(config, dict):
             return self.error(403, "This add-on has not declared that discovery service")
-        if service not in {"mqtt", "wyoming"}:
+        if service not in {"mqtt", "wyoming", *supervisor_ws.URL_SERVICES}:
             self.record_unimplemented("POST", "/discovery:" + str(service))
-            return self.error(501, "Only MQTT and Wyoming discovery are implemented; add the " + str(service) + " integration in Home Assistant by hand")
+            return self.error(501, "Only MQTT, Wyoming, Z-Wave JS, Matter and OpenThread discovery are implemented; add the " + str(service) + " integration in Home Assistant by hand")
         access = self.ha_access()
         if access is None:
             return self.error(503, "No Home Assistant access token is configured (Add-ons tab), so the service cannot be registered automatically")
-        if service == "wyoming":
+        if service in {"wyoming", *supervisor_ws.URL_SERVICES}:
             # Home Assistant runs on the host network, so it reaches the add-on's own address on the add-on bridge.
             row = self.m.engine.owned(slug)
             networks = (row or {}).get("NetworkSettings", {}).get("Networks", {}) or {}
@@ -302,7 +302,10 @@ class Shim:
             # Wyoming add-ons announce `uri: tcp://<their hostname>:<port>`; only the port is used (the host is this add-on).
             match = re.fullmatch(r"tcp://[A-Za-z0-9.-]{1,100}:(\d{1,5})", str(config.get("uri", "")))
             port = int(match[1]) if match else config.get("port")
-            outcome = supervisor_ws.discover_wyoming(access[0], access[1], address, port)
+            if service == "wyoming":
+                outcome = supervisor_ws.discover_wyoming(access[0], access[1], address, port)
+            else:
+                outcome = supervisor_ws.discover_url_service(access[0], access[1], service, address, config.get("port"))
             return self.ok({"uuid": slug, "outcome": outcome})
         port = config.get("port", 1883)
         host_port = self.m.record(slug)["options"]["host_ports"].get(f"{port}/tcp")

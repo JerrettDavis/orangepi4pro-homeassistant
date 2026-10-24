@@ -89,7 +89,7 @@ class OpihaStoreTab extends Tab {
     const busy = this.busy || !!this.job;
     const b = (action, label, cls = "") => `<button class="small ${cls}" data-act="${action}" data-app="${a.id}" ${busy ? "disabled" : ""}>${label}</button>`;
     const running = a.state === "running";
-    return `<div class="item"><div class="grow"><strong>${esc(a.name)}</strong> <span class="badge ${running ? "good" : ""}">${esc(a.state.replaceAll("_", " "))}</span><small>${esc(a.options?.version || "")} · ${esc(a.manifest?.slug || "")}</small></div>
+    return `<div class="item"><div class="grow"><strong>${esc(a.name)}</strong> <span class="badge ${running ? "good" : ""}">${esc(a.state.replaceAll("_", " "))}</span>${a.update_available ? ` <span class="badge" title="Open the repository listing below and choose Update">update ${esc(a.update_available)} available</span>` : ""}<small>${esc(a.options?.version || "")} · ${esc(a.manifest?.slug || "")}</small></div>
       ${a.installed ? (running ? (a.ingress ? b("open", "Open", "primary") : "") + b("stop", "Stop") + b("restart", "Restart") : b("start", "Start", "primary")) + b("configure", "Configure") + b("backup", "Backup") + b("backups", "Restore…") + b("logs", "Logs") + b("remove", "Remove", "danger")
         : `<span class="muted">Removed, data kept</span>`}</div>`;
   }

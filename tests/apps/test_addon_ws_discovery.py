@@ -209,9 +209,24 @@ def test_wyoming_discovery_uses_the_addon_container_address(ha, monkeypatch):
         supervisor_ws.discover_wyoming("http://127.0.0.1:1", "t", "172.30.33.5", "x")
 
 
+@pytest.mark.parametrize("service,config,url", [("zwave_js", {"host": "core-zwave-js", "port": 3000}, "ws://172.30.33.5:3000"),
+                                                ("matter", {}, "ws://172.30.33.5:5580/ws"),
+                                                ("otbr", {"host": "x", "port": 8081}, "http://172.30.33.5:8081")])
+def test_url_services_are_registered_at_the_addon_address(ha, monkeypatch, service, config, url):
+    from conftest import execute
+    manager, shim, tokens, fake = ha
+    slug = [r for r in manager.records()][0]
+    seen = {}
+    monkeypatch.setattr(supervisor_ws, "discover_flow", lambda u, t, handler, supplied, menu_step=None: seen.update(handler=handler, supplied=supplied) or "created")
+    _declare(slug, service)
+    assert execute(manager, slug, "start")["status"] == "succeeded"
+    status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": service, "config": config})
+    assert status == 200 and seen == {"handler": service, "supplied": {"url": url}}
+
+
 def test_other_discovery_services_stay_explicitly_unimplemented(ha):
     manager, shim, tokens, fake = ha
     slug = [r for r in manager.records()][0]
-    _declare(slug, "zwave_js")
-    status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "zwave_js", "config": {}})
+    _declare(slug, "adguard")
+    status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "adguard", "config": {}})
     assert status == 501 and "Wyoming" in payload["message"]
