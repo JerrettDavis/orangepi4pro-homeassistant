@@ -16,6 +16,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
 | Ports | Published to `127.0.0.1` only, unless you tick "reachable from my LAN". |
+| Audio | Add-ons that declare `audio` get the host's ALSA sound devices (`/dev/snd`, with the owning group) once you approve the "sound devices" privilege. Verified on the Pi: the Assist microphone add-on sees both sound cards, including the ES8389 capture codec. There is no PulseAudio server. |
 | `http://supervisor/` | A shim on the add-on network answers `addons/self/{info,options,options/config,options/validate,stats}`, `info`, `core/info`, `host/info`, `supervisor/info`, `network/info`, `services/{mqtt,mysql}` (publish and read) and `core/api/...` (proxied to Home Assistant), `core/websocket` (a real WebSocket relay: the add-on authenticates with its own `SUPERVISOR_TOKEN`, the relay authenticates to Home Assistant with your token, and frames flow both ways) and `discovery` for MQTT and Wyoming (the service is registered through Home Assistant's own config-flow API; verified on the Pi: the Piper add-on's own announcement created a loaded Wyoming entry and a `tts.piper` entity). Each add-on has its own `SUPERVISOR_TOKEN`. |
 | Add-on to add-on names | Each add-on gets the Supervisor's hostname (`core-mosquitto`, `<hash>-<slug>`), so existing configs that point at those names keep working. |
 | Ingress | Add-ons that declare `ingress` open inside the panel through the same admin-only proxy as the reviewed apps. The mount prefix is stripped and `X-Ingress-Path` is supplied. Add-ons that allow only `172.30.32.2` work because the host side of the add-on bridge *is* `172.30.32.2`. Dynamic ingress ports (`ingress_port: 0`) are supported. |
@@ -52,7 +53,7 @@ recovered on its own when the shim came back.
   filling Home Assistant's own form from its schema. Other services (Z-Wave JS, Matter, OpenThread) answer 501; add
   that integration by hand.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
-* No HAOS, host D-Bus, host audio, AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or add-on store auto-updates.
+* No HAOS, host D-Bus, a PulseAudio server (raw ALSA is provided), AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or add-on store auto-updates.
 * Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked
   **Unsupported** and cannot be installed. Everything else is **Works** or **Reduced**, with the reasons shown first.
 * Every request to an endpoint the shim does not implement is recorded in `shim-unimplemented.json` in the state

@@ -134,7 +134,7 @@ class Shim:
             "ingress_entry": "/" + entry.strip("/") if entry else "/", "ingress_url": catalog.PREFIX + slug + "/" + entry.strip("/"),
             "ip_address": address, "network": {k: v for k, v in opts["host_ports"].items()},
             "homeassistant_api": m["homeassistant_api"], "hassio_api": m["hassio_api"], "hassio_role": m["hassio_role"],
-            "auth_api": False, "audio": False, "video": False, "gpio": False, "usb": False, "uart": False,
+            "auth_api": False, "audio": "audio" in opts["grants"], "video": False, "gpio": False, "usb": False, "uart": False,
             "services_role": m["services"], "auto_update": False, "repository": app["repo"], "url": m["url"],
             "slug_local": slug,
         }

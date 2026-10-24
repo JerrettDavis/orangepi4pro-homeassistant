@@ -311,3 +311,23 @@ def test_extract_rejects_traversal_links_and_special_entries(tmp_path):
     ok = archive("ok.tgz", lambda t: reg(t, "data/a.txt"))
     addon_backup.extract(ok, tmp_path / "out-ok")
     assert (tmp_path / "out-ok/data/a.txt").read_bytes() == b"x"
+
+
+def test_audio_is_a_grant_and_hands_over_the_alsa_devices(manager, repo, tmp_path, monkeypatch):
+    snd = tmp_path / "snd"
+    snd.mkdir()
+    (snd / "controlC0").write_text("")
+    monkeypatch.setattr(addon_runtime, "SND", str(snd))
+    voice = MOSQ.replace("slug: mosquitto", "slug: voice").replace("hassio_api: true", "hassio_api: true\naudio: true")
+    d = manager.repos.addon_dir(repo, "mosquitto").parent / "voice"
+    d.mkdir()
+    (d / "config.yaml").write_text(voice)
+    with pytest.raises(AppError, match="sound devices"):
+        manager.plan_addon(repo, "voice", {"grants": ["ha_api"]})
+    plan = manager.plan_addon(repo, "voice", {"grants": ["ha_api", "audio"]})
+    assert any("ALSA" in n for n in plan["report"]["notes"]) and not any("PulseAudio" in r for r in plan["report"]["reduced"])
+    assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
+    create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
+    assert str(snd) in create["devices"] and create["group_add"] == [(snd / "controlC0").stat().st_gid]
+    monkeypatch.setattr(addon_runtime, "SND", str(tmp_path / "absent"))
+    assert addon_runtime.audio_access() == ([], [])  # a host without sound devices simply gets none
