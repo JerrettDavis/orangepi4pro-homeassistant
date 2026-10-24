@@ -110,6 +110,9 @@ def options(app: dict, supplied: dict | None) -> dict:
     if not isinstance(supplied, dict) or set(supplied) - ADDON_OPTIONS:
         raise AppError("Unsupported add-on options (no arbitrary images, mounts, commands or environment)")
     result = {**defaults(app), **supplied}
+    if isinstance(supplied.get("config"), dict) and isinstance(m["options"], dict):
+        # Options the caller leaves out take the add-on's defaults, as the Supervisor does.
+        result["config"] = {**addons.default_options(m), **supplied["config"]}
     if not isinstance(result["version"], str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,63}", result["version"]):
         raise AppError("Invalid add-on version")
     for key, lo, hi in (("memory_mib", 128, 32768), ("cpu_shares", 64, 1024), ("port", 20000, 29999)):
