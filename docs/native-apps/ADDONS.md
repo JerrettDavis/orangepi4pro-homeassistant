@@ -47,6 +47,13 @@ was missing, and a shim bound to a vanished address never rebound.
 After a simulated "API not ready at boot" (shim stopped, autostart add-on restarting), the add-on crash-looped and
 recovered on its own when the shim came back.
 
+## Verified on the production Home Assistant
+
+With a long-lived token saved in the Add-ons tab, on the Pi's own Home Assistant (2026.9.3): Whisper and Speech-to-Phrase each
+registered themselves through discovery and appear as loaded Wyoming entries; Speech-to-Phrase, which declares
+`homeassistant_api`, read the real entity and area names through the shim's `core/api` proxy and trained its model on them.
+A Matter Server add-on ran healthy but its registration was correctly skipped because Home Assistant already had a Matter entry.
+
 ## What does not, and what is said instead
 
 * **Discovery** works for MQTT and Wyoming (Piper, Whisper, openWakeWord; needs the Home Assistant access token),
