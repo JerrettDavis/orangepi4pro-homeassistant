@@ -286,12 +286,24 @@ class Shim:
         service, config = doc.get("service"), doc.get("config")
         if not isinstance(doc, dict) or service not in app["manifest"]["discovery"] or not isinstance(config, dict):
             return self.error(403, "This add-on has not declared that discovery service")
-        if service != "mqtt":
+        if service not in {"mqtt", "wyoming"}:
             self.record_unimplemented("POST", "/discovery:" + str(service))
-            return self.error(501, "Only MQTT discovery is implemented; add the " + str(service) + " integration in Home Assistant by hand")
+            return self.error(501, "Only MQTT and Wyoming discovery are implemented; add the " + str(service) + " integration in Home Assistant by hand")
         access = self.ha_access()
         if access is None:
-            return self.error(503, "No Home Assistant access token is configured (Add-ons tab), so the broker cannot be registered automatically")
+            return self.error(503, "No Home Assistant access token is configured (Add-ons tab), so the service cannot be registered automatically")
+        if service == "wyoming":
+            # Home Assistant runs on the host network, so it reaches the add-on's own address on the add-on bridge.
+            row = self.m.engine.owned(slug)
+            networks = (row or {}).get("NetworkSettings", {}).get("Networks", {}) or {}
+            address = (networks.get(addon_runtime.NETWORK) or {}).get("IPAddress")
+            if not address or not row.get("State", {}).get("Running"):
+                return self.error(400, "The add-on has no address on the add-on network")
+            # Wyoming add-ons announce `uri: tcp://<their hostname>:<port>`; only the port is used (the host is this add-on).
+            match = re.fullmatch(r"tcp://[A-Za-z0-9.-]{1,100}:(\d{1,5})", str(config.get("uri", "")))
+            port = int(match[1]) if match else config.get("port")
+            outcome = supervisor_ws.discover_wyoming(access[0], access[1], address, port)
+            return self.ok({"uuid": slug, "outcome": outcome})
         port = config.get("port", 1883)
         host_port = self.m.record(slug)["options"]["host_ports"].get(f"{port}/tcp")
         if type(port) is not int or host_port is None:

@@ -181,3 +181,37 @@ def test_discovery_without_a_token_is_an_explicit_error(world):
 def test_discovery_helper_rejects_hostile_broker_values():
     with pytest.raises(AppError):
         supervisor_ws.discover_mqtt("http://127.0.0.1:1", "t", "bad host;x", 1883, None, None)
+
+
+def _declare(slug, service):
+    from opiha_apps import catalog
+    entry = catalog.entry(slug)
+    entry["manifest"]["discovery"] = [service]
+    catalog.register(slug, entry)
+
+
+def test_wyoming_discovery_uses_the_addon_container_address(ha, monkeypatch):
+    from conftest import execute
+    manager, shim, tokens, fake = ha
+    slug = [r for r in manager.records()][0]
+    seen = {}
+
+    def flow(ha_url, token, handler, supplied, menu_step=None):
+        seen.update(handler=handler, supplied=supplied)
+        return "created"
+    monkeypatch.setattr(supervisor_ws, "discover_flow", flow)
+    _declare(slug, "wyoming")
+    assert execute(manager, slug, "start")["status"] == "succeeded"  # the fake engine puts it at 172.30.33.5
+    status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "wyoming", "config": {"uri": "tcp://core-piper:10200"}})
+    assert status == 200 and payload["data"]["outcome"] == "created"
+    assert seen == {"handler": "wyoming", "supplied": {"host": "172.30.33.5", "port": 10200}}
+    with pytest.raises(AppError):
+        supervisor_ws.discover_wyoming("http://127.0.0.1:1", "t", "172.30.33.5", "x")
+
+
+def test_other_discovery_services_stay_explicitly_unimplemented(ha):
+    manager, shim, tokens, fake = ha
+    slug = [r for r in manager.records()][0]
+    _declare(slug, "zwave_js")
+    status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "zwave_js", "config": {}})
+    assert status == 501 and "Wyoming" in payload["message"]

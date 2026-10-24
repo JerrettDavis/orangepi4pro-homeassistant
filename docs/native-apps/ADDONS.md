@@ -16,7 +16,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
 | Ports | Published to `127.0.0.1` only, unless you tick "reachable from my LAN". |
-| `http://supervisor/` | A shim on the add-on network answers `addons/self/{info,options,options/config,options/validate,stats}`, `info`, `core/info`, `host/info`, `supervisor/info`, `network/info`, `services/{mqtt,mysql}` (publish and read) and `core/api/...` (proxied to Home Assistant), `core/websocket` (a real WebSocket relay: the add-on authenticates with its own `SUPERVISOR_TOKEN`, the relay authenticates to Home Assistant with your token, and frames flow both ways) and MQTT `discovery` (the broker is registered through Home Assistant's own config-flow API). Each add-on has its own `SUPERVISOR_TOKEN`. |
+| `http://supervisor/` | A shim on the add-on network answers `addons/self/{info,options,options/config,options/validate,stats}`, `info`, `core/info`, `host/info`, `supervisor/info`, `network/info`, `services/{mqtt,mysql}` (publish and read) and `core/api/...` (proxied to Home Assistant), `core/websocket` (a real WebSocket relay: the add-on authenticates with its own `SUPERVISOR_TOKEN`, the relay authenticates to Home Assistant with your token, and frames flow both ways) and `discovery` for MQTT and Wyoming (the service is registered through Home Assistant's own config-flow API; verified on the Pi: the Piper add-on's own announcement created a loaded Wyoming entry and a `tts.piper` entity). Each add-on has its own `SUPERVISOR_TOKEN`. |
 | Add-on to add-on names | Each add-on gets the Supervisor's hostname (`core-mosquitto`, `<hash>-<slug>`), so existing configs that point at those names keep working. |
 | Ingress | Add-ons that declare `ingress` open inside the panel through the same admin-only proxy as the reviewed apps. The mount prefix is stripped and `X-Ingress-Path` is supplied. Add-ons that allow only `172.30.32.2` work because the host side of the add-on bridge *is* `172.30.32.2`. Dynamic ingress ports (`ingress_port: 0`) are supported. |
 | Lifecycle | Install, start, stop, restart, configure, update and remove use the same plan, approval, journal and rollback flow as the reviewed apps. A failed update restores the previous image, manifest and data. |
@@ -48,8 +48,9 @@ recovered on its own when the shim came back.
 
 ## What does not, and what is said instead
 
-* **Discovery** works for MQTT only (needs the Home Assistant access token), filling Home Assistant's own form from its
-  schema. Other discovery services (for example Wyoming for Piper/Whisper) answer 501; add that integration by hand.
+* **Discovery** works for MQTT and Wyoming (Piper, Whisper, openWakeWord; needs the Home Assistant access token),
+  filling Home Assistant's own form from its schema. Other services (Z-Wave JS, Matter, OpenThread) answer 501; add
+  that integration by hand.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
 * No HAOS, host D-Bus, host audio, AppArmor profiles, Supervisor backups or add-on store auto-updates.
 * Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0-alpha.8
+
+- Wyoming discovery: Piper, Whisper and openWakeWord register themselves with Home Assistant (verified on the Pi: a
+  loaded Wyoming entry and a `tts.piper` entity). Home Assistant reaches the add-on at its own bridge address.
+
 ## 0.3.0-alpha.7
 
 Found by running every installable official add-on on the device:
