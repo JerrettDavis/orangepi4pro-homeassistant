@@ -60,13 +60,24 @@ class Shim:
             return None
         found = None
         for p in (self.m.root / "apps").glob("*/private.env"):
-            slug = p.parent.name
-            if not catalog.is_addon(slug):
-                continue
-            known = addon_runtime.token(self.m, slug)
+            path = p.parent / "addon.json"
+            if not path.is_file():
+                continue  # reviewed apps have no add-on token
+            known = self._token_of(p)
             if known and hmac.compare_digest(known, token):
-                found = slug
+                found = p.parent.name
+        if found and not catalog.is_addon(found):
+            # Installed by another process (CLI, repair) since this one started: learn it from disk.
+            try:
+                catalog.register(found, addon_runtime.load_addon(self.m.root / "apps" / found / "addon.json"))
+            except AppError:
+                return None
         return found
+
+    @staticmethod
+    def _token_of(path: Path) -> str | None:
+        match = re.search(r"(?m)^SUPERVISOR_TOKEN=([0-9a-f]{64})$", path.read_text())
+        return match[1] if match else None
 
     # --- helpers --------------------------------------------------------------------
 

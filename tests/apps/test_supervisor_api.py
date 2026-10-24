@@ -166,3 +166,12 @@ def test_redirect_rule_is_checked_then_inserted_once_and_failures_are_reported()
     rule = " ".join(calls[1])
     assert "172.30.32.2" in rule and "--dport 80" in rule and f"--to-ports {supervisor_api.SHIM_PORT}" in rule and "opihaadd0" in rule
     assert supervisor_api.ensure_redirect(lambda argv: 1) is False
+
+
+def test_addon_installed_by_another_process_is_recognised_on_first_call(world):
+    manager, shim, repo, tokens = world
+    catalog.clear_dynamic()  # this process "started before" the add-on was installed elsewhere
+    assert not catalog.is_addon(slug_of(repo, "consumer"))
+    assert call(shim, "GET", "/addons/self/info", tokens["consumer"])[0] == 200
+    assert catalog.is_addon(slug_of(repo, "consumer"))
+    assert call(shim, "GET", "/addons/self/info", "f" * 64)[0] == 401
