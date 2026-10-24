@@ -351,7 +351,7 @@ def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUP
                 server = make_server(shim, host, port)
                 threading.Thread(target=server.serve_forever, daemon=True).start()
             except OSError as exc:
-                server, error = None, f"cannot listen on {host}:{port} ({exc.strerror or exc}); no add-on network yet?"
+                server, error = None, f"cannot listen on {host}:{port} ({exc.strerror or exc}); the add-on network is created by the first add-on install"
         redirect = ensure_redirect() if server is not None else False
         if server is not None and not redirect:
             error = "could not install the supervisor:80 redirect (iptables); add-ons will not reach the API"

@@ -69,7 +69,7 @@ class OpihaStoreTab extends Tab {
 
   view() {
     const filtered = this.rows.filter(r => `${r.manifest?.name || r.folder} ${r.manifest?.description || ""}`.toLowerCase().includes(this.search.toLowerCase()));
-    const shimBad = this.shim && !(this.shim.listening && this.shim.redirect);
+    const shimBad = this.shim && this.installed.length > 0 && !(this.shim.listening && this.shim.redirect);
     return `${shimBad ? `<div class="error" role="alert">The add-on API (http://supervisor/) is not available: ${esc(this.shim.error || "starting")}. Add-ons that call it will fail until this clears.</div>` : ""}${this.job ? `<div class="notice" role="status">${esc(this.job.app)} · ${esc(this.job.stage)}</div>` : ""}
     <div class="notice warn">Add-ons are third-party software from repositories <em>you</em> add. This panel runs them natively in Docker with the options and access you approve. It is not the Home Assistant Supervisor: some add-ons run with reduced capability and some cannot run at all, which is stated before you install.</div>
     <section><h2>Installed add-ons</h2>${this.installed.length ? `<div class="list">${this.installed.map(a => this.installedRow(a)).join("")}</div>` : `<p class="muted">None yet. Add a repository below and install one.</p>`}</section>

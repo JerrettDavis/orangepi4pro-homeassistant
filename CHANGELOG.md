@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.5
+
+- The Add-ons tab no longer warns that the add-on API is unavailable before any add-on has been installed.
+
 ## 0.3.0-alpha.4
 
 - **Add-ons**: a new Add-ons tab installs Home Assistant add-ons from repositories you add, without the Supervisor.
