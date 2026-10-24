@@ -30,16 +30,18 @@ discovery could be exercised end to end.
 
 | Result | Add-ons |
 |---|---|
-| **Run steadily** (10) | File editor (ingress, REST and WebSocket through the shim), Mosquitto (HA's MQTT integration connects to it through discovery), MariaDB (publishes its MySQL service), Piper, Whisper, openWakeWord, Speech-to-Phrase, Assist microphone, VLC, deCONZ (web part; no radio attached) |
-| **Run and do their job, then stop for want of input or hardware** (4) | Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
-| **Start but exit** (6) | nginx Proxy Manager (exits on startup), dnsmasq, RPC shutdown, Samba (reaches every API call, then its own start-up script finds no interface), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
+| **Run steadily** (12) | File editor (ingress, REST and WebSocket through the shim), Mosquitto (HA's MQTT integration connects to it through discovery), MariaDB (publishes its MySQL service), dnsmasq (answers real DNS queries), Samba (binds the Wi-Fi interface, `smbd`/`nmbd` up), Piper, Whisper, openWakeWord, Speech-to-Phrase, Assist microphone, VLC, deCONZ (web part; no radio attached) |
+| **Run and do their job, then stop** (5) | RPC shutdown (run-once by design), Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
+| **Need something this test could not give** (3) | nginx Proxy Manager (needs a real domain and certificate before nginx will start), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
+| **Not exercised** (2) | DuckDNS (rejected the placeholder domain) and Z-Wave JS (needs a controller) |
 | **Refused before install** (2) | Matter Server and SSH & Web Terminal (host D-Bus / Docker API) |
 
-Of the 22 installable add-ons, 20 were actually started (DuckDNS rejected the placeholder domain used for the test and
-Z-Wave JS needs a controller, so neither was exercised). 14 of those 20 run; 3 more need a radio; and 3 (nginx Proxy
-Manager, dnsmasq, Samba) fail for reasons not yet understood. The run also exposed and fixed: host-networked add-ons could not
-reach the API, `network/info` was empty, block-scalar schema rules (Piper) failed to parse, TCP and UDP of the same
-port number were treated as a clash, `supervisor/ping` was missing, and a shim bound to a vanished address never rebound.
+Of the 20 add-ons that could be started, 17 ran or completed as designed and 3 need real hardware or a real domain.
+An earlier version of this table listed dnsmasq, Samba and nginx Proxy Manager as unexplained failures; those were
+caused by the test harness filling optional lists and options with placeholder values, not by the shim. The run also
+exposed and fixed real bugs: host-networked add-ons could not reach the API, `network/info` was empty, block-scalar
+schema rules (Piper) failed to parse, TCP and UDP of the same port number were treated as a clash, `supervisor/ping`
+was missing, and a shim bound to a vanished address never rebound.
 
 After a simulated "API not ready at boot" (shim stopped, autostart add-on restarting), the add-on crash-looped and
 recovered on its own when the shim came back.
