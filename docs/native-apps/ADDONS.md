@@ -35,7 +35,7 @@ discovery could be exercised end to end.
 | **Run and do their job, then stop** (5) | RPC shutdown (run-once by design), Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
 | **Need something this test could not give** (3) | nginx Proxy Manager (needs a real domain and certificate before nginx will start), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
 | **Not exercised** (2) | DuckDNS (rejected the placeholder domain) and Z-Wave JS (needs a controller) |
-| **Refused before install** (1) | SSH & Web Terminal (Docker API). Matter Server installs behind the host D-Bus grant and runs healthy on the device (web server on the bridge gateway and loopback, BLE off; not yet paired with Home Assistant). |
+| **Refused before install** (1) | SSH & Web Terminal (Docker API). Matter Server installs behind the host D-Bus grant and runs healthy on the device (web server on the bridge gateway and loopback, BLE off; registered with a throwaway Home Assistant, which loaded it). |
 
 Of the 20 add-ons that could be started, 17 ran or completed as designed and 3 need real hardware or a real domain.
 An earlier version of this table listed dnsmasq, Samba and nginx Proxy Manager as unexplained failures; those were
@@ -51,7 +51,7 @@ recovered on its own when the shim came back.
 
 * **Discovery** works for MQTT and Wyoming (Piper, Whisper, openWakeWord; needs the Home Assistant access token),
   filling Home Assistant's own form from its schema, and for Z-Wave JS, Matter Server and the OpenThread border router
-  (registered by their URL; covered by unit tests, not yet run against a live controller). Other services answer 501.
+  (registered by their URL). Matter was verified live on the Pi: the Matter Server add-on's registration created a loaded Matter entry in a throwaway Home Assistant. Z-Wave JS and OpenThread are covered by unit tests only (they need a controller or border router). Other services answer 501.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
 * No HAOS, the Supervisor's own D-Bus services (NetworkManager, rauc; the host's system bus can be granted), a PulseAudio server (raw ALSA is provided), AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or automatic add-on updates. The Add-ons tab does show "update X available" for an installed add-on when its (refreshed) repository offers a newer version; applying it is still a reviewed update.
 * Add-ons that need the host PID namespace, Docker API or an architecture other than aarch64 are marked
