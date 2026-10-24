@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.12
+
+- Add-on options you leave out take the add-on's defaults (a partial `config` no longer fails with "Option X is required").
+
 ## 0.3.0-alpha.11
 
 - A finished job no longer blocks the next submit: the terminal status ("succeeded"/"failed") is published only after the

@@ -331,3 +331,8 @@ def test_audio_is_a_grant_and_hands_over_the_alsa_devices(manager, repo, tmp_pat
     assert str(snd) in create["devices"] and create["group_add"] == [(snd / "controlC0").stat().st_gid]
     monkeypatch.setattr(addon_runtime, "SND", str(tmp_path / "absent"))
     assert addon_runtime.audio_access() == ([], [])  # a host without sound devices simply gets none
+
+
+def test_partial_config_takes_defaults_for_the_rest(manager, repo):
+    plan = manager.plan_addon(repo, "mosquitto", {"grants": ["ha_api"], "config": {"name": "front"}})
+    assert plan["options"]["config"] == {"require_certificate": False, "name": "front"}
