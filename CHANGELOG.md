@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.14
+
+- A list of optional items (`- str?`) can be left out of add-on options, as the Supervisor allows (found installing Matter Server).
+
 ## 0.3.0-alpha.13
 
 - Installed add-ons show "update X available" when their repository offers a newer version.
