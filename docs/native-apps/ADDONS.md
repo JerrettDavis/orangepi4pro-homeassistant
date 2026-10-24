@@ -20,7 +20,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Add-on to add-on names | Each add-on gets the Supervisor's hostname (`core-mosquitto`, `<hash>-<slug>`), so existing configs that point at those names keep working. |
 | Ingress | Add-ons that declare `ingress` open inside the panel through the same admin-only proxy as the reviewed apps. The mount prefix is stripped and `X-Ingress-Path` is supplied. Add-ons that allow only `172.30.32.2` work because the host side of the add-on bridge *is* `172.30.32.2`. Dynamic ingress ports (`ingress_port: 0`) are supported. |
 | Lifecycle | Install, start, stop, restart, configure, update and remove use the same plan, approval, journal and rollback flow as the reviewed apps. A failed update restores the previous image, manifest and data. |
-| Backup | `opiha-apps backup` includes add-on records, data and tokens (it is private state; encrypt it). Cloned repositories and the shared `/share`, `/media`, `/ssl` folders are not included. |
+| Backup and restore | Per add-on, in the Add-ons tab (**Backup**, **Restore…**) or `opiha-apps app backup|restore <slug>`: the add-on is stopped, its data and options are packed into a private, hash-checked archive under `addon-backups/`, and it is started again. Restore verifies the hash, accepts only regular files under the add-on's own directories, keeps the current data as a rollback copy, and leaves the install decisions (image, ports, privileges) unchanged. Verified on the Pi with dnsmasq. `opiha-apps backup` still covers the whole manager state (it includes add-on records, data and tokens; encrypt it). Cloned repositories and the shared `/share`, `/media`, `/ssl` folders are in neither. |
 
 ## Measured on the Orange Pi
 
@@ -52,7 +52,7 @@ recovered on its own when the shim came back.
   filling Home Assistant's own form from its schema. Other services (Z-Wave JS, Matter, OpenThread) answer 501; add
   that integration by hand.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
-* No HAOS, host D-Bus, host audio, AppArmor profiles, Supervisor backups or add-on store auto-updates.
+* No HAOS, host D-Bus, host audio, AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or add-on store auto-updates.
 * Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked
   **Unsupported** and cannot be installed. Everything else is **Works** or **Reduced**, with the reasons shown first.
 * Every request to an endpoint the shim does not implement is recorded in `shim-unimplemented.json` in the state

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.9
+
+- Per-add-on **backup and restore** (Add-ons tab and `opiha-apps app backup|restore`): stop, hash-checked private archive of the add-on's data and options, start again; restore keeps the previous data as a rollback copy and refuses tampered or unsafe archives.
+
 ## 0.3.0-alpha.8
 
 - Wyoming discovery: Piper, Whisper and openWakeWord register themselves with Home Assistant (verified on the Pi: a

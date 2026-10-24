@@ -90,7 +90,7 @@ class OpihaStoreTab extends Tab {
     const b = (action, label, cls = "") => `<button class="small ${cls}" data-act="${action}" data-app="${a.id}" ${busy ? "disabled" : ""}>${label}</button>`;
     const running = a.state === "running";
     return `<div class="item"><div class="grow"><strong>${esc(a.name)}</strong> <span class="badge ${running ? "good" : ""}">${esc(a.state.replaceAll("_", " "))}</span><small>${esc(a.options?.version || "")} · ${esc(a.manifest?.slug || "")}</small></div>
-      ${a.installed ? (running ? (a.ingress ? b("open", "Open", "primary") : "") + b("stop", "Stop") + b("restart", "Restart") : b("start", "Start", "primary")) + b("configure", "Configure") + b("logs", "Logs") + b("remove", "Remove", "danger")
+      ${a.installed ? (running ? (a.ingress ? b("open", "Open", "primary") : "") + b("stop", "Stop") + b("restart", "Restart") : b("start", "Start", "primary")) + b("configure", "Configure") + b("backup", "Backup") + b("backups", "Restore…") + b("logs", "Logs") + b("remove", "Remove", "danger")
         : `<span class="muted">Removed, data kept</span>`}</div>`;
   }
   addonRow(r) {
@@ -181,8 +181,17 @@ class OpihaStoreTab extends Tab {
       if (action === "open") { this.dispatchEvent(new CustomEvent("opiha-navigate", {detail: {tab: "apps", open: slug}, bubbles: true, composed: true})); return; }
       if (action === "logs") { const r = await this.api("logs", {app: slug}); this.modal(`${a.name} logs`, `<p class="muted">Logs can contain private data.</p><pre>${esc(r.logs)}</pre><div class="buttons"><button data-close>Close</button></div>`); return; }
       if (action === "configure") return this.configure(a);
+      if (action === "backups") return this.backups(a);
       const plan = await this.api("plan", {app: slug, action}); this.showPlan(plan, `${action[0].toUpperCase() + action.slice(1)} ${a.name}`);
     } catch (e) { this.fail(e); }
+  }
+  async backups(a) {
+    const rows = (await this.api("backups", {app: a.id})).backups.slice().reverse();
+    const d = this.modal(`${a.name} backups`, `${rows.length ? `<div class="list">${rows.map(r => `<div class="item"><div class="grow"><strong>${esc(new Date(r.created * 1000).toLocaleString())}</strong><small>version ${esc(r.version)} · ${esc((r.size / 1048576).toFixed(1))} MiB</small></div><button class="small" data-restore="${esc(r.id)}">Restore</button></div>`).join("")}</div>` : `<p class="muted">No backups yet. Use Backup on the add-on first.</p>`}
+      <div class="buttons"><button data-close>Close</button></div>`);
+    d.querySelectorAll("[data-restore]").forEach(b => b.onclick = async () => {
+      try { d.close(); const plan = await this.api("plan", {app: a.id, action: "restore", backup: b.dataset.restore}); this.showPlan(plan, `Restore ${a.name}`); } catch (e) { this.fail(e); }
+    });
   }
   configure(a) {
     const m = a.manifest, o = a.options;

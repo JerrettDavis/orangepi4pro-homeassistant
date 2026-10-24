@@ -31,9 +31,10 @@ def parser():
     a.add_argument("state", choices=("on", "off"))
     a.add_argument("--user", help="Host account the terminal runs as (default: orangepi)")
     a = sub.add_parser("app", help="Plan one app operation; --apply executes the reviewed plan")
-    a.add_argument("action", choices=("install", "update", "start", "stop", "restart", "remove", "configure"))
+    a.add_argument("action", choices=("install", "update", "start", "stop", "restart", "remove", "configure", "backup", "restore"))
     a.add_argument("app")
     a.add_argument("--options-file", type=Path)
+    a.add_argument("--backup-id", help="Backup to restore (see opiha-apps app ... via the Add-ons tab or the API)")
     a.add_argument("--apply", action="store_true")
     a.add_argument("--confirm-network-access", action="store_true")
     a = sub.add_parser("repo", help="Manage Home Assistant add-on repositories (git, https only)")
@@ -155,7 +156,7 @@ def main(argv=None):
                     return 1
             elif args.command == "app":
                 opts = read_json(args.options_file.absolute()) if args.options_file else None
-                plan = manager.plan(args.app, args.action, opts)
+                plan = manager.plan(args.app, args.action, opts, backup=args.backup_id)
                 emit(plan)
                 if args.apply:
                     if args.action in {"install", "update", "start", "restart"} and not args.confirm_network_access:

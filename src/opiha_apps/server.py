@@ -62,7 +62,7 @@ def make_server(manager, port: int | None = None):
                     value = manager.overview(include_stats=True)
                 elif match := re.fullmatch(r"/v1/jobs/([A-Za-z0-9_-]{1,80})", self.path):
                     value = manager.job(match[1])
-                elif match := re.fullmatch(r"/v1/apps/([a-z0-9_-]{1,32})/(logs|ingress)", self.path):
+                elif match := re.fullmatch(r"/v1/apps/([a-z0-9_-]{1,32})/(logs|ingress|backups)", self.path):
                     value = getattr(manager, match[2])(match[1])
                 elif self.path == "/v1/repos":
                     value = {"repositories": manager.repos.list(), "suggested": addon_repos.SUGGESTED,
@@ -93,9 +93,9 @@ def make_server(manager, port: int | None = None):
                 if not isinstance(document, dict):
                     raise AppError("Request must be a JSON object")
                 if self.path == "/v1/plan":
-                    if set(document) - {"app", "action", "options"}:
+                    if set(document) - {"app", "action", "options", "backup"}:
                         raise AppError("Unknown planning fields")
-                    value = manager.plan(document["app"], document["action"], document.get("options"))
+                    value = manager.plan(document["app"], document["action"], document.get("options"), backup=document.get("backup"))
                 elif self.path == "/v1/repos/add":
                     if set(document) != {"url"}:
                         raise AppError("Send only the repository URL")

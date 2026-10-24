@@ -31,7 +31,7 @@ def _admin(connection):
 
 
 @websocket_api.websocket_command({vol.Required("type"): "opiha_apps/request",
-                                 vol.Required("operation"): vol.In(["overview", "metrics", "plan", "apply", "job", "logs", "credentials"]),
+                                 vol.Required("operation"): vol.In(["overview", "metrics", "plan", "apply", "job", "logs", "credentials", "backups"]),
                                  vol.Optional("data", default={}): dict})
 @websocket_api.async_response
 async def ws_request(hass, connection, msg):
@@ -45,19 +45,19 @@ async def ws_request(hass, connection, msg):
                 raise NativeError("This operation takes no parameters")
             method, path, body = "GET", "/v1/" + op, None
         elif op == "plan":
-            if set(data) - {"app", "action", "options"}:
+            if set(data) - {"app", "action", "options", "backup"}:
                 raise NativeError("Unknown plan fields")
             method, path, body = "POST", "/v1/plan", data
         elif op == "apply":
             if set(data) != {"id", "confirm"}:
                 raise NativeError("Invalid plan approval")
             method, path, body = "POST", "/v1/apply", data
-        elif op in {"job", "logs"}:
+        elif op in {"job", "logs", "backups"}:
             key = "id" if op == "job" else "app"
             value = data.get(key)
             if set(data) != {key} or not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", value):
                 raise NativeError("Invalid request identifier")
-            method, path, body = "GET", "/v1/jobs/" + value if op == "job" else "/v1/apps/" + value + "/logs", None
+            method, path, body = "GET", "/v1/jobs/" + value if op == "job" else "/v1/apps/" + value + "/" + op, None
         else:
             if data != {"confirm": True}:
                 raise NativeError("Confirm before revealing the private broker account")
@@ -175,7 +175,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     websocket_api.async_register_command(hass, ws_store)
     await panel_custom.async_register_panel(hass, frontend_url_path="opiha-apps",
         webcomponent_name="opiha-apps-panel", sidebar_title="Orange Pi", sidebar_icon="mdi:chip",
-        module_url="/api/opiha_apps/panel.js?v=0.3.0-alpha.8", require_admin=True)
+        module_url="/api/opiha_apps/panel.js?v=0.3.0-alpha.9", require_admin=True)
 
     async def stop(_event):
         await ingress.close()

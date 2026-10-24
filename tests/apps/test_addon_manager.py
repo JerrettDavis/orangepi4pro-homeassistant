@@ -238,3 +238,76 @@ def test_tcp_and_udp_of_the_same_port_number_may_share_a_host_port(manager, repo
     (manager.repos.addon_dir(repo, "mosquitto").parent / "dns" / "config.yaml").write_text(dns)
     plan = manager.plan_addon(repo, "dns", {"grants": ["ha_api"]})
     assert plan["options"]["host_ports"] == {"53/tcp": 20053, "53/udp": 20053}
+
+
+def _installed(manager, repo):
+    assert execute_addon(manager, repo, "mosquitto", {"grants": ["ha_api"], "config": {"require_certificate": True}})["status"] == "succeeded"
+    s = slug(repo, "mosquitto")
+    (manager.app_dir(s) / "data/state.txt").write_text("before")
+    (manager.app_dir(s) / "addon_config").mkdir(exist_ok=True)
+    (manager.app_dir(s) / "addon_config/c.yaml").write_text("keep: me")
+    return s
+
+
+def test_backup_stops_copies_restarts_and_restore_replaces_data_with_a_rollback_copy(manager, repo):
+    from opiha_apps import addon_backup
+    s = _installed(manager, repo)
+    assert execute(manager, s, "start")["status"] == "succeeded"
+    assert execute(manager, s, "backup")["status"] == "succeeded"
+    assert manager.engine.owned(s)["State"]["Running"]  # it was running, so it is running again
+    assert ("stop", s) in manager.engine.calls
+    rows = manager.backups(s)["backups"]
+    assert len(rows) == 1 and rows[0]["version"] == "6.5.2"
+    # the add-on keeps working and its data drifts; then the options change as well
+    (manager.app_dir(s) / "data/state.txt").write_text("after")
+    (manager.app_dir(s) / "addon_config/c.yaml").unlink()
+    opts = {**manager.record(s)["options"], "config": {"require_certificate": False}}
+    assert execute(manager, s, "configure", opts)["status"] == "succeeded"
+    job = wait(manager, manager.submit(manager.plan(s, "restore", backup=rows[0]["id"])["id"], True))
+    assert job["status"] == "succeeded", job["stage"]
+    assert (manager.app_dir(s) / "data/state.txt").read_text() == "before"
+    assert (manager.app_dir(s) / "addon_config/c.yaml").read_text() == "keep: me"
+    assert json.loads((manager.app_dir(s) / "data/options.json").read_text())["require_certificate"] is True
+    assert manager.record(s)["options"]["config"]["require_certificate"] is True
+    assert manager.engine.owned(s)["State"]["Running"]
+    kept = [p for p in (manager.root / "rollbacks").glob(s + "-prerestore-*")]
+    assert kept and (kept[0] / "data/state.txt").read_text() == "after"  # the pre-restore data was not destroyed
+
+
+def test_restore_refuses_tampered_unknown_and_foreign_backups(manager, repo):
+    from opiha_apps import addon_backup
+    s = _installed(manager, repo)
+    assert execute(manager, s, "backup")["status"] == "succeeded"
+    row = manager.backups(s)["backups"][0]
+    for bad in ("nope", "../x", "20260101T000000Z-deadbeef", None):
+        with pytest.raises(AppError):
+            manager.plan(s, "restore", backup=bad)
+    archive = next((manager.root / "addon-backups").glob(s + "-*.tar.gz"))
+    archive.write_bytes(archive.read_bytes() + b"x")
+    with pytest.raises(AppError, match="integrity"):
+        manager.plan(s, "restore", backup=row["id"])
+    with pytest.raises(AppError):
+        manager.plan("nodered", "backup")  # the reviewed apps have their own backup command
+    with pytest.raises(AppError):
+        manager.plan(s, "backup", backup=row["id"])
+
+
+def test_extract_rejects_traversal_links_and_special_entries(tmp_path):
+    import io, tarfile
+    from opiha_apps import addon_backup
+    def archive(name, build):
+        path = tmp_path / name
+        with tarfile.open(path, "w:gz") as tar:
+            build(tar)
+        return path
+    def reg(tar, n, data=b"x"):
+        i = tarfile.TarInfo(n); i.size = len(data); tar.addfile(i, io.BytesIO(data))
+    def link(tar):
+        i = tarfile.TarInfo("data/l"); i.type = tarfile.SYMTYPE; i.linkname = "/etc/passwd"; tar.addfile(i)
+    cases = {"trav": lambda t: reg(t, "data/../../escape"), "abs": lambda t: reg(t, "/etc/x"), "other": lambda t: reg(t, "etc/x"), "link": link}
+    for key, build in cases.items():
+        with pytest.raises(AppError):
+            addon_backup.extract(archive(key + ".tgz", build), tmp_path / ("out-" + key))
+    ok = archive("ok.tgz", lambda t: reg(t, "data/a.txt"))
+    addon_backup.extract(ok, tmp_path / "out-ok")
+    assert (tmp_path / "out-ok/data/a.txt").read_bytes() == b"x"
