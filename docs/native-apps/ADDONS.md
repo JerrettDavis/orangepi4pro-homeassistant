@@ -35,7 +35,7 @@ discovery could be exercised end to end.
 | **Run and do their job, then stop** (5) | RPC shutdown (run-once by design), Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
 | **Need something this test could not give** (3) | nginx Proxy Manager (needs a real domain and certificate before nginx will start), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
 | **Not exercised** (2) | DuckDNS (rejected the placeholder domain) and Z-Wave JS (needs a controller) |
-| **Refused before install** (1) | SSH & Web Terminal (Docker API). Matter Server is installable behind the host D-Bus grant (not yet run on the device). |
+| **Refused before install** (1) | SSH & Web Terminal (Docker API). Matter Server installs behind the host D-Bus grant and runs healthy on the device (web server on the bridge gateway and loopback, BLE off; not yet paired with Home Assistant). |
 
 Of the 20 add-ons that could be started, 17 ran or completed as designed and 3 need real hardware or a real domain.
 An earlier version of this table listed dnsmasq, Samba and nginx Proxy Manager as unexplained failures; those were
