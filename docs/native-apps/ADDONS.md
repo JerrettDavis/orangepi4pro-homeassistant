@@ -11,7 +11,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Supervisor feature | Here |
 |---|---|
 | Repositories | Add any `https://` git repository. Suggested: official add-ons, Community Hass.io Add-ons, ESPHome, Zigbee2MQTT. Shallow clone, no submodules, no hooks, refreshed only when you ask. |
-| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Checked on all 24 official add-ons on the Orange Pi: 4 work fully, 18 run with reduced capability (each names why: no Supervisor discovery, REST-only API, hardware you must grant, ...), 2 are refused (host D-Bus / Docker API). Real runs on the device: File editor (ingress), Mosquitto (publishes its MQTT service) and a Dockerfile-only add-on built on the device, all under the production service sandbox. |
+| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Parsed on the Orange Pi: all 24 official add-ons (4 "works", 18 "reduced" with the reasons shown, 2 refused for needing the host D-Bus / Docker API). |
 | Images | `image:` add-ons are pulled for `linux/arm64` and locked to their digest. Add-ons with only a `Dockerfile` are built on the device with `BUILD_FROM`/`BUILD_ARCH` (needs 4 GiB free). |
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
@@ -22,10 +22,32 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Lifecycle | Install, start, stop, restart, configure, update and remove use the same plan, approval, journal and rollback flow as the reviewed apps. A failed update restores the previous image, manifest and data. |
 | Backup | `opiha-apps backup` includes add-on records, data and tokens (it is private state; encrypt it). Cloned repositories and the shared `/share`, `/media`, `/ssl` folders are not included. |
 
+## Measured on the Orange Pi
+
+Every installable official add-on was installed and started on the device (default or plausible options), watched for
+45 seconds and removed. A throwaway Home Assistant on the same host stood in for HA so the WebSocket relay and MQTT
+discovery could be exercised end to end.
+
+| Result | Add-ons |
+|---|---|
+| **Run steadily** (10) | File editor (ingress, REST and WebSocket through the shim), Mosquitto (HA's MQTT integration connects to it through discovery), MariaDB (publishes its MySQL service), Piper, Whisper, openWakeWord, Speech-to-Phrase, Assist microphone, VLC, deCONZ (web part; no radio attached) |
+| **Run and do their job, then stop for want of input or hardware** (4) | Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
+| **Start but exit** (6) | nginx Proxy Manager (exits on startup), dnsmasq, RPC shutdown, Samba (reaches every API call, then its own start-up script finds no interface), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
+| **Refused before install** (2) | Matter Server and SSH & Web Terminal (host D-Bus / Docker API) |
+
+Of the 22 installable add-ons, 20 were actually started (DuckDNS rejected the placeholder domain used for the test and
+Z-Wave JS needs a controller, so neither was exercised). 14 of those 20 run; 3 more need a radio; and 3 (nginx Proxy
+Manager, dnsmasq, Samba) fail for reasons not yet understood. The run also exposed and fixed: host-networked add-ons could not
+reach the API, `network/info` was empty, block-scalar schema rules (Piper) failed to parse, TCP and UDP of the same
+port number were treated as a clash, `supervisor/ping` was missing, and a shim bound to a vanished address never rebound.
+
+After a simulated "API not ready at boot" (shim stopped, autostart add-on restarting), the add-on crash-looped and
+recovered on its own when the shim came back.
+
 ## What does not, and what is said instead
 
-* **Discovery** works for MQTT only (needs the Home Assistant access token). Other discovery services answer 501;
-  add that integration in Home Assistant by hand.
+* **Discovery** works for MQTT only (needs the Home Assistant access token), filling Home Assistant's own form from its
+  schema. Other discovery services (for example Wyoming for Piper/Whisper) answer 501; add that integration by hand.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
 * No HAOS, host D-Bus, host audio, AppArmor profiles, Supervisor backups or add-on store auto-updates.
 * Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked
@@ -55,7 +77,9 @@ access**; it is stored in the manager's private state directory and used only fo
 
 The reverse proxy on the host owns port 80, so the shim listens on `172.30.32.2:8180` and an iptables rule
 (`nat PREROUTING -i opihaadd0 -d 172.30.32.2 --dport 80 -j REDIRECT --to-ports 8180`) is installed and re-checked
-every 30 seconds by the manager. It touches only traffic from the add-on bridge to that address.
+every 30 seconds by the manager. A second rule (`nat OUTPUT`, DNAT to the same port) serves add-ons that use host
+networking. They touch only traffic to that one address. The listener also checks it is still reachable and rebinds if the
+bridge is recreated. Peers must be on the add-on subnet or be this host itself.
 
 ## Command line
 

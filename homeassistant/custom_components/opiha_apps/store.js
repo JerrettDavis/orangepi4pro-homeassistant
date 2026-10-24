@@ -7,6 +7,7 @@ const badge = (status) => `<span class="badge ${STATUS[status]?.[0] || ""}">${ST
 
 /* --- options form generated from an add-on `schema` ---------------------------------------------- */
 function parseRule(rule) {
+  rule = rule.trim();
   const optional = rule.endsWith("?"), r = rule.replace(/\?$/, ""), open = r.indexOf("(");
   return {optional, base: open < 0 ? r : r.slice(0, open), arg: open < 0 ? "" : r.slice(open + 1, -1)};
 }

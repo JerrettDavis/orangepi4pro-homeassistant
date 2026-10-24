@@ -102,6 +102,15 @@ def test_schema_validation_rejects_bad_options(schema, value):
         addons.validate_options(schema, value)
 
 
+def test_rules_from_yaml_block_scalars_keep_working():
+    # Piper's real manifest writes `voice: |` followed by a long list(...); YAML leaves a trailing newline.
+    rule = "list(en_US-lessac-medium|de_DE-thorsten-medium)" + chr(10)
+    assert addons.validate_options({"voice": rule}, {"voice": "en_US-lessac-medium"}) == {"voice": "en_US-lessac-medium"}
+    with pytest.raises(AppError):
+        addons.validate_options({"voice": rule}, {"voice": "xx"})
+    assert addons.validate_options({"v": "list(a|b)?" + chr(10)}, {}) == {}
+
+
 def test_optional_marker_and_no_options_addon():
     assert addons.validate_options({"a": "str?"}, {}) == {}
     assert addons.validate_options(False, {}) == {}

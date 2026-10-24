@@ -220,7 +220,36 @@ def _rest(base: str, token: str, path: str, body: dict | None = None):
         raise AppError("Home Assistant is not reachable") from exc
 
 
-def discover_mqtt(ha_url: str, token: str, host: str, port: int, username: str | None, password: str | None) -> str:
+def fill_form(schema: list, supplied: dict) -> dict:
+    """Build a config-flow submission from Home Assistant's own serialized form: our values where we have them,
+    otherwise the form's default, otherwise a neutral value for required fields (False / first option / minimum / "")."""
+    out: dict = {}
+    for item in schema:
+        name = item.get("name")
+        if item.get("type") == "expandable":
+            out[name] = fill_form(item.get("schema", []), {})
+            continue
+        selector = item.get("selector") or {}
+        if name in supplied and supplied[name] is not None:
+            out[name] = supplied[name]
+        elif "default" in item:
+            out[name] = item["default"]
+        elif item.get("required"):
+            if "boolean" in selector:
+                out[name] = False
+            elif "select" in selector:
+                options = selector["select"].get("options") or [""]
+                first = options[0]
+                out[name] = first["value"] if isinstance(first, dict) else first
+            elif "number" in selector:
+                out[name] = selector["number"].get("min", 0)
+            else:
+                out[name] = ""
+    return out
+
+
+def discover_mqtt(ha_url: str, token: str, host: str, port: int, username: str | None, password: str | None,
+                  protocol: str | None = None) -> str:
     """Register a broker with Home Assistant's MQTT integration. Returns a short outcome string."""
     if not re.fullmatch(r"[A-Za-z0-9.:-]{1,100}", host) or not 1 <= port <= 65535:
         raise AppError("Invalid broker address")
@@ -232,9 +261,12 @@ def discover_mqtt(ha_url: str, token: str, host: str, port: int, username: str |
         flow = _rest(base, token, "/api/config/config_entries/flow/" + flow["flow_id"], {"next_step_id": "broker"})
     if flow.get("type") != "form":
         raise AppError("Unexpected Home Assistant MQTT setup step")
-    data = {"broker": host, "port": port}
+    supplied = {"broker": host, "port": port, "protocol": protocol if protocol in {"5", "3.1.1", "3.1"} else None}
     if username:
-        data.update(username=username, password=password or "")
+        supplied.update(username=username, password=password or "")
+    data = fill_form(flow.get("data_schema") or [], supplied)
+    data.setdefault("broker", host)
+    data.setdefault("port", port)
     done = _rest(base, token, "/api/config/config_entries/flow/" + flow["flow_id"], data)
     if done.get("type") == "create_entry":
         return "created"

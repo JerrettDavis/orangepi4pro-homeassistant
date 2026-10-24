@@ -229,3 +229,12 @@ def test_planning_and_overview_do_not_block_while_an_addon_installs(manager, rep
     finally:
         gate.set()
     assert wait(manager, job)["status"] == "succeeded"
+
+
+def test_tcp_and_udp_of_the_same_port_number_may_share_a_host_port(manager, repo):
+    # dnsmasq publishes 53/tcp and 53/udp; both default to the same host port number, which is legitimate.
+    dns = MOSQ.replace("ports: {1883/tcp: 1883, 1884/tcp: null}", "ports: {53/tcp: 53, 53/udp: 53}").replace("slug: mosquitto", "slug: dns")
+    (manager.repos.addon_dir(repo, "mosquitto").parent / "dns").mkdir()
+    (manager.repos.addon_dir(repo, "mosquitto").parent / "dns" / "config.yaml").write_text(dns)
+    plan = manager.plan_addon(repo, "dns", {"grants": ["ha_api"]})
+    assert plan["options"]["host_ports"] == {"53/tcp": 20053, "53/udp": 20053}

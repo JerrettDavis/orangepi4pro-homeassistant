@@ -37,13 +37,28 @@ class FakeHA:
                 await ws.send_json({"id": data["id"], "type": "result", "success": True, "result": {"echo": data["type"], "pad": "x" * data.get("pad", 0)}})
         return ws
 
+    SCHEMA = [  # shape captured from the real mqtt flow on the Orange Pi (HA 2026.9.3)
+        {"name": "broker", "required": True, "selector": {"text": {}}},
+        {"name": "port", "required": True, "default": 1883, "selector": {"number": {}}},
+        {"name": "protocol", "required": True, "default": "5", "selector": {"select": {"options": ["5", "3.1.1", "3.1"]}}},
+        {"name": "username", "required": False, "selector": {"text": {}}},
+        {"name": "password", "required": False, "selector": {"text": {}}},
+        {"type": "expandable", "name": "other_settings", "schema": [
+            {"name": "set_client_cert", "required": True, "selector": {"boolean": {}}},
+            {"name": "set_ca_cert", "required": True, "selector": {"select": {"options": ["off", "auto", "custom"]}}},
+            {"name": "transport", "required": True, "default": "tcp", "selector": {"select": {"options": [{"value": "tcp"}]}}}]}]
+
     async def flow_start(self, request):
         assert request.headers["Authorization"] == "Bearer LONG-LIVED-HA-TOKEN"
         self.flow_posts.append(await request.json())
-        return web.json_response({"type": "form", "flow_id": "f1", "step_id": "broker"})
+        return web.json_response({"type": "form", "flow_id": "f1", "step_id": "broker", "data_schema": self.SCHEMA})
 
     async def flow_step(self, request):
-        self.flow_posts.append(await request.json())
+        body = await request.json()
+        self.flow_posts.append(body)
+        required = {"broker", "port", "protocol", "other_settings"}
+        if required - set(body) or {"set_client_cert", "set_ca_cert", "transport"} - set(body.get("other_settings", {})):
+            return web.json_response({"errors": {"base": ["required key not provided"]}}, status=400)
         return web.json_response({"type": "create_entry"})
 
     def run(self):
@@ -151,7 +166,8 @@ def test_mqtt_discovery_registers_the_broker_through_the_config_flow(ha):
                            {"service": "mqtt", "config": {"host": "core-mosquitto", "port": 1883, "username": "homeassistant", "password": "s3cret"}})
     assert status == 200 and payload["data"]["outcome"] == "created"
     assert fake.flow_posts[0]["handler"] == "mqtt"
-    assert fake.flow_posts[1] == {"broker": "127.0.0.1", "port": 21883, "username": "homeassistant", "password": "s3cret"}
+    assert fake.flow_posts[1] == {"broker": "127.0.0.1", "port": 21883, "protocol": "5", "username": "homeassistant", "password": "s3cret",
+                                  "other_settings": {"set_client_cert": False, "set_ca_cert": "off", "transport": "tcp"}}
     status, payload = call(shim, "POST", "/discovery", tokens["mosquitto"], {"service": "mqtt", "config": {"port": 9999}})
     assert status == 400 and "not published" in payload["message"]
 

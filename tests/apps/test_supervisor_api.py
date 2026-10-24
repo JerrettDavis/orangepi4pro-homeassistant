@@ -140,16 +140,18 @@ def test_http_listener_accepts_bearer_and_legacy_headers_and_refuses_foreign_pee
         assert err.value.code == 401
     finally:
         server.shutdown()
-    strict = supervisor_api.make_server(shim, "127.0.0.1", 0)  # loopback is outside 172.30.32.0/23
+    strict = supervisor_api.make_server(shim, "127.0.0.1", 0)  # a host-local peer (loopback) is allowed ...
     threading.Thread(target=strict.serve_forever, daemon=True).start()
     try:
         req = urllib.request.Request(f"http://127.0.0.1:{strict.server_address[1]}/info",
                                      headers={"Authorization": "Bearer " + tokens["consumer"]})
-        with pytest.raises(urllib.error.HTTPError) as err:
-            urllib.request.urlopen(req, timeout=5)
-        assert err.value.code == 403
+        assert urllib.request.urlopen(req, timeout=5).status == 200
     finally:
         strict.shutdown()
+    # ... a remote LAN host is not, and neither is garbage.
+    assert supervisor_api.peer_allowed("172.30.33.7") and supervisor_api.peer_allowed("127.0.0.1")
+    for remote in ("192.0.2.55", "8.8.8.8", "not-an-ip", ""):
+        assert supervisor_api.peer_allowed(remote) is False
 
 
 def test_redirect_rule_is_checked_then_inserted_once_and_failures_are_reported():
@@ -160,10 +162,11 @@ def test_redirect_rule_is_checked_then_inserted_once_and_failures_are_reported()
             calls.append(argv)
             return rc_check if "-C" in argv else 0
         return run
-    assert supervisor_api.ensure_redirect(fake(0)) is True and len(calls) == 1 and "-C" in calls[0]
+    assert supervisor_api.ensure_redirect(fake(0)) is True and len(calls) == 2 and all("-C" in c for c in calls)
     calls.clear()
     assert supervisor_api.ensure_redirect(fake(1)) is True
     assert "-C" in calls[0] and "-I" in calls[1] and "PREROUTING" in calls[1]
+    assert "-C" in calls[2] and "-I" in calls[3] and "OUTPUT" in calls[3] and "DNAT" in calls[3]  # host-network add-ons
     rule = " ".join(calls[1])
     assert "172.30.32.2" in rule and "--dport 80" in rule and f"--to-ports {supervisor_api.SHIM_PORT}" in rule and "opihaadd0" in rule
     assert supervisor_api.ensure_redirect(lambda argv: 1) is False
@@ -193,3 +196,54 @@ def test_shim_state_is_reported_in_overview_and_run_loop_records_failures(world,
     t.join(5)
     state = manager.overview()["shim"]
     assert state["listening"] is True and state["redirect"] is False and "redirect" in state["error"]
+
+
+def test_listener_alive_detects_a_dead_address_and_run_loop_rebinds(world, monkeypatch):
+    import socket
+    manager, shim, _, _ = world
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        free = probe.getsockname()[1]
+    assert supervisor_api.listener_alive("127.0.0.1", free) is False  # nothing listening there
+
+    monkeypatch.setattr(supervisor_api, "ensure_redirect", lambda: True)
+    made, real_make = [], supervisor_api.make_server
+    monkeypatch.setattr(supervisor_api, "make_server", lambda *a, **k: made.append(real_make(*a, **k)) or made[-1])
+    checks = iter([False, True, True, True, True, True, True, True])  # first liveness probe fails, later ones pass
+    monkeypatch.setattr(supervisor_api, "listener_alive", lambda h, p: next(checks, True))
+    stop = threading.Event()
+    t = threading.Thread(target=supervisor_api.run_forever, args=(shim, stop, "127.0.0.1", 0), daemon=True)
+    t.start()
+    for _ in range(200):
+        if len(made) >= 2:
+            break
+        stop.wait(0.05)
+    stop.set()
+    t.join(5)
+    assert len(made) >= 2 and manager.shim_state["listening"] is True
+
+
+def test_network_info_lists_real_interfaces_in_the_supervisor_shape():
+    outputs = {
+        ("-4", "route", "show", "default"): json.dumps([{"dst": "default", "gateway": "10.0.0.1", "dev": "wlan0"}]),
+        ("-4", "addr", "show"): json.dumps([
+            {"ifname": "lo", "addr_info": [{"family": "inet", "local": "127.0.0.1", "prefixlen": 8}]},
+            {"ifname": "wlan0", "address": "aa:bb:cc:dd:ee:ff", "addr_info": [{"family": "inet", "local": "10.0.0.19", "prefixlen": 24}]},
+            {"ifname": "docker0", "addr_info": [{"family": "inet", "local": "172.17.0.1", "prefixlen": 16}]},
+            {"ifname": "opihaadd0", "addr_info": [{"family": "inet", "local": "172.30.32.2", "prefixlen": 23}]},
+            {"ifname": "eth0", "addr_info": []}])}
+    interfaces = supervisor_api.host_interfaces(lambda argv: outputs[tuple(argv[2:])])
+    assert [i["interface"] for i in interfaces] == ["wlan0"]
+    wlan = interfaces[0]
+    assert wlan["primary"] is True and wlan["type"] == "wireless" and wlan["ipv4"]["address"] == ["10.0.0.19/24"] and wlan["ipv4"]["gateway"] == "10.0.0.1"
+    assert supervisor_api.host_interfaces(lambda argv: "not json") == []
+
+
+def test_network_interface_info_route(world, monkeypatch):
+    manager, shim, repo, tokens = world
+    fake = [{"interface": "wlan0", "enabled": True, "ipv4": {"address": ["10.0.0.19/24"]}}]
+    monkeypatch.setattr(supervisor_api, "host_interfaces", lambda run=None: fake)
+    status, payload = call(shim, "GET", "/network/interface/wlan0/info", tokens["consumer"])
+    assert status == 200 and payload["data"]["enabled"] is True
+    assert call(shim, "GET", "/network/interface/eth9/info", tokens["consumer"])[0] == 404
+    assert call(shim, "GET", "/network/interface/..%2f..%2fx/info", tokens["consumer"])[0] == 404
