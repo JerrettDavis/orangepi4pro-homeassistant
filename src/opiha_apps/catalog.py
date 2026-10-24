@@ -138,7 +138,8 @@ def wanted_ports(slug: str, opts: dict) -> set[int]:
     """Host ports an app will bind, for conflict checks."""
     if is_addon(slug):
         extra = set(opts["host_ports"].values())
-        return {opts["port"]} | extra if _dynamic(slug).get("container_port") else extra
+        app = _dynamic(slug)
+        return {opts["port"]} | extra if app.get("container_port") and not app.get("ingress") else extra
     return {opts["port"]} | ({28554} if slug == "go2rtc" else {23000} if slug == "zwave" else set())
 
 

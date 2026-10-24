@@ -14,6 +14,12 @@ from . import addons
 from .common import AppError, atomic, checked_path, write_json
 
 ARCH_NAME = "aarch64"
+# Same addressing as the Supervisor: the host side of the bridge is 172.30.32.2, so add-ons that allow only
+# that address (their ingress nginx configs do) accept the traffic, and `supervisor` resolves where they expect.
+NETWORK = "opiha-addons"
+SUPERVISOR_IP = "172.30.32.2"
+NETWORK_ARGS = ["--subnet", "172.30.32.0/23", "--gateway", SUPERVISOR_IP, "--ip-range", "172.30.33.0/24",
+                "-o", "com.docker.network.bridge.name=opihaadd0"]
 DEFAULT_BASE = "ghcr.io/home-assistant/{arch}-base:latest"
 # Docker's default capability set minus NET_RAW. Root add-ons need these to start their services.
 BASE_CAPS = ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP",
@@ -246,17 +252,18 @@ def spec(mgr, slug: str, record: dict) -> dict:
     published = {int(k.split("/")[0]) for k in opts["host_ports"] if k.endswith("/tcp")}
     ports = [] if host_net else [(h, int(k.split("/")[0])) for k, h in sorted(opts["host_ports"].items()) if k.endswith("/tcp")]
     udp = [] if host_net else [(h, int(k.split("/")[0])) for k, h in sorted(opts["host_ports"].items()) if k.endswith("/udp")]
-    loopback = [] if host_net or not app["container_port"] or app["container_port"] in published else [(opts["port"], app["container_port"])]
+    loopback = [] if host_net or app["ingress"] or not app["container_port"] or app["container_port"] in published else [(opts["port"], app["container_port"])]
     environment = dict(m["environment"])
     caps = list(BASE_CAPS) + (m["privileged"] if "capabilities" in opts["grants"] else [])
     result = {**opts, "uid": 0, "user": "0:0", "image": record["image"],
-              "network": "host" if host_net else mgr.config["network"], "ports": ports, "udp_ports": udp,
+              "network": "host" if host_net else NETWORK, "ports": ports, "udp_ports": udp,
+              "aliases": [] if host_net else [app["hostname"]],
               "loopback_ports": loopback, "bind": "0.0.0.0" if opts["lan"] else "127.0.0.1",
               "mounts": mounts, "environment": environment, "command": [], "cap_add": sorted(set(caps)),
               "privileged_mode": "full_access" in opts["grants"], "init": m["init"] is not False,
               "tmpfs": m["tmpfs"], "env_file": str(checked_path(root / "private.env")),
               "devices": [d for d in opts["devices"] if os.path.exists(d)] if "devices" in opts["grants"] else [],
-              "extra_hosts": [("supervisor", mgr.shim_address)] if getattr(mgr, "shim_address", None) else []}
+              "extra_hosts": [("supervisor", SUPERVISOR_IP)]}
     return result
 
 

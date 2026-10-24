@@ -503,7 +503,10 @@ class Manager:
             progress("Pulling and verifying native image")
             reference = old["image"] if old and not existing and old["options"] == opts else catalog.image(slug, opts)
             locked, image_id = self.engine.pull(reference, app["repository"], self.config["architecture"])
-        self.engine.ensure_network(self.config["network"])
+        if app.get("addon"):
+            self.engine.ensure_network(addon_runtime.NETWORK, addon_runtime.NETWORK_ARGS)
+        else:
+            self.engine.ensure_network(self.config["network"])
         if not existing:
             self._seed(slug, locked, opts)
         old_addon = None
@@ -643,12 +646,24 @@ class Manager:
         return {"app": slug, "logs": self.engine.logs(row["Id"], slug), "private": True}
 
     def ingress(self, slug: str) -> dict:
-        if not catalog.entry(slug)["ingress"]:
+        app = catalog.entry(slug)
+        if not app["ingress"]:
             raise AppError("This adapter has no reviewed in-HA web route")
         row, record = self.engine.owned(slug), self.record(slug)
         if not row or not record or not row.get("State", {}).get("Running"):
             raise AppError("The requested app is not running")
-        return {"app": slug, "port": record["options"]["port"], "prefix": catalog.PREFIX + slug + "/"}
+        prefix = catalog.PREFIX + slug + "/"
+        if not app.get("addon"):
+            return {"app": slug, "port": record["options"]["port"], "prefix": prefix,
+                    "host": "127.0.0.1", "strip_prefix": slug == "esphome", "entry": ""}
+        networks = row.get("NetworkSettings", {}).get("Networks", {}) or {}
+        address = (networks.get(addon_runtime.NETWORK) or {}).get("IPAddress")
+        if not address or not re.fullmatch(r"172\.30\.3[23]\.\d{1,3}", address):
+            raise AppError("The add-on has no address on the add-on network")
+        port = record["options"]["port"] if app["dynamic_ingress"] else app["container_port"]
+        entry = app["manifest"]["ingress_entry"]
+        return {"app": slug, "port": port, "prefix": prefix, "host": address, "strip_prefix": True,
+                "entry": entry.strip("/") if isinstance(entry, str) and re.fullmatch(r"[A-Za-z0-9_./-]{0,100}", entry) else ""}
 
     def credentials(self, slug: str) -> dict:
         if slug != "mosquitto":

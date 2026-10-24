@@ -92,7 +92,7 @@ class Docker:
             raise AppError("Image has no matching registry digest; refusing a tag-only launch")
         return candidates[0], row["Id"]
 
-    def ensure_network(self, name: str):
+    def ensure_network(self, name: str, create_args: list[str] | None = None):
         raw = self.command(["network", "ls", "--format", "{{json .}}"])
         for line in raw.splitlines():
             row = json.loads(line)
@@ -101,7 +101,7 @@ class Docker:
                 if (net.get("Labels") or {}).get(LABEL) != self.owner or net.get("Driver") != "bridge":
                     raise AppError("Existing app network is not owned by this deployment")
                 return
-        self.command(["network", "create", "--driver", "bridge", "--label", LABEL + "=" + self.owner, name])
+        self.command(["network", "create", "--driver", "bridge", *(create_args or []), "--label", LABEL + "=" + self.owner, name])
 
     def create(self, slug: str, spec: dict) -> str:
         # Reviewed catalog apps run as an unprivileged UID with every capability dropped.
@@ -125,6 +125,8 @@ class Docker:
             args += ["--init"]
         if spec.get("tmpfs"):
             args += ["--tmpfs", "/tmp:rw,size=64m"]
+        for alias in spec.get("aliases", []):
+            args += ["--network-alias", alias]
         for host, address in spec.get("extra_hosts", []):
             args += ["--add-host", f"{host}:{address}"]
         for src, dst, readonly in spec["mounts"]:

@@ -27,14 +27,14 @@ class FakeDocker:
         return row
     def pull(self,ref,repository,architecture):
         self.calls.append(('pull',ref,architecture));return repository+'@sha256:'+'a'*64,'sha256:'+'b'*64
-    def ensure_network(self,name):self.calls.append(('network',name))
+    def ensure_network(self,name,args=None):self.calls.append(('network',name))
     def build(self,tag,context,args,arch):
         self.calls.append(('build',tag,context,dict(args),arch));return 'sha256:'+'c'*64
     def create(self,slug,spec):
         self.calls.append(('create',slug,copy.deepcopy(spec)))
         if self.fail_create:self.fail_create-=1;raise AppError('Synthetic create failure')
         self.serial+=1;identifier=f'{self.serial:064x}'
-        self.rows[identifier]={'Id':identifier,'Name':'/opiha-apps-'+slug,'Config':{'Image':spec['image'],'Labels':{LABEL:self.owner,APP_LABEL:slug}},'State':{'Running':False,'Status':'created'},'HostConfig':{'PortBindings':{str(c)+'/tcp':[{'HostPort':str(h)}] for h,c in spec['ports']},'RestartPolicy':{'Name':'unless-stopped' if spec['autostart'] else 'no'},'Devices':[]}}
+        self.rows[identifier]={'Id':identifier,'Name':'/opiha-apps-'+slug,'Config':{'Image':spec['image'],'Labels':{LABEL:self.owner,APP_LABEL:slug}},'State':{'Running':False,'Status':'created'},'NetworkSettings':{'Networks':{spec['network']:{'IPAddress':'172.30.33.5'}}},'HostConfig':{'PortBindings':{str(c)+'/tcp':[{'HostPort':str(h)}] for h,c in spec['ports']},'RestartPolicy':{'Name':'unless-stopped' if spec['autostart'] else 'no'},'Devices':[]}}
         return identifier
     def action(self,identifier,slug,action):
         self.assert_owned(identifier,slug);self.calls.append((action,slug))

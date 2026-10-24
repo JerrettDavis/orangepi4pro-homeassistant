@@ -137,8 +137,13 @@ def test_write_access_to_ha_config_and_ingress_need_grants(manager, repo):
     s = slug(repo, "configurator")
     create = next(c for c in manager.engine.calls if c[0] == "create")[2]
     assert (manager.ha_config, "/homeassistant", False) in create["mounts"]
-    assert create["loopback_ports"] == [(manager.record(s)["options"]["port"], 8099)]
+    assert create["loopback_ports"] == [] and create["network"] == "opiha-addons"
+    assert create["aliases"] == ["a0d7b954-configurator"] or create["aliases"][0].endswith("-configurator")
+    assert ("supervisor", "172.30.32.2") in create["extra_hosts"]
     assert catalog.entry(s)["ingress"] is True
+    assert execute(manager, s, "start")["status"] == "succeeded"
+    route = manager.ingress(s)
+    assert route["host"] == "172.30.33.5" and route["port"] == 8099 and route["strip_prefix"] and route["prefix"].endswith(s + "/")
 
 
 def test_addon_without_image_is_built_from_its_dockerfile(manager, repo):
