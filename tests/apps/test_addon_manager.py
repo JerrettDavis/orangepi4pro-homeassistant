@@ -374,3 +374,16 @@ def test_docker_api_grant_mounts_the_socket(manager, repo):
     assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
     create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
     assert ("/var/run/docker.sock", "/var/run/docker.sock", False) in create["mounts"]
+
+
+def test_host_pid_grant_reaches_the_container_spec(manager, repo):
+    pid = MOSQ.replace("slug: mosquitto", "slug: pidns").replace("hassio_api: true", "hassio_api: true\nhost_pid: true")
+    d = manager.repos.addon_dir(repo, "mosquitto").parent / "pidns"
+    d.mkdir()
+    (d / "config.yaml").write_text(pid)
+    with pytest.raises(AppError, match="process"):
+        manager.plan_addon(repo, "pidns", {"grants": ["ha_api"]})
+    plan = manager.plan_addon(repo, "pidns", {"grants": ["ha_api", "host_pid"]})
+    assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
+    create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
+    assert create["host_pid"] is True

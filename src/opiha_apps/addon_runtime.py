@@ -278,7 +278,7 @@ def spec(mgr, slug: str, record: dict) -> dict:
               "aliases": [] if host_net else [app["hostname"]],
               "loopback_ports": loopback, "bind": "0.0.0.0" if opts["lan"] else "127.0.0.1",
               "mounts": mounts, "environment": environment, "command": [], "cap_add": sorted(set(caps)),
-              "privileged_mode": "full_access" in opts["grants"], "init": m["init"] is not False,
+              "privileged_mode": "full_access" in opts["grants"], "host_pid": "host_pid" in opts["grants"], "init": m["init"] is not False,
               "tmpfs": m["tmpfs"], "env_file": str(checked_path(root / "private.env")),
               "devices": ([d for d in opts["devices"] if os.path.exists(d)] if "devices" in opts["grants"] else [])
                          + (audio_access()[0] if "audio" in opts["grants"] else []),

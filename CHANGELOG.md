@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.17
+
+- `host_pid` add-ons are installable behind an explicit high-risk grant (`--pid host`). Only an architecture other than aarch64 is refused now.
+
 ## 0.3.0-alpha.16
 
 - `docker_api` add-ons (SSH & Web Terminal) are installable behind an explicit high-risk grant that mounts the Docker socket (root-equivalent, and able to replace this manager's containers). Only the host PID namespace stays refused.

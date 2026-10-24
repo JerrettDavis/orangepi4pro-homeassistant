@@ -58,7 +58,7 @@ def test_report_works_reduced_and_unsupported():
     assert not any("AppArmor" in r for r in mq["reduced"])
     plain = addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default", "homeassistant_api": False, "hassio_api": False})
     assert addons.report(plain)["status"] == "works"
-    for blocker in ({"arch": ["armv7", "amd64"]}, {"host_pid": True}):
+    for blocker in ({"arch": ["armv7", "amd64"]},):
         r = addons.report(addons.parse({**FILE_EDITOR, **blocker}))
         assert r["status"] == "unsupported" and r["blocked"]
 
@@ -66,6 +66,11 @@ def test_report_works_reduced_and_unsupported():
 def test_docker_api_is_a_high_risk_grant_not_a_blocker():
     r = addons.report(addons.parse({**FILE_EDITOR, "docker_api": True}))
     assert not r["blocked"] and any(p["id"] == "docker_api" and p["risk"] == "high" for p in r["privileges"])
+
+
+def test_host_pid_is_a_high_risk_grant_not_a_blocker():
+    r = addons.report(addons.parse({**FILE_EDITOR, "host_pid": True}))
+    assert not r["blocked"] and any(p["id"] == "host_pid" and p["risk"] == "high" for p in r["privileges"])
 
 
 def test_host_dbus_is_a_high_risk_grant_not_a_blocker():
