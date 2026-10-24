@@ -17,6 +17,8 @@ ARCH = "aarch64"
 SLUG = re.compile(r"[A-Za-z0-9_-]{1,64}")
 MAPS = {"config", "ssl", "addons", "backup", "share", "media", "homeassistant_config",
         "all_addon_configs", "addon_config", "data"}
+# Home Assistant renamed add-ons to "apps" and the map types with them; both spellings are in the wild.
+MAP_ALIASES = {"app_config": "addon_config", "all_app_configs": "all_addon_configs", "local_apps": "addons"}
 ROLES = {"default", "homeassistant", "backup", "manager", "admin"}
 DANGEROUS_PRIVILEGES = {"NET_ADMIN", "SYS_ADMIN", "SYS_RAWIO", "SYS_PTRACE", "SYS_RESOURCE",
                         "IPC_LOCK", "DAC_READ_SEARCH", "SYS_MODULE", "SYS_TIME", "NET_RAW", "NET_BIND_SERVICE", "SYS_NICE"}
@@ -96,6 +98,7 @@ def parse_map(raw) -> list[dict]:
             row = {"type": item.get("type"), "read_only": item.get("read_only", True), "path": item.get("path")}
         else:
             raise AppError("Add-on map entry is malformed")
+        row["type"] = MAP_ALIASES.get(row["type"], row["type"])
         if row["type"] not in MAPS or type(row["read_only"]) is not bool:
             raise AppError("Add-on maps an unknown directory")
         if row["path"] is not None and (not isinstance(row["path"], str) or not re.fullmatch(r"/[A-Za-z0-9_./-]{1,200}", row["path"]) or ".." in row["path"].split("/")):
@@ -181,7 +184,7 @@ def report(manifest: dict) -> dict:
     `unsupported` blocks install; `reduced` installs but names what will not work;
     `privileges` are the things the administrator has to approve on this install.
     """
-    blocked, reduced, privileges = [], [], []
+    blocked, reduced, privileges, notes = [], [], [], []
     if ARCH not in manifest["arch"]:
         blocked.append("Not built for aarch64 (this host's architecture)")
     if manifest["host_dbus"]:
@@ -193,7 +196,7 @@ def report(manifest: dict) -> dict:
     if manifest["hassio_role"] in {"manager", "admin"}:
         reduced.append("Asks for Supervisor " + manifest["hassio_role"] + " API access; only the endpoints this project emulates answer")
     if manifest["apparmor"] not in (False, "false"):
-        reduced.append("The add-on's AppArmor profile is not applied (Docker's default profile still is)")
+        notes.append("The add-on's own AppArmor profile is not applied (Docker's default profile still is)")
     if manifest["audio"]:
         reduced.append("Host audio (PulseAudio) is not provided")
     if manifest["video"]:
@@ -206,8 +209,6 @@ def report(manifest: dict) -> dict:
         reduced.append("Home Assistant user authentication API is not provided")
     if not manifest["image"]:
         reduced.append("Has no prebuilt image; it must be built on this device (slow, needs free disk)")
-    if manifest["ingress"] and manifest["ingress_port"] == 0:
-        reduced.append("Uses a dynamic ingress port, which is not supported; open its published port instead")
     if manifest["host_network"]:
         privileges.append({"id": "host_network", "label": "Host networking: the add-on shares the Pi's network stack", "risk": "high"})
     if manifest["full_access"]:
@@ -224,7 +225,7 @@ def report(manifest: dict) -> dict:
     if manifest["homeassistant_api"] or manifest["hassio_api"]:
         privileges.append({"id": "ha_api", "label": "Act as a Home Assistant client through the Supervisor-style API", "risk": "medium"})
     status = "unsupported" if blocked else "reduced" if reduced else "works"
-    return {"status": status, "blocked": blocked, "reduced": reduced, "privileges": privileges}
+    return {"status": status, "blocked": blocked, "reduced": reduced, "privileges": privileges, "notes": notes}
 
 
 # --- options schema -------------------------------------------------------------------

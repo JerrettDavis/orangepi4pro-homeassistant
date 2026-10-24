@@ -47,8 +47,15 @@ def test_parse_rejects_hostile_or_malformed_fields(patch):
         addons.parse({**FILE_EDITOR, **patch})
 
 
+def test_renamed_map_types_are_normalised():
+    m = addons.parse({**FILE_EDITOR, "map": ["app_config:rw", "all_app_configs:rw", {"type": "local_apps", "read_only": True}]})
+    assert [e["type"] for e in m["map"]] == ["addon_config", "all_addon_configs", "addons"]
+
+
 def test_report_works_reduced_and_unsupported():
-    assert addons.report(addons.parse(MOSQUITTO))["status"] == "reduced"  # apparmor default + auth_api
+    mq = addons.report(addons.parse(MOSQUITTO))
+    assert mq["status"] == "reduced" and mq["notes"]  # auth_api reduces; AppArmor is only a note
+    assert not any("AppArmor" in r for r in mq["reduced"])
     plain = addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default"})
     assert addons.report(plain)["status"] == "works"
     for blocker in ({"arch": ["armv7", "amd64"]}, {"host_dbus": True}, {"docker_api": True}, {"host_pid": True}):

@@ -45,9 +45,17 @@ def image_repository(manifest: dict) -> str | None:
     return manifest["image"].replace("{arch}", ARCH_NAME).split(":", 1)[0]
 
 
-def entry_from(manifest: dict, repo_id: str, folder: str) -> dict:
+def hostname(repo_url: str, manifest_slug: str) -> str:
+    """The name other add-ons use for this one, spelled as the Supervisor spells it."""
+    official = repo_url.rstrip("/") in {"https://github.com/home-assistant/addons", ""}
+    prefix = "core" if official else hashlib.sha1(repo_url.lower().encode()).hexdigest()[:8]
+    return (prefix + "-" + manifest_slug).replace("_", "-").lower()[:63]
+
+
+def entry_from(manifest: dict, repo_id: str, folder: str, repo_url: str = "") -> dict:
     slug = slug_for(repo_id, manifest["slug"])
-    container_port = manifest["ingress_port"] if manifest["ingress"] and manifest["ingress_port"] else 0
+    dynamic = bool(manifest["ingress"] and manifest["ingress_port"] == 0)
+    container_port = _ui_port(slug) if dynamic else manifest["ingress_port"] if manifest["ingress"] else 0
     if not container_port and manifest["webui"]:
         match = re.search(r"\[PORT:(\d+)\]", manifest["webui"])
         container_port = int(match[1]) if match else 0
@@ -59,7 +67,8 @@ def entry_from(manifest: dict, repo_id: str, folder: str) -> dict:
         "category": "Add-on", "ingress": bool(manifest["ingress"] and container_port), "source": manifest["url"],
         "notes": "Unreviewed add-on from a repository you added. Its code, image and web UI must be trusted.",
         "addon": True, "build": not manifest["image"], "repo": repo_id, "folder": folder, "manifest": manifest,
-        "radio": False, "slug": slug,
+        "radio": False, "slug": slug, "dynamic_ingress": dynamic, "hostname": hostname(repo_url, manifest["slug"]),
+        "repo_url": repo_url,
     }
 
 
@@ -207,7 +216,9 @@ def map_host(mgr, slug: str, kind: str) -> Path:
 
 
 def default_target(kind: str) -> str:
-    if kind in CONFIG_TYPES or kind == "addon_config":
+    if kind == "homeassistant_config":
+        return "/homeassistant"
+    if kind in {"config", "addon_config"}:
         return "/config"
     if kind == "all_addon_configs":
         return "/addon_configs"
@@ -274,14 +285,14 @@ def token(mgr, slug: str) -> str | None:
     return match[1] if match else None
 
 
-def save_addon(mgr, slug: str, raw: dict, repo_id: str, folder: str) -> None:
+def save_addon(mgr, slug: str, raw: dict, repo_id: str, folder: str, repo_url: str = "") -> None:
     """Freeze the manifest the administrator approved; it, not the live repository, drives later starts."""
-    write_json(mgr.app_dir(slug) / "addon.json", {"schema": 1, "raw": raw, "repo": repo_id, "folder": folder})
+    write_json(mgr.app_dir(slug) / "addon.json", {"schema": 1, "raw": raw, "repo": repo_id, "folder": folder, "url": repo_url})
 
 
 def load_addon(path: Path) -> dict:
     from .common import read_json
     doc = read_json(path)
-    if set(doc) != {"schema", "raw", "repo", "folder"} or doc["schema"] != 1 or not isinstance(doc["raw"], dict):
+    if set(doc) != {"schema", "raw", "repo", "folder", "url"} or doc["schema"] != 1 or not isinstance(doc["raw"], dict) or not isinstance(doc["url"], str):
         raise AppError("Invalid add-on record")
-    return entry_from(addons.parse(doc["raw"], repository=doc["repo"]), doc["repo"], doc["folder"])
+    return entry_from(addons.parse(doc["raw"], repository=doc["repo"]), doc["repo"], doc["folder"], doc["url"])

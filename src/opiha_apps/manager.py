@@ -275,10 +275,11 @@ class Manager:
         """Plan installing (or updating to) an add-on exactly as it exists in an added repository now."""
         raw = self.repos.raw(repository, folder)
         manifest = addons.parse(raw, repository=repository)
-        app = addon_runtime.entry_from(manifest, repository, folder)
+        url = next((r["url"] for r in self.repos.list() if r["id"] == repository), "")
+        app = addon_runtime.entry_from(manifest, repository, folder, url)
         slug = app["slug"]
         source = self.repos.addon_dir(repository, folder)
-        info = {"raw": raw, "repo": repository, "folder": folder,
+        info = {"raw": raw, "repo": repository, "folder": folder, "repo_url": url,
                 "source_hash": addon_runtime.tree_hash(source)}
         with self.guard, catalog.override(slug, app):
             old = self.record(slug)
@@ -294,7 +295,7 @@ class Manager:
         return value
 
     def _addon_entry(self, info: dict) -> dict:
-        return addon_runtime.entry_from(addons.parse(info["raw"], repository=info["repo"]), info["repo"], info["folder"])
+        return addon_runtime.entry_from(addons.parse(info["raw"], repository=info["repo"]), info["repo"], info["folder"], info["repo_url"])
 
     def plan(self, slug: str, action: str, supplied: dict | None = None, *, addon: dict | None = None) -> dict:
         with self.guard:
@@ -518,7 +519,7 @@ class Manager:
             first = {"schema": 1, "app": slug, "phase": "first-install", "new": new, "old": old}
             write_json(root / "transaction.json", first)
             if info:
-                addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"])
+                addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"], info["repo_url"])
             try:
                 self.engine.create(slug, spec)
                 write_json(root / "record.json", new)
@@ -535,7 +536,7 @@ class Manager:
             transaction["old_addon"] = old_addon
         write_json(root / "transaction.json", transaction)
         if info:
-            addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"])
+            addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"], info["repo_url"])
         try:
             progress("Stopping app and making a private rollback copy")
             self.engine.restart_policy(existing["Id"], slug, False)
