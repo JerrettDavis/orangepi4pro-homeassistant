@@ -17,7 +17,7 @@ import socket
 import stat
 import threading
 import time
-from . import __version__, addon_runtime, addons, catalog, resources
+from . import __version__, addon_backup, addon_runtime, addons, catalog, resources
 from .addon_repos import Repositories
 from .common import AppError, atomic, checked_path, initialize, operation_lock, read_json, stamp, validate_config, write_json
 from .engine import APP_LABEL, LABEL, Docker
@@ -223,8 +223,10 @@ class Manager:
         all_containers = self.engine.containers()
         existing = self.engine.owned(slug)
         record = self.record(slug)
-        if action not in {"install", "update", "start", "stop", "restart", "remove", "configure"}:
+        if action not in {"install", "update", "start", "stop", "restart", "remove", "configure", "backup", "restore"}:
             raise AppError("Unsupported lifecycle operation")
+        if action in {"backup", "restore"} and not catalog.is_addon(slug):
+            raise AppError("Backups here cover add-ons; use opiha-apps backup for the reviewed apps")
         if action == "configure" and not catalog.is_addon(slug):
             raise AppError("Only add-ons have editable options")
         if catalog.is_addon(slug) and action in {"install", "update", "start", "restart", "configure"}:
@@ -301,8 +303,18 @@ class Manager:
     def _addon_entry(self, info: dict) -> dict:
         return addon_runtime.entry_from(addons.parse(info["raw"], repository=info["repo"]), info["repo"], info["folder"], info["repo_url"])
 
-    def plan(self, slug: str, action: str, supplied: dict | None = None, *, addon: dict | None = None) -> dict:
+    def backups(self, slug: str) -> dict:
+        if not catalog.is_addon(slug):
+            raise AppError("Backups here cover add-ons")
+        return {"app": slug, "backups": addon_backup.listing(self, slug)}
+
+    def plan(self, slug: str, action: str, supplied: dict | None = None, *, addon: dict | None = None,
+             backup: str | None = None) -> dict:
         with self.guard:
+            if action == "restore":
+                addon_backup.find(self, slug, backup)  # existence and integrity are checked before anything is stopped
+            elif backup is not None:
+                raise AppError("A backup id only applies to a restore")
             old = self.record(slug)
             if catalog.is_addon(slug) and action in {"install", "update"} and addon is None:
                 raise AppError("Install or update add-ons from their repository listing")
@@ -326,6 +338,11 @@ class Manager:
                                   "This app can reach your LAN through Docker NAT; it is not a production-state quarantine."],
                      "starts_app": action in {"start", "restart"},
                      "requires_host_reboot": False}
+            if action in {"backup", "restore"}:
+                value["backup"] = backup
+                value["warnings"].append("The add-on is stopped while its data is copied, then started again if it was running."
+                                         if action == "backup" else
+                                         "The add-on is stopped, its current data is kept as a rollback copy, then its data and options are replaced by the backup's.")
             if addon is not None:
                 report = addons.report(app["manifest"])
                 value.update(addon=addon, report=report, privileges=report["privileges"],
@@ -471,6 +488,9 @@ class Manager:
             if existing.get("State", {}).get("Running"):
                 self.engine.action(existing["Id"], slug, "restart")
             return
+        if action in {"backup", "restore"}:
+            self._backup_or_restore(plan, old, existing, progress)
+            return
         info = plan.get("addon")
         if info:
             source = self.repos.addon_dir(info["repo"], info["folder"])
@@ -571,6 +591,56 @@ class Manager:
             progress("Replacement failed; attempting state-matched rollback")
             self.repair(slug)
             raise AppError("Replacement failed; prior app state restored. Review before retrying")
+
+    def _backup_or_restore(self, plan: dict, old: dict, existing: dict, progress):
+        slug, action = plan["app"], plan["action"]
+        root = self.app_dir(slug)
+        running = bool(existing.get("State", {}).get("Running"))
+        meta = path = None
+        if action == "restore":
+            meta, path = addon_backup.find(self, slug, plan["backup"])
+        progress("Stopping the add-on" if running else "Add-on is stopped")
+        if running:
+            self.engine.restart_policy(existing["Id"], slug, False)
+            self.engine.action(existing["Id"], slug, "stop")
+        try:
+            if action == "backup":
+                progress("Writing the backup")
+                addon_backup.create(self, slug, old["options"]["version"], old["options"]["config"])
+                return
+            progress("Keeping a rollback copy of the current data")
+            rollback = self.root / "rollbacks" / (slug + "-prerestore-" + stamp())
+            rollback.mkdir(mode=0o700, parents=True)
+            for name in addon_backup.ROOTS:
+                if (root / name).is_dir():
+                    copy_tree(root / name, rollback / name)
+            staging = self.root / "rollbacks" / (slug + "-restoring-" + stamp())
+            try:
+                addon_backup.extract(path, staging)
+                config = catalog.options(slug, {**old["options"], "config": meta["config"]})["config"]
+                for name in addon_backup.ROOTS:
+                    shutil.rmtree(root / name, ignore_errors=True)
+                    if (staging / name).is_dir():
+                        os.replace(staging / name, root / name)
+                    else:
+                        (root / name).mkdir(mode=0o700)
+                options = {**old["options"], "config": config}
+                addon_runtime.write_options(self, slug, options)
+                write_json(root / "record.json", {**old, "options": options, "revision": stamp()})
+                progress("Restored; the previous data is kept as a rollback copy")
+            except Exception:
+                progress("Restore failed; putting the previous data back")
+                for name in addon_backup.ROOTS:
+                    shutil.rmtree(root / name, ignore_errors=True)
+                    if (rollback / name).is_dir():
+                        shutil.copytree(rollback / name, root / name, symlinks=True)
+                raise
+            finally:
+                shutil.rmtree(staging, ignore_errors=True)
+        finally:
+            if running:
+                self.engine.restart_policy(existing["Id"], slug, old["options"]["autostart"])
+                self.engine.action(existing["Id"], slug, "start")
 
     def _wait_running(self, identifier: str, slug: str):
         for attempt in range(60):
