@@ -107,6 +107,8 @@ class Repositories:
                 info = addons.read_document(src / "repo.yaml")
             elif (src / "repository.yaml").is_file():
                 info = addons.read_document(src / "repository.yaml")
+            elif (src / "repository.json").is_file():
+                info = addons.read_document(src / "repository.json")
             else:
                 info = {}
             if not self._scan(src):

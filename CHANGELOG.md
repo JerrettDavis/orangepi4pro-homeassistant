@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0-alpha.4
+
+- **Add-ons**: a new Add-ons tab installs Home Assistant add-ons from repositories you add, without the Supervisor.
+  Manifests are parsed and judged (works / reduced / unsupported) before install; privileges are listed and must be
+  approved; options come from a generated form validated against the add-on schema. Images are pulled by digest or
+  built from their Dockerfile. See `docs/native-apps/ADDONS.md`.
+- A Supervisor-style API shim (`http://supervisor/`) serves add-on info/options, the MQTT/MySQL service registry and
+  a Home Assistant REST proxy; unimplemented endpoints answer honestly and are recorded.
+- Add-ons run on their own bridge (172.30.32.0/23) with Supervisor-style hostnames; ingress works for add-ons,
+  including ones that allow only 172.30.32.2.
+- New `opiha-apps repo` and `opiha-apps addon` commands; `configure` lifecycle action.
+
 ## 0.3.0-alpha.3
 
 - Panel tab bar collapses unselected tabs to icons when the panel is narrow, so all seven tabs fit the 1024 px kiosk.
