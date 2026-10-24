@@ -29,7 +29,9 @@ class Manager:
         self.config = validate_config(copy.deepcopy(config))
         self.root = checked_path(config["data_dir"], directory=True)
         self.owner = initialize(config)
-        self.engine = engine or Docker(self.owner)
+        self.engine = engine or Docker(self.owner, config_dir=str(self.root / ".docker"))
+        if engine is None:
+            (self.root / ".docker").mkdir(mode=0o700, exist_ok=True)
         self.sampler = sampler
         self.check_port = check_port
         self.guard = threading.RLock()
@@ -39,6 +41,7 @@ class Manager:
         self.active = False
         self.repos = Repositories(self.root)
         self.shim_address = None
+        self.shim_state = {"listening": False, "redirect": False, "error": None}
         self._ha_config = None
         self._load_addons()
         for p in sorted((self.root / "jobs").glob("*.json"))[-64:]:
@@ -148,7 +151,8 @@ class Manager:
                   "resources": host, "reserve_mib": self.config["reserve_mib"],
                   "allocated_limit_mib": sum(r["options"]["memory_mib"] for r in records.values() if r.get("installed")),
                   "active_job": active_job,
-                  "supervisor": False, "changes_homeassistant": False}
+                  "supervisor": False, "changes_homeassistant": False,
+                  "shim": dict(self.shim_state)}
         if include_stats and not engine_error:
             ids = [c["Id"] for c in all_containers if (c.get("Config", {}).get("Labels") or {}).get(LABEL) == self.owner
                    and c.get("State", {}).get("Running")]

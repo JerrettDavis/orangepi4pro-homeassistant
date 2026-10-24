@@ -56,11 +56,18 @@ def test_report_works_reduced_and_unsupported():
     mq = addons.report(addons.parse(MOSQUITTO))
     assert mq["status"] == "reduced" and mq["notes"]  # auth_api reduces; AppArmor is only a note
     assert not any("AppArmor" in r for r in mq["reduced"])
-    plain = addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default"})
+    plain = addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default", "homeassistant_api": False, "hassio_api": False})
     assert addons.report(plain)["status"] == "works"
     for blocker in ({"arch": ["armv7", "amd64"]}, {"host_dbus": True}, {"docker_api": True}, {"host_pid": True}):
         r = addons.report(addons.parse({**FILE_EDITOR, **blocker}))
         assert r["status"] == "unsupported" and r["blocked"]
+
+
+def test_discovery_and_ha_api_are_reported_as_reduced_not_works():
+    r = addons.report(addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default", "discovery": ["mqtt"]}))
+    assert r["status"] == "reduced" and any("discovery" in x.lower() for x in r["reduced"]) and any("WebSocket" in x for x in r["reduced"])
+    with pytest.raises(AppError):
+        addons.parse({**FILE_EDITOR, "discovery": "mqtt"})
 
 
 def test_report_lists_privileges_for_approval():

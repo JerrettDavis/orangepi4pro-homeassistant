@@ -149,6 +149,9 @@ def parse(raw: dict, *, repository: str = "") -> dict:
     env = raw.get("environment", {})
     if not isinstance(env, dict) or not all(isinstance(k, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", k) and isinstance(v, (str, int, float, bool)) for k, v in env.items()):
         raise AppError("Add-on environment must be simple name/value pairs")
+    discovery = raw.get("discovery", [])
+    if not isinstance(discovery, list) or not all(isinstance(d, str) and re.fullmatch(r"[a-z0-9_]{1,40}", d) for d in discovery):
+        raise AppError("Add-on 'discovery' is malformed")
     services = raw.get("services", [])
     if not isinstance(services, list) or not all(isinstance(s, str) and re.fullmatch(r"(mqtt|mysql)(:(provide|want|need))?", s) for s in services):
         raise AppError("Add-on 'services' is malformed")
@@ -173,7 +176,7 @@ def parse(raw: dict, *, repository: str = "") -> dict:
         "panel_icon": raw.get("panel_icon"), "panel_title": raw.get("panel_title"),
         "webui": raw.get("webui") if isinstance(raw.get("webui"), str) else None,
         "options": options, "schema": schema, "environment": {k: str(v) for k, v in env.items()},
-        "services": services, "tmpfs": bool(raw.get("tmpfs")), "stdin": bool(raw.get("stdin")),
+        "services": services, "discovery": discovery, "tmpfs": bool(raw.get("tmpfs")), "stdin": bool(raw.get("stdin")),
         "backup": raw.get("backup", "hot"), "stage": raw.get("stage", "stable"),
     }
 
@@ -205,6 +208,10 @@ def report(manifest: dict) -> dict:
         reduced.append("Host udev data is not mounted")
     if manifest["gpio"] or manifest["uart"] or manifest["usb"] or manifest["devicetree"]:
         reduced.append("Hardware access is only granted for devices the administrator selects")
+    if manifest["discovery"]:
+        reduced.append("Announces itself to Home Assistant through Supervisor discovery, which a Container install cannot receive; add its Home Assistant integration by hand")
+    if manifest["homeassistant_api"] or manifest["hassio_api"]:
+        reduced.append("Only the REST part of the Supervisor/Home Assistant API is available (no WebSocket proxy), and Home Assistant calls need the access token from the Add-ons tab")
     if manifest["auth_api"]:
         reduced.append("Home Assistant user authentication API is not provided")
     if not manifest["image"]:

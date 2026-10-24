@@ -16,6 +16,7 @@ from pathlib import Path
 import re
 import socket
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
@@ -342,15 +343,22 @@ def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUP
     """Serve once the add-on bridge address exists; retry while Docker has not created it yet, and keep the
     redirect in place (it is re-checked because a firewall reload can drop it)."""
     server = None
+    state = shim.m.shim_state
     while not stop.is_set():
+        error = None
         if server is None:
             try:
                 server = make_server(shim, host, port)
                 threading.Thread(target=server.serve_forever, daemon=True).start()
-            except OSError:
-                server = None
-        if server is not None:
-            ensure_redirect()
+            except OSError as exc:
+                server, error = None, f"cannot listen on {host}:{port} ({exc.strerror or exc}); no add-on network yet?"
+        redirect = ensure_redirect() if server is not None else False
+        if server is not None and not redirect:
+            error = "could not install the supervisor:80 redirect (iptables); add-ons will not reach the API"
+        changed = (state.get("listening"), state.get("redirect"), state.get("error")) != (server is not None, redirect, error)
+        state.update(listening=server is not None, redirect=redirect, error=error)
+        if changed and error:
+            print("opiha-apps: supervisor shim: " + error, file=sys.stderr, flush=True)
         stop.wait(30 if server is not None else 10)
     if server is not None:
         server.shutdown()

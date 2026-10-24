@@ -17,13 +17,15 @@ APP_LABEL = "io.opiha.native-apps.app"
 
 
 class Docker:
-    def __init__(self, owner: str, *, runner=None):
+    def __init__(self, owner: str, *, runner=None, config_dir: str | None = None):
         self.owner = owner
+        self.config_dir = config_dir  # writable client state (buildx) when the service filesystem is read-only
         self.runner = runner or self._run
 
-    @staticmethod
-    def _run(argv: list[str], timeout: int = 30) -> tuple[int, str]:
+    def _run(self, argv: list[str], timeout: int = 30) -> tuple[int, str]:
         env = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "HOME": "/var/lib/orangepi-apps", "LC_ALL": "C.UTF-8"}
+        if self.config_dir:
+            env["DOCKER_CONFIG"] = self.config_dir
         try:
             # Output cannot accumulate unbounded in the daemon's memory during pulls.
             with tempfile.TemporaryFile() as output:

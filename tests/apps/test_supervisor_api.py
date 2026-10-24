@@ -175,3 +175,20 @@ def test_addon_installed_by_another_process_is_recognised_on_first_call(world):
     assert call(shim, "GET", "/addons/self/info", tokens["consumer"])[0] == 200
     assert catalog.is_addon(slug_of(repo, "consumer"))
     assert call(shim, "GET", "/addons/self/info", "f" * 64)[0] == 401
+
+
+def test_shim_state_is_reported_in_overview_and_run_loop_records_failures(world, monkeypatch):
+    manager, shim, _, _ = world
+    assert manager.overview()["shim"] == {"listening": False, "redirect": False, "error": None}
+    monkeypatch.setattr(supervisor_api, "ensure_redirect", lambda: False)
+    stop = threading.Event()
+    t = threading.Thread(target=supervisor_api.run_forever, args=(shim, stop, "127.0.0.1", 0), daemon=True)
+    t.start()
+    for _ in range(100):
+        if manager.shim_state["listening"]:
+            break
+        stop.wait(0.05)
+    stop.set()
+    t.join(5)
+    state = manager.overview()["shim"]
+    assert state["listening"] is True and state["redirect"] is False and "redirect" in state["error"]

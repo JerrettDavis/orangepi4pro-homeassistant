@@ -76,7 +76,7 @@ def test_plan_requires_the_privileges_the_manifest_asks_for(manager, repo):
     with pytest.raises(AppError, match="Approve these privileges"):
         manager.plan_addon(repo, "mosquitto")
     plan = manager.plan_addon(repo, "mosquitto", {"grants": ["ha_api"]})
-    assert plan["action"] == "install" and plan["report"]["status"] == "works" and plan["privileges"][0]["id"] == "ha_api"
+    assert plan["action"] == "install" and plan["report"]["status"] == "reduced" and plan["privileges"][0]["id"] == "ha_api"
     assert not manager.engine.calls  # planning never pulls
     assert not catalog.is_addon(plan["app"])  # and does not register an uninstalled add-on
 
