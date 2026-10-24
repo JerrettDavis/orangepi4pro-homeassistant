@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import re
 import socket
+import subprocess
 import threading
 import time
 import urllib.error
@@ -26,6 +27,24 @@ SUBNET = ipaddress.ip_network("172.30.32.0/23")
 MAX_BODY = 1024 * 1024
 PROXY_LIMIT = 16 * 1024 * 1024
 SERVICES = {"mqtt", "mysql"}
+# The host's reverse proxy owns port 80 on every address, so the shim listens on its own port and the
+# kernel redirects the Supervisor-style `http://supervisor/` (172.30.32.2:80) from the add-on bridge to it.
+SHIM_PORT = 8180
+REDIRECT_RULE = ["-i", "opihaadd0", "-d", addon_runtime.SUPERVISOR_IP, "-p", "tcp", "--dport", "80",
+                 "-j", "REDIRECT", "--to-ports", str(SHIM_PORT)]
+
+
+def ensure_redirect(run=None) -> bool:
+    """Idempotently install the nat redirect; returns True when the rule is present afterwards."""
+    run = run or (lambda argv: subprocess.run(argv, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20, check=False).returncode)
+    tool = next((t for t in ("/usr/sbin/iptables", "/sbin/iptables", "/usr/bin/iptables") if Path(t).exists()), None)
+    tool = tool or "/usr/sbin/iptables"
+    try:
+        if run([tool, "-w", "-t", "nat", "-C", "PREROUTING", *REDIRECT_RULE]) == 0:
+            return True
+        return run([tool, "-w", "-t", "nat", "-I", "PREROUTING", *REDIRECT_RULE]) == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 class Shim:
@@ -252,7 +271,7 @@ class Shim:
             return (*self.error(502, "Home Assistant is not reachable"), "json")
 
 
-def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int = 80, *, allow_any_peer: bool = False):
+def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int = SHIM_PORT, *, allow_any_peer: bool = False):
     class Handler(BaseHTTPRequestHandler):
         server_version = "OPIHA-Supervisor-Shim/1"
 
@@ -308,16 +327,20 @@ def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int =
     return Server((host, port), Handler)
 
 
-def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUPERVISOR_IP, port: int = 80):
-    """Serve once the add-on bridge address exists; retry while Docker has not created it yet."""
+def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUPERVISOR_IP, port: int = SHIM_PORT):
+    """Serve once the add-on bridge address exists; retry while Docker has not created it yet, and keep the
+    redirect in place (it is re-checked because a firewall reload can drop it)."""
+    server = None
     while not stop.is_set():
-        try:
-            server = make_server(shim, host, port)
-        except OSError:
-            stop.wait(10)
-            continue
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        stop.wait()
+        if server is None:
+            try:
+                server = make_server(shim, host, port)
+                threading.Thread(target=server.serve_forever, daemon=True).start()
+            except OSError:
+                server = None
+        if server is not None:
+            ensure_redirect()
+        stop.wait(30 if server is not None else 10)
+    if server is not None:
         server.shutdown()
         server.server_close()

@@ -149,3 +149,20 @@ def test_http_listener_accepts_bearer_and_legacy_headers_and_refuses_foreign_pee
         assert err.value.code == 403
     finally:
         strict.shutdown()
+
+
+def test_redirect_rule_is_checked_then_inserted_once_and_failures_are_reported():
+    calls = []
+
+    def fake(rc_check):
+        def run(argv):
+            calls.append(argv)
+            return rc_check if "-C" in argv else 0
+        return run
+    assert supervisor_api.ensure_redirect(fake(0)) is True and len(calls) == 1 and "-C" in calls[0]
+    calls.clear()
+    assert supervisor_api.ensure_redirect(fake(1)) is True
+    assert "-C" in calls[0] and "-I" in calls[1] and "PREROUTING" in calls[1]
+    rule = " ".join(calls[1])
+    assert "172.30.32.2" in rule and "--dport 80" in rule and f"--to-ports {supervisor_api.SHIM_PORT}" in rule and "opihaadd0" in rule
+    assert supervisor_api.ensure_redirect(lambda argv: 1) is False
