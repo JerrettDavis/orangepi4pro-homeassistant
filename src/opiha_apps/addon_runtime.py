@@ -51,11 +51,18 @@ def image_repository(manifest: dict) -> str | None:
     return manifest["image"].replace("{arch}", ARCH_NAME).split(":", 1)[0]
 
 
+def repo_prefix(repo_url: str) -> str:
+    official = repo_url.rstrip("/") in {"https://github.com/home-assistant/addons", ""}
+    return "core" if official else hashlib.sha1(repo_url.lower().encode()).hexdigest()[:8]
+
+
 def hostname(repo_url: str, manifest_slug: str) -> str:
     """The name other add-ons use for this one, spelled as the Supervisor spells it."""
-    official = repo_url.rstrip("/") in {"https://github.com/home-assistant/addons", ""}
-    prefix = "core" if official else hashlib.sha1(repo_url.lower().encode()).hexdigest()[:8]
-    return (prefix + "-" + manifest_slug).replace("_", "-").lower()[:63]
+    return (repo_prefix(repo_url) + "-" + manifest_slug).replace("_", "-").lower()[:63]
+
+
+def supervisor_slug(app: dict) -> str:
+    return repo_prefix(app["repo_url"]) + "_" + app["manifest"]["slug"]
 
 
 def entry_from(manifest: dict, repo_id: str, folder: str, repo_url: str = "") -> dict:
