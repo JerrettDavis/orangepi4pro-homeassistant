@@ -33,6 +33,11 @@ SERVICES = {"mqtt", "mysql"}
 SHIM_PORT = 8180
 REDIRECT_RULE = ["-i", "opihaadd0", "-d", addon_runtime.SUPERVISOR_IP, "-p", "tcp", "--dport", "80",
                  "-j", "REDIRECT", "--to-ports", str(SHIM_PORT)]
+# Add-ons with host networking reach the same address from the host itself, which is locally generated traffic.
+# (REDIRECT would aim at 127.0.0.1 for locally generated packets; the shim listens on the bridge address.)
+OUTPUT_RULE = ["-d", addon_runtime.SUPERVISOR_IP, "-p", "tcp", "--dport", "80",
+               "-j", "DNAT", "--to-destination", f"{addon_runtime.SUPERVISOR_IP}:{SHIM_PORT}"]
+RULES = (("PREROUTING", REDIRECT_RULE), ("OUTPUT", OUTPUT_RULE))
 
 
 def ensure_redirect(run=None) -> bool:
@@ -41,9 +46,10 @@ def ensure_redirect(run=None) -> bool:
     tool = next((t for t in ("/usr/sbin/iptables", "/sbin/iptables", "/usr/bin/iptables") if Path(t).exists()), None)
     tool = tool or "/usr/sbin/iptables"
     try:
-        if run([tool, "-w", "-t", "nat", "-C", "PREROUTING", *REDIRECT_RULE]) == 0:
-            return True
-        return run([tool, "-w", "-t", "nat", "-I", "PREROUTING", *REDIRECT_RULE]) == 0
+        for chain, rule in RULES:
+            if run([tool, "-w", "-t", "nat", "-C", chain, *rule]) != 0 and run([tool, "-w", "-t", "nat", "-I", chain, *rule]) != 0:
+                return False
+        return True
     except (OSError, subprocess.SubprocessError):
         return False
 
@@ -173,6 +179,8 @@ class Shim:
                 return self.ok({"valid": False, "message": str(exc)})
         if path == "/addons/self/stats" and method == "GET":
             return self.stats(slug)
+        if path == "/supervisor/ping" and method == "GET":
+            return self.ok()
         if path == "/info" and method == "GET":
             return self.ok(self.system_info())
         if path in {"/core/info", "/homeassistant/info"} and method == "GET":
@@ -188,7 +196,10 @@ class Shim:
                             "healthy": True, "timezone": "UTC", "logging": "info", "ip_address": addon_runtime.SUPERVISOR_IP,
                             "addons": [], "addons_repositories": []})
         if path == "/network/info" and method == "GET":
-            return self.ok({"interfaces": [], "host_internet": True, "supervisor_internet": True})
+            return self.ok({"interfaces": host_interfaces(), "host_internet": True, "supervisor_internet": True})
+        if (m_ := re.fullmatch(r"/network/interface/([A-Za-z0-9_.:-]{1,15})/info", path)) and method == "GET":
+            found = next((i for i in host_interfaces() if i["interface"] == m_[1]), None)
+            return self.ok(found) if found else self.error(404, "Unknown network interface")
         if m_ := re.fullmatch(r"/services/(mqtt|mysql)", path):
             return self.service(method, m_[1], slug, app, body)
         if path == "/discovery" and method == "POST":
@@ -286,7 +297,7 @@ class Shim:
         if type(port) is not int or host_port is None:
             return self.error(400, "The add-on's broker port is not published to the host")
         outcome = supervisor_ws.discover_mqtt(access[0], access[1], "127.0.0.1", host_port,
-                                              config.get("username"), config.get("password"))
+                                              config.get("username"), config.get("password"), config.get("protocol"))
         return self.ok({"uuid": slug, "outcome": outcome})
 
     def websocket(self, sock) -> None:
@@ -323,6 +334,55 @@ class Shim:
             return (*self.error(502, "Home Assistant is not reachable"), "json")
 
 
+def _ip_json(args: list[str], run=None):
+    run = run or (lambda argv: subprocess.run(argv, capture_output=True, text=True, timeout=10, check=False).stdout)
+    tool = next((t for t in ("/usr/sbin/ip", "/sbin/ip", "/usr/bin/ip", "/bin/ip") if Path(t).exists()), "/usr/sbin/ip")
+    try:
+        value = json.loads(run([tool, "-j", *args]) or "[]")
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+    return value if isinstance(value, list) else []
+
+
+def host_interfaces(run=None) -> list[dict]:
+    """The host's real network interfaces in the Supervisor's `network/info` shape (Samba and others bind to these)."""
+    routes = _ip_json(["-4", "route", "show", "default"], run)
+    primary = routes[0].get("dev") if routes else None
+    gateway = routes[0].get("gateway") if routes else None
+    result = []
+    for link in _ip_json(["-4", "addr", "show"], run):
+        name = link.get("ifname", "")
+        if not name or name == "lo" or name.startswith(("docker", "br-", "veth", "opihaadd", "virbr")):
+            continue
+        addresses = [f"{a['local']}/{a['prefixlen']}" for a in link.get("addr_info", []) if a.get("family") == "inet" and "local" in a]
+        if not addresses:
+            continue
+        kind = "wireless" if name.startswith(("wl", "wlan")) else "ethernet"
+        result.append({"interface": name, "type": kind, "enabled": True, "connected": True, "primary": name == primary,
+                       "ipv4": {"method": "auto", "address": addresses, "gateway": gateway if name == primary else None,
+                                "nameservers": [], "ready": True},
+                       "ipv6": {"method": "disabled", "address": [], "gateway": None, "nameservers": [], "ready": False},
+                       "mac": link.get("address"), "vlan": None, "wifi": None})
+    return result
+
+
+def peer_allowed(address: str) -> bool:
+    """Add-on bridge clients, plus this host itself: add-ons with host networking arrive from the Pi's own address.
+    Binding succeeds only for addresses that belong to this machine, so a remote host cannot pass as local."""
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return False
+    if ip in SUBNET or ip.is_loopback:
+        return True
+    try:
+        with socket.socket(socket.AF_INET6 if ip.version == 6 else socket.AF_INET) as probe:
+            probe.bind((address, 0))
+        return True
+    except OSError:
+        return False
+
+
 def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int = SHIM_PORT, *, allow_any_peer: bool = False):
     class Handler(BaseHTTPRequestHandler):
         server_version = "OPIHA-Supervisor-Shim/1"
@@ -353,7 +413,7 @@ def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int =
 
         def serve(self):
             try:
-                if not allow_any_peer and ipaddress.ip_address(self.client_address[0]) not in SUBNET:
+                if not allow_any_peer and not peer_allowed(self.client_address[0]):
                     self.send_error(403)
                     return
                 if (self.headers.get("Upgrade", "").lower() == "websocket"
@@ -393,6 +453,15 @@ def make_server(shim: Shim, host: str = addon_runtime.SUPERVISOR_IP, port: int =
     return Server((host, port), Handler)
 
 
+def listener_alive(host: str, port: int) -> bool:
+    """True when something accepts connections at host:port (a socket bound to a removed address does not)."""
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except OSError:
+        return False
+
+
 def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUPERVISOR_IP, port: int = SHIM_PORT):
     """Serve once the add-on bridge address exists; retry while Docker has not created it yet, and keep the
     redirect in place (it is re-checked because a firewall reload can drop it)."""
@@ -406,6 +475,14 @@ def run_forever(shim: Shim, stop: threading.Event, host: str = addon_runtime.SUP
                 threading.Thread(target=server.serve_forever, daemon=True).start()
             except OSError as exc:
                 server, error = None, f"cannot listen on {host}:{port} ({exc.strerror or exc}); the add-on network is created by the first add-on install"
+        if server is not None and not listener_alive(host, server.server_address[1]):
+            # The add-on network was removed or recreated underneath the socket (or another process took the
+            # address): drop the dead listener and bind again on the next pass.
+            server.shutdown()
+            server.server_close()
+            server = None
+            stop.wait(1)
+            continue
         redirect = ensure_redirect() if server is not None else False
         if server is not None and not redirect:
             error = "could not install the supervisor:80 redirect (iptables); add-ons will not reach the API"

@@ -246,6 +246,7 @@ _SIMPLE = {"bool", "email", "url", "port", "str", "password", "int", "float", "m
 
 
 def _check_scalar(rule: str, value, path: str):
+    rule = rule.strip()  # YAML block scalars (`|`) leave a trailing newline on long rules such as Piper's voice list
     optional = rule.endswith("?")
     rule = rule.rstrip("?")
     if value is None:

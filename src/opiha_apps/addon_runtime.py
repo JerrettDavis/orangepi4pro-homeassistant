@@ -133,8 +133,8 @@ def options(app: dict, supplied: dict | None) -> dict:
         low, high = (1024, 65535) if result["lan"] else (20000, 29999)
         if type(host) is not int or not low <= host <= high or (result["lan"] and host in RESERVED_LAN_PORTS):
             raise AppError("Add-on host port is out of range or reserved" + ("" if result["lan"] else " (loopback ports use 20000-29999)"))
-    if len(set(ports.values())) != len(ports):
-        raise AppError("Two add-on ports map to the same host port")
+    if len({(host, key.split("/")[1]) for key, host in ports.items()}) != len(ports):
+        raise AppError("Two add-on ports of the same protocol map to the same host port")
     devices = result["devices"]
     if not isinstance(devices, list) or len(devices) > 16 or not all(
             isinstance(d, str) and (d in m["devices"] or re.fullmatch(r"/dev/serial/by-id/[A-Za-z0-9_.:+-]{1,240}", d)) for d in devices):

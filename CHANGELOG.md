@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0-alpha.7
+
+Found by running every installable official add-on on the device:
+
+- Host-networked add-ons can reach `http://supervisor/` (extra `nat OUTPUT` rule; the shim accepts this host as a peer).
+- `network/info` and `network/interface/<name>/info` report the host's real interfaces; `supervisor/ping` exists.
+- Schema rules from YAML block scalars (Piper's voice list) parse; TCP and UDP of the same port number may share a host port.
+- MQTT discovery fills Home Assistant's form from its own schema (the real form needs fields the first version omitted).
+- The shim notices if its bound address disappears and rebinds.
+
 ## 0.3.0-alpha.6
 
 - Add-ons: Home Assistant WebSocket relay (`ws://supervisor/core/websocket`) with token swap, and MQTT discovery that
