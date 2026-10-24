@@ -111,7 +111,11 @@ def main(argv=None):
                 from .supervisor_api import Shim, run_forever
                 server = make_server(manager, port=cfg["port"])
                 stop = threading.Event()
-                threading.Thread(target=run_forever, args=(Shim(manager), stop), daemon=True, name="opiha-supervisor-shim").start()
+                from . import addon_runtime
+                if addon_runtime.real_supervisor():
+                    manager.shim_state.update(error="The Home Assistant Supervisor manages add-ons on this host")
+                else:
+                    threading.Thread(target=run_forever, args=(Shim(manager), stop), daemon=True, name="opiha-supervisor-shim").start()
                 try:
                     server.serve_forever()
                 finally:
