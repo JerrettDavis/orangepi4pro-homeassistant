@@ -17,13 +17,15 @@ APP_LABEL = "io.opiha.native-apps.app"
 
 
 class Docker:
-    def __init__(self, owner: str, *, runner=None):
+    def __init__(self, owner: str, *, runner=None, config_dir: str | None = None):
         self.owner = owner
+        self.config_dir = config_dir  # writable client state (buildx) when the service filesystem is read-only
         self.runner = runner or self._run
 
-    @staticmethod
-    def _run(argv: list[str], timeout: int = 30) -> tuple[int, str]:
+    def _run(self, argv: list[str], timeout: int = 30) -> tuple[int, str]:
         env = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "HOME": "/var/lib/orangepi-apps", "LC_ALL": "C.UTF-8"}
+        if self.config_dir:
+            env["DOCKER_CONFIG"] = self.config_dir
         try:
             # Output cannot accumulate unbounded in the daemon's memory during pulls.
             with tempfile.TemporaryFile() as output:
@@ -92,7 +94,7 @@ class Docker:
             raise AppError("Image has no matching registry digest; refusing a tag-only launch")
         return candidates[0], row["Id"]
 
-    def ensure_network(self, name: str):
+    def ensure_network(self, name: str, create_args: list[str] | None = None):
         raw = self.command(["network", "ls", "--format", "{{json .}}"])
         for line in raw.splitlines():
             row = json.loads(line)
@@ -101,21 +103,42 @@ class Docker:
                 if (net.get("Labels") or {}).get(LABEL) != self.owner or net.get("Driver") != "bridge":
                     raise AppError("Existing app network is not owned by this deployment")
                 return
-        self.command(["network", "create", "--driver", "bridge", "--label", LABEL + "=" + self.owner, name])
+        self.command(["network", "create", "--driver", "bridge", *(create_args or []), "--label", LABEL + "=" + self.owner, name])
 
     def create(self, slug: str, spec: dict) -> str:
+        # Reviewed catalog apps run as an unprivileged UID with every capability dropped.
+        # Add-on specs may name a user, a capability allow-list and further reviewed switches.
+        user = spec.get("user", str(spec["uid"]) + ":" + str(spec["uid"]))
         args = ["container", "create", "--name", "opiha-apps-" + slug,
                 "--label", LABEL + "=" + self.owner, "--label", APP_LABEL + "=" + slug,
                 "--restart", "unless-stopped" if spec["autostart"] else "no",
                 "--network", spec["network"], "--memory", str(spec["memory_mib"]) + "m",
                 "--memory-swap", str(spec["memory_mib"]) + "m", "--cpu-shares", str(spec["cpu_shares"]),
-                "--pids-limit", "512", "--security-opt", "no-new-privileges:true", "--cap-drop", "ALL",
+                "--pids-limit", "512", "--cap-drop", "ALL",
                 "--log-driver", "json-file", "--log-opt", "max-size=5m", "--log-opt", "max-file=2",
-                "--user", str(spec["uid"]) + ":" + str(spec["uid"])]
+                "--user", user]
+        if not spec.get("privileged_mode"):
+            args += ["--security-opt", "no-new-privileges:true"]
+        else:
+            args += ["--privileged"]
+        for cap in spec.get("cap_add", []):
+            args += ["--cap-add", cap]
+        if spec.get("init"):
+            args += ["--init"]
+        if spec.get("tmpfs"):
+            args += ["--tmpfs", "/tmp:rw,size=64m"]
+        for alias in spec.get("aliases", []):
+            args += ["--network-alias", alias]
+        for host, address in spec.get("extra_hosts", []):
+            args += ["--add-host", f"{host}:{address}"]
         for src, dst, readonly in spec["mounts"]:
             args += ["--mount", f"type=bind,src={src},dst={dst}" + (",readonly" if readonly else "")]
         for host, container in spec["ports"]:
+            args += ["--publish", f"{spec.get('bind', '127.0.0.1')}:{host}:{container}"]
+        for host, container in spec.get("loopback_ports", []):
             args += ["--publish", f"127.0.0.1:{host}:{container}"]
+        for host, container in spec.get("udp_ports", []):
+            args += ["--publish", f"{spec.get('bind', '127.0.0.1')}:{host}:{container}/udp"]
         for key, value in sorted(spec["environment"].items()):
             args += ["--env", f"{key}={value}"]
         if spec.get("env_file"):
@@ -123,8 +146,24 @@ class Docker:
         if spec.get("device"):
             args += ["--device", spec["device"] + ":/dev/zwave:rwm",
                      "--group-add", str(os.stat(spec["device"]).st_gid)]
+        for path in spec.get("devices", []):
+            args += ["--device", f"{path}:{path}:rwm"]
         args += [spec["image"], *spec.get("command", [])]
         return self.command(args, timeout=90).strip()
+
+    def build(self, tag: str, context: str, build_args: dict[str, str], architecture: str) -> str:
+        """Build an add-on image from its reviewed-on-install source tree; returns the local image ID."""
+        argv = ["image", "build", "--quiet", "--platform", "linux/" + architecture, "--tag", tag,
+                "--label", LABEL + "=" + self.owner]
+        for key, value in sorted(build_args.items()):
+            argv += ["--build-arg", f"{key}={value}"]
+        code, out = self.runner([*argv, context], 3600)
+        if code:
+            raise AppError("Image build failed: " + " ".join(out.strip().splitlines()[-4:])[-400:])
+        row = json.loads(self.command(["image", "inspect", tag]))[0]
+        if row.get("Architecture") != architecture or row.get("Os") != "linux":
+            raise AppError("Built image is not native to this Linux host")
+        return row["Id"]
 
     def action(self, identifier: str, slug: str, action: str):
         self.assert_owned(identifier, slug)

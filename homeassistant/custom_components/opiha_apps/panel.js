@@ -4,6 +4,7 @@ const TABS = [
   {id: "host", label: "Host", icon: "mdi:server", tag: "opiha-host-tab", module: "./host.js"},
   {id: "docker", label: "Docker", icon: "mdi:docker", tag: "opiha-docker-tab", module: "./docker.js"},
   {id: "apps", label: "Apps", icon: "mdi:apps", tag: "opiha-apps-tab", module: "./apps.js"},
+  {id: "store", label: "Add-ons", icon: "mdi:puzzle-outline", tag: "opiha-store-tab", module: "./store.js"},
   {id: "updates", label: "Updates", icon: "mdi:update", tag: "opiha-updates-tab", module: "./updates.js"},
   {id: "terminal", label: "Terminal", icon: "mdi:console", tag: "opiha-terminal-tab", module: "./terminal.js"},
   {id: "desktop", label: "Desktop", icon: "mdi:monitor-dashboard", tag: "opiha-desktop-tab", module: "./desktop.js"},
@@ -48,6 +49,11 @@ class OrangePiPanel extends HTMLElement {
     <div id="content"></div>`;
     this.shadowRoot.getElementById("menu").onclick = () => this.dispatchEvent(new Event("hass-toggle-menu", {bubbles: true, composed: true}));
     this.shadowRoot.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => this.select(b.dataset.tab));
+    // Tabs can hand the user to another tab (e.g. "Open" an installed add-on in the Apps frame).
+    this.shadowRoot.addEventListener("opiha-navigate", async (e) => {
+      const {tab, open} = e.detail || {}; await this.select(tab);
+      if (open && typeof this.elements[tab]?.open === "function") this.elements[tab].open(open);
+    });
     const wanted = (location.hash || "").slice(1) || remembered();
     this.select(TABS.some(t => t.id === wanted) ? wanted : "overview");
   }

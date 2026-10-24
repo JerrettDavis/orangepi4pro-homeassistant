@@ -1,6 +1,7 @@
-"""Narrow, admin-authenticated in-HA UI proxy for the three reviewed adapters.
+"""Narrow, admin-authenticated in-HA UI proxy for the reviewed adapters and for add-ons.
 
-No arbitrary URL proxy, static public token, blanket cookie/header forwarding,
+Add-ons are reached at the container address the manager reports (inside the add-on subnet only) with the mount
+prefix stripped and `X-Ingress-Path` supplied, as the Supervisor's ingress does. No arbitrary URL proxy, static public token, blanket cookie/header forwarding,
 or Supervisor-token emulation. App code still shares the HA browser origin;
 only install trusted app publishers and trusted Node-RED palette packages.
 """
@@ -19,13 +20,19 @@ from .client import NativeError
 
 PREFIX = "/api/opiha_apps/ingress/"
 APPS = {"nodered", "esphome", "go2rtc"}
+ADDON_APP = re.compile(r"x[0-9a-f]{6}-[a-z0-9-]{1,25}")
+ADDON_HOST = re.compile(r"172\.30\.3[23]\.\d{1,3}")
+
+
+def valid_app(app) -> bool:
+    return isinstance(app, str) and (app in APPS or bool(ADDON_APP.fullmatch(app)))
 COOKIE_PREFIX = "opiha_auth_"
 BODY_LIMIT = 8 * 1024 * 1024
 RESPONSE_LIMIT = 128 * 1024 * 1024
 SESSION_SECONDS = 300
 REQUEST_HEADERS = {"accept", "accept-language", "content-type", "if-none-match", "if-modified-since", "cache-control", "range",
                    # Node-RED editor API negotiation; without it the editor receives the legacy /flows format.
-                   "node-red-api-version", "node-red-deployment-type"}
+                   "node-red-api-version", "node-red-deployment-type", "x-requested-with"}
 RESPONSE_HEADERS = {"content-type", "content-disposition", "etag", "last-modified", "cache-control", "content-range", "accept-ranges"}
 
 
@@ -53,12 +60,12 @@ def same_origin(request) -> bool:
         return False
 
 
-def rewrite_location(value: str, prefix: str, port: int) -> str:
+def rewrite_location(value: str, prefix: str, port: int, host: str = "127.0.0.1") -> str:
     if any(x in value for x in ("\r", "\n", "\\")) or value.startswith("//"):
         raise web.HTTPBadGateway(text="Unsafe application redirect")
     parsed = urlsplit(value)
     if parsed.scheme or parsed.netloc:
-        if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or parsed.port != port or parsed.username:
+        if parsed.scheme != "http" or parsed.hostname != host or parsed.port != port or parsed.username:
             raise web.HTTPBadGateway(text="Cross-origin application redirect is not supported")
         value = parsed.path + ("?" + parsed.query if parsed.query else "")
     safe_tail(parsed.path.lstrip("/"))
@@ -84,27 +91,33 @@ class SessionView(HomeAssistantView):
             raise web.HTTPRequestEntityTooLarge(max_size=1024, actual_size=request.content_length or 0)
         try:
             data = await request.json()
-            if not isinstance(data, dict) or set(data) != {"app"} or data["app"] not in APPS:
+            if not isinstance(data, dict) or set(data) != {"app"} or not valid_app(data["app"]):
                 raise web.HTTPBadRequest(text="Unknown application route")
             descriptor = await self.ingress.client.request("GET", "/v1/apps/" + data["app"] + "/ingress")
             app = data["app"]
             prefix = PREFIX + app + "/"
-            if descriptor.get("prefix") != prefix or type(descriptor.get("port")) is not int or not 1024 <= descriptor["port"] <= 65535:
+            host, entry = descriptor.get("host", "127.0.0.1"), descriptor.get("entry", "")
+            low = 1 if app not in APPS else 1024
+            if (descriptor.get("prefix") != prefix or type(descriptor.get("port")) is not int or not low <= descriptor["port"] <= 65535
+                    or (host != "127.0.0.1" and not (app not in APPS and ADDON_HOST.fullmatch(host)))
+                    or type(descriptor.get("strip_prefix", False)) is not bool or not isinstance(entry, str)
+                    or not re.fullmatch(r"[A-Za-z0-9_./-]{0,100}", entry) or ".." in entry.split("/")):
                 raise web.HTTPBadGateway(text="Invalid application route descriptor")
+            target = {"host": host, "port": descriptor["port"], "strip_prefix": descriptor.get("strip_prefix", app == "esphome")}
             self.ingress.expire()
             token = next((key for key, row in self.ingress.sessions.items()
                           if row["app"] == app and row["refresh_id"] == refresh_id and row["user_id"] == user.id), None)
             if token:
                 self.ingress.sessions[token]["expires"] = time.monotonic() + SESSION_SECONDS
-                self.ingress.sessions[token]["port"] = descriptor["port"]
+                self.ingress.sessions[token].update(target)
             else:
                 if len(self.ingress.sessions) >= 128:
                     raise web.HTTPServiceUnavailable(text="Too many active app sessions")
                 token = secrets.token_urlsafe(32)
                 self.ingress.sessions[token] = {"app": app, "refresh_id": refresh_id, "user_id": user.id,
                                            "expires": time.monotonic() + SESSION_SECONDS,
-                                           "port": descriptor["port"], "cookies": set()}
-            response = web.json_response({"url": prefix, "expires_in": SESSION_SECONDS}, headers={"Cache-Control": "no-store"})
+                                           **target, "cookies": set()}
+            response = web.json_response({"url": prefix + entry.strip("/"), "expires_in": SESSION_SECONDS}, headers={"Cache-Control": "no-store"})
             response.set_cookie(COOKIE_PREFIX + app, token, httponly=True, secure=request.secure,
                                 samesite="Strict", max_age=SESSION_SECONDS, path=prefix)
             return response
@@ -145,7 +158,7 @@ class Ingress(HomeAssistantView):
         return bool(refresh and refresh.user.id == session["user_id"] and refresh.user.is_admin and refresh.user.is_active)
 
     def authorize(self, request, app):
-        if app not in APPS or not same_origin(request):
+        if not valid_app(app) or not same_origin(request):
             raise web.HTTPForbidden(text="Invalid application origin or route")
         session = self.sessions.get(request.cookies.get(COOKIE_PREFIX + app, ""))
         if not session or session["app"] != app or not self.valid(session):
@@ -161,7 +174,7 @@ class Ingress(HomeAssistantView):
         headers = {k: v for k, v in request.headers.items() if k.lower() in REQUEST_HEADERS}
         # Ask for identity bytes; do not silently decompress while retaining upstream lengths.
         headers["Accept-Encoding"] = "identity"
-        headers["Origin"] = f"http://127.0.0.1:{session['port']}"
+        headers["Origin"] = f"http://{session.get('host', '127.0.0.1')}:{session['port']}"
         headers["X-Ingress-Path"] = PREFIX + app
         headers["X-Forwarded-Prefix"] = PREFIX + app
         jar = SimpleCookie()
@@ -214,8 +227,9 @@ class Ingress(HomeAssistantView):
         session = self.authorize(request, app)
         path = safe_tail(tail)
         prefix = PREFIX + app + "/"
-        upstream_path = "/" + path if app == "esphome" else prefix + path
-        url = URL(f"http://127.0.0.1:{session['port']}" + upstream_path, encoded=True)
+        host = session.get("host", "127.0.0.1")
+        upstream_path = "/" + path if session.get("strip_prefix", app == "esphome") else prefix + path
+        url = URL(f"http://{host}:{session['port']}" + upstream_path, encoded=True)
         if request.query_string:
             if len(request.query_string) > 8192:
                 raise web.HTTPBadRequest(text="Application query is too long")
@@ -240,7 +254,7 @@ class Ingress(HomeAssistantView):
                 output_headers["X-Frame-Options"] = "SAMEORIGIN"
                 output_headers["Content-Security-Policy"] = "frame-ancestors 'self'"
                 if "Location" in upstream.headers:
-                    output_headers["Location"] = rewrite_location(upstream.headers["Location"], prefix, session["port"])
+                    output_headers["Location"] = rewrite_location(upstream.headers["Location"], prefix, session["port"], host)
                 response = web.StreamResponse(status=upstream.status, headers=output_headers)
                 self.copy_cookies(upstream, response, request, app, session)
                 await response.prepare(request)

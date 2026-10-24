@@ -54,9 +54,9 @@ class OpihaAppsTab extends HTMLElement {
   card(a){
     const blocked=this.busy||!!this.state?.active_job||!!this.state?.engine_error||['externally_managed','conflict','recovery_required'].includes(a.state);
     const button=(action,title,primary=false)=>`<button data-app="${a.id}" data-action="${action}" ${blocked?'disabled':''} class="${primary?'primary':''}">${title}</button>`;
-    let buttons=a.installed?(a.state==='running'?(a.ingress?button('open','Open',true):'')+button('stop','Stop')+button('restart','Restart'):button('start','Start',true))+button('update','Settings / update')+button('logs','Logs')+button('remove','Remove') : button('install',a.state==='externally_managed'?'Managed by existing stack':'Install',true);
+    let buttons=a.installed?(a.state==='running'?(a.ingress?button('open','Open',true):'')+button('stop','Stop')+button('restart','Restart'):button('start','Start',true))+(a.kind==='addon'?button('manage','Manage in Add-ons'):button('update','Settings / update'))+button('logs','Logs')+button('remove','Remove') : button('install',a.state==='externally_managed'?'Managed by existing stack':'Install',true);
     if(a.id==='mosquitto'&&a.installed)buttons+=button('credentials','Connection');
-    return `<article class="card" data-id="${a.id}"><div class="body"><div class="top"><ha-icon icon="${escapeHtml(a.icon)}"></ha-icon><h2>${escapeHtml(a.name)}</h2><span class="badge ${a.state==='running'?'running':''}">${escapeHtml(a.state.replaceAll('_',' '))}</span></div><p class="desc">${escapeHtml(a.summary)}</p><div class="details"><span>${escapeHtml(a.category)} · ${escapeHtml(a.options.version)}</span><span>${a.options.memory_mib} MiB ceiling</span></div></div><div class="actions">${buttons}</div></article>`;
+    return `<article class="card" data-id="${a.id}"><div class="body"><div class="top"><ha-icon icon="${escapeHtml(a.icon)}"></ha-icon><h2>${escapeHtml(a.name)}</h2><span class="badge ${a.state==='running'?'running':''}">${escapeHtml(a.state.replaceAll('_',' '))}</span>${a.kind==='addon'?'<span class="badge" title="Third-party add-on from a repository you added">add-on</span>':''}</div><p class="desc">${escapeHtml(a.summary)}</p><div class="details"><span>${escapeHtml(a.category)} · ${escapeHtml(a.options.version)}</span><span>${a.options.memory_mib} MiB ceiling</span></div></div><div class="actions">${buttons}</div></article>`;
   }
   modal(title,body){
     let d=this.shadowRoot.querySelector('dialog'); if(!d){d=document.createElement('dialog');this.shadowRoot.append(d);}
@@ -65,6 +65,7 @@ class OpihaAppsTab extends HTMLElement {
   }
   async action(slug,action){
     if(action==='open')return this.open(slug);
+    if(action==='manage'){this.dispatchEvent(new CustomEvent('opiha-navigate',{detail:{tab:'store'},bubbles:true,composed:true}));return;}
     if(action==='logs'){try{const r=await this.api('logs',{app:slug});this.modal('Private application logs',`<p>Logs can contain private data. Do not paste them into public issues.</p><pre>${escapeHtml(r.logs)}</pre><div class="buttons"><button data-close>Close</button></div>`);}catch(e){this.fail(e);}return;}
     if(action==='credentials'){const d=this.modal('Show private MQTT credentials?',`<p>These credentials will be visible on this screen. They are not logged.</p><div class="buttons"><button data-close>Cancel</button><button id="reveal" class="primary">Reveal</button></div>`);d.querySelector('#reveal').onclick=async()=>{try{const c=await this.api('credentials',{confirm:true});d.innerHTML=`<h2>MQTT connection</h2><p>HA host: <code>127.0.0.1:21883</code>. This manager’s apps: <code>opiha-apps-mosquitto:1883</code>.</p><pre>${escapeHtml(JSON.stringify(c,null,2))}</pre><button data-close>Close</button>`;d.querySelector('button').onclick=()=>{d.innerHTML='';d.close();};}catch(e){d.close();this.fail(e);}};return;}
     const a=this.state.apps.find(a=>a.id===slug);
@@ -80,7 +81,7 @@ class OpihaAppsTab extends HTMLElement {
   async showMetrics(){try{const r=await this.api('metrics');this.modal('Measured host and application resources',`<p>On-demand sample. Memory ceilings are budgets, not reserved allocations or measured consumption. This is not an Orange Pi benchmark.</p><pre>${escapeHtml(JSON.stringify(r,null,2))}</pre><div class="buttons"><button data-close>Close</button></div>`);}catch(e){this.fail(e);}}
   fail(e){this.error=e.message||String(e);if(!this.selected)this.render();}
   async open(slug){
-    try{const session=await this._hass.callApi('POST','opiha_apps/session',{app:slug});if(session.url!==`/api/opiha_apps/ingress/${slug}/`)throw new Error('Unexpected application route');
+    try{const session=await this._hass.callApi('POST','opiha_apps/session',{app:slug});if(!session.url.startsWith(`/api/opiha_apps/ingress/${slug}/`))throw new Error('Unexpected application route');
       this.selected=slug;this.shadowRoot.innerHTML=this.css()+`<header class="frame-head"><div><button id="back">← Apps</button> <strong>${escapeHtml(slug)}</strong><br><small>Protected by your active Home Assistant administrator session</small></div><button id="reload">Reload app</button></header><iframe class="app-frame" title="${escapeHtml(slug)}" referrerpolicy="no-referrer"></iframe>`;
       const frame=this.shadowRoot.querySelector('iframe');frame.src=session.url;
       this.shadowRoot.querySelector('#back').onclick=()=>{clearInterval(this.renewTimer);this.selected=null;this.render();this.refresh();};

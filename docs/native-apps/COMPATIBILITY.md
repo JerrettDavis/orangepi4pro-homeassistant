@@ -20,7 +20,7 @@ Z-Wave starts never generate new network keys, reset a controller or exclude/rei
 
 ## Not implemented here
 
-There is no generic Supervisor add-on repository importer, Supervisor ingress API emulation, Home Assistant OS updater, Matter Server adapter, Thread/OTBR adapter, shared audio/D-Bus broker, Frigate adapter, VS Code/File Editor adapter, NPU backend, or native A733 HAOS board image. Host network/IPv6/multicast, BlueZ, audio, extra hardware and privileged access need explicit per-app engineering.
+The reviewed adapters above are a closed list. Arbitrary add-on repositories are handled separately by the Add-ons tab (see [ADDONS.md](ADDONS.md)), which is *not* reviewed by this project. There is no Home Assistant OS updater, Matter Server adapter, Thread/OTBR adapter, shared audio/D-Bus broker, Frigate adapter, VS Code/File Editor adapter, NPU backend, or native A733 HAOS board image. Host network/IPv6/multicast, BlueZ, audio, extra hardware and privileged access need explicit per-app engineering.
 
 ## Adding another app
 

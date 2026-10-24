@@ -26,7 +26,8 @@ class OverviewTab extends Tab {
     const s = this.s; if (!s) return `<div class="empty">Reading the host…</div>`;
     const m = s.memory, used = m.total - m.available, hot = s.temperatures.reduce((a, t) => t.celsius > (a?.celsius ?? -1) ? t : a, null);
     const swapUsed = (m.swap_total || 0) - (m.swap_free || 0);
-    return `${this.chips(s)}
+    return `<div class="row" style="margin-bottom:12px"><button id="reboot">Reboot…</button><button id="poweroff" class="danger">Shut down…</button><button id="screen">Screen off</button></div>
+      ${this.chips(s)}
       <div class="cards">
         <section class="card"><div class="label">CPU</div><div class="big">${pct(s.cpu_percent)}</div>${meter((s.cpu_percent || 0) / 100, "CPU use")}${spark(this.history.cpu)}
           <dl class="kv"><dt>Load</dt><dd>${s.load.join(" · ")} (${s.cpus} cores)</dd>${s.frequencies.length ? `<dt>Clock</dt><dd>${s.frequencies.map(f => f.mhz + " MHz").join(" · ")}</dd>` : ""}</dl></section>
@@ -38,8 +39,7 @@ class OverviewTab extends Tab {
         <section class="card"><div class="label">Network</div>${s.network.map(n => `<div style="margin-top:8px"><strong>${esc(n.name)}</strong> <span class="muted">${esc(n.addresses.join(", "))}</span><div class="muted">↓ ${rate(n.rx_rate)} · ↑ ${rate(n.tx_rate)}</div></div>`).join("") || `<p class="muted">No interfaces</p>`}</section>
         <section class="card"><div class="label">System</div>
           <dl class="kv" style="margin-top:8px"><dt>Host</dt><dd>${esc(s.hostname)}</dd><dt>Board</dt><dd>${esc(s.model || "–")}</dd><dt>OS</dt><dd>${esc(s.os || "–")}</dd><dt>Kernel</dt><dd>${esc(s.kernel)} (${esc(s.arch)})</dd><dt>Uptime</dt><dd>${duration(s.uptime)}</dd></dl></section>
-      </div>
-      <div class="row"><button id="reboot">Reboot…</button><button id="poweroff" class="danger">Shut down…</button><button id="screen">Screen off</button></div>`;
+      </div>`;
   }
   bind() {
     const power = (action, label) => async () => {

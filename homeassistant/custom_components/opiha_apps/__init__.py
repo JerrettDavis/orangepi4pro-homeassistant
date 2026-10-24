@@ -85,6 +85,50 @@ async def ws_host(hass, connection, msg):
         connection.send_error(msg["id"], "host_error", str(exc))
 
 
+STORE_OPERATIONS = ["repos", "repo_add", "repo_refresh", "repo_remove", "repo_addons", "addon_plan", "ha_token"]
+STORE_TIMEOUT = 330  # a shallow clone of a large repository can take minutes
+
+
+@websocket_api.websocket_command({vol.Required("type"): "opiha_apps/store",
+                                 vol.Required("operation"): vol.In(STORE_OPERATIONS),
+                                 vol.Optional("data", default={}): dict})
+@websocket_api.async_response
+async def ws_store(hass, connection, msg):
+    """Add-on repositories and install planning. Applying a plan uses the ordinary opiha_apps/request apply."""
+    if not _admin(connection):
+        connection.send_error(msg["id"], "unauthorized", "An active Home Assistant administrator is required")
+        return
+    op, data = msg["operation"], msg["data"]
+    try:
+        timeout = None
+        if op == "repos":
+            if data:
+                raise NativeError("This operation takes no parameters")
+            method, path, body = "GET", "/v1/repos", None
+        elif op == "repo_addons":
+            value = data.get("id")
+            if set(data) != {"id"} or not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{8}", value):
+                raise NativeError("Invalid repository identifier")
+            method, path, body = "GET", "/v1/repos/" + value + "/addons", None
+        elif op in {"repo_add", "repo_refresh", "repo_remove"}:
+            key = "url" if op == "repo_add" else "id"
+            if set(data) != {key} or not isinstance(data[key], str) or len(data[key]) > 200:
+                raise NativeError("Invalid repository request")
+            method, path, body = "POST", "/v1/repos/" + op.removeprefix("repo_"), data
+            timeout = STORE_TIMEOUT if op != "repo_remove" else None
+        elif op == "addon_plan":
+            if set(data) - {"repository", "folder", "options"} or not {"repository", "folder"} <= set(data):
+                raise NativeError("Unknown add-on planning fields")
+            method, path, body = "POST", "/v1/addon/plan", data
+        else:
+            if set(data) != {"token"}:
+                raise NativeError("Send only the access token")
+            method, path, body = "POST", "/v1/addons/ha-token", data
+        connection.send_result(msg["id"], await hass.data[DOMAIN]["client"].request(method, path, body, timeout))
+    except NativeError as exc:
+        connection.send_error(msg["id"], "native_apps_error", str(exc))
+
+
 ASSET_TYPES = {".js": "application/javascript", ".css": "text/css"}
 
 
@@ -128,9 +172,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.http.register_view(ingress)
     websocket_api.async_register_command(hass, ws_request)
     websocket_api.async_register_command(hass, ws_host)
+    websocket_api.async_register_command(hass, ws_store)
     await panel_custom.async_register_panel(hass, frontend_url_path="opiha-apps",
         webcomponent_name="opiha-apps-panel", sidebar_title="Orange Pi", sidebar_icon="mdi:chip",
-        module_url="/api/opiha_apps/panel.js?v=0.3.0-alpha.3", require_admin=True)
+        module_url="/api/opiha_apps/panel.js?v=0.3.0-alpha.4", require_admin=True)
 
     async def stop(_event):
         await ingress.close()

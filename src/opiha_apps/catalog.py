@@ -6,8 +6,10 @@ explicitly selected other tag is pulled for the native architecture and then loc
 resolved content digest before container creation. See docs/native-apps/COMPATIBILITY.md.
 """
 from __future__ import annotations
+import contextlib
 import copy
 import re
+import threading
 from .common import AppError
 
 PREFIX = "/api/opiha_apps/ingress/"
@@ -55,15 +57,96 @@ CATALOG = {
 }
 
 COMMON_OPTIONS = {"version", "memory_mib", "cpu_shares", "autostart", "port", "device", "radio_reviewed"}
+ADDON_OPTIONS = COMMON_OPTIONS | {"config", "grants", "host_ports", "lan", "devices"}
+
+# Add-ons from administrator-added repositories, registered from their frozen manifests.
+# The reviewed CATALOG above always wins and cannot be shadowed.
+DYNAMIC: dict[str, dict] = {}
+_LOCK = threading.Lock()  # guards DYNAMIC mutation/snapshots only; never held across a yield or I/O
+_LOCAL = threading.local()  # per-thread plan/job overrides, invisible to other threads
+
+
+def register(slug: str, app: dict) -> None:
+    if slug in CATALOG:
+        raise AppError("Add-on slug collides with a reviewed application")
+    with _LOCK:
+        DYNAMIC[slug] = copy.deepcopy(app)
+
+
+@contextlib.contextmanager
+def override(slug: str, app: dict):
+    """Resolve `slug` to `app` for the calling thread only, without installing it or blocking anyone."""
+    if slug in CATALOG:
+        raise AppError("Add-on slug collides with a reviewed application")
+    table = getattr(_LOCAL, "table", None)
+    if table is None:
+        table = _LOCAL.table = {}
+    previous = table.get(slug)
+    table[slug] = copy.deepcopy(app)
+    try:
+        yield
+    finally:
+        if previous is None:
+            table.pop(slug, None)
+        else:
+            table[slug] = previous
+
+
+def _dynamic(slug) -> dict | None:
+    if not isinstance(slug, str):
+        return None
+    local = getattr(_LOCAL, "table", None)
+    if local and slug in local:
+        return local[slug]
+    with _LOCK:
+        return DYNAMIC.get(slug)
+
+
+def forget(slug: str) -> None:
+    with _LOCK:
+        DYNAMIC.pop(slug, None)
+
+
+def clear_dynamic() -> None:
+    with _LOCK:
+        DYNAMIC.clear()
+
+
+def is_addon(slug: str) -> bool:
+    return _dynamic(slug) is not None
+
+
+def _snapshot() -> dict[str, dict]:
+    with _LOCK:
+        return dict(DYNAMIC)
+
+
+def all_slugs() -> list[str]:
+    return [*CATALOG, *_snapshot()]
 
 
 def entry(slug: str) -> dict:
-    if not isinstance(slug, str) or slug not in CATALOG:
-        raise AppError("Unknown application; only the bundled reviewed catalog is accepted")
-    return copy.deepcopy(CATALOG[slug])
+    if isinstance(slug, str) and slug in CATALOG:
+        return copy.deepcopy(CATALOG[slug])
+    app = _dynamic(slug)
+    if app is not None:
+        return copy.deepcopy(app)
+    raise AppError("Unknown application; only the reviewed catalog and added repositories are accepted")
+
+
+def wanted_ports(slug: str, opts: dict) -> set[int]:
+    """Host ports an app will bind, for conflict checks."""
+    if is_addon(slug):
+        extra = set(opts["host_ports"].values())
+        app = _dynamic(slug)
+        return {opts["port"]} | extra if app.get("container_port") and not app.get("ingress") else extra
+    return {opts["port"]} | ({28554} if slug == "go2rtc" else {23000} if slug == "zwave" else set())
 
 
 def options(slug: str, supplied: dict | None = None) -> dict:
+    if is_addon(slug):
+        from . import addon_runtime
+        return addon_runtime.options(entry(slug), supplied)
     app = entry(slug)
     supplied = {} if supplied is None else supplied
     if not isinstance(supplied, dict) or set(supplied) - COMMON_OPTIONS:
@@ -92,13 +175,20 @@ def options(slug: str, supplied: dict | None = None) -> dict:
 
 
 def public_catalog() -> list[dict]:
-    return [{"id": slug, **copy.deepcopy(app), "defaults": options(slug),
+    rows = [{"id": slug, **copy.deepcopy(app), "defaults": options(slug), "kind": "reviewed",
              "compatibility": "native-container-adapter", "hardware_validated": False}
             for slug, app in CATALOG.items()]
+    from . import addon_runtime
+    rows += [{"id": slug, **copy.deepcopy(app), "defaults": addon_runtime.defaults(app), "kind": "addon",
+              "compatibility": "unreviewed-addon", "hardware_validated": False}
+             for slug, app in _snapshot().items()]
+    return rows
 
 
 def image(slug: str, opts: dict) -> str:
     """The reviewed release is pulled by its multi-arch index digest; other tags remain tag-only until locked."""
     app, version = entry(slug), options(slug, opts)["version"]
+    if app.get("build"):
+        return "local-build:" + slug
     reference = app["repository"] + ":" + version
-    return reference + "@" + app["digest"] if version == app["version"] else reference
+    return reference + "@" + app["digest"] if app["digest"] and version == app["version"] else reference

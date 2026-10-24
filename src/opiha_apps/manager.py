@@ -4,6 +4,7 @@ The Home Assistant container is deliberately not managed by this class.
 """
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
+import contextlib
 import copy
 import hashlib
 import json
@@ -16,7 +17,8 @@ import socket
 import stat
 import threading
 import time
-from . import __version__, catalog, resources
+from . import __version__, addon_runtime, addons, catalog, resources
+from .addon_repos import Repositories
 from .common import AppError, atomic, checked_path, initialize, operation_lock, read_json, stamp, validate_config, write_json
 from .engine import APP_LABEL, LABEL, Docker
 from .filesystem import copy_tree, inventory, set_owner
@@ -27,7 +29,9 @@ class Manager:
         self.config = validate_config(copy.deepcopy(config))
         self.root = checked_path(config["data_dir"], directory=True)
         self.owner = initialize(config)
-        self.engine = engine or Docker(self.owner)
+        self.engine = engine or Docker(self.owner, config_dir=str(self.root / ".docker"))
+        if engine is None:
+            (self.root / ".docker").mkdir(mode=0o700, exist_ok=True)
         self.sampler = sampler
         self.check_port = check_port
         self.guard = threading.RLock()
@@ -35,12 +39,42 @@ class Manager:
         self.jobs: dict[str, dict] = {}
         self.worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix="opiha-apps")
         self.active = False
+        self.repos = Repositories(self.root)
+        self.shim_address = None
+        self.shim_state = {"listening": False, "redirect": False, "error": None}
+        self._ha_config = None
+        self._load_addons()
         for p in sorted((self.root / "jobs").glob("*.json"))[-64:]:
             item = read_json(p)
             if item.get("status") in {"queued", "running"}:
                 item.update(status="interrupted", stage="Inspect state before retrying", finished=time.time())
                 write_json(p, item)
             self.jobs[p.stem] = item
+
+    @property
+    def ha_config(self):
+        """Home Assistant's configuration directory, derived from the appliance file; None when unknown."""
+        if self._ha_config is None:
+            try:
+                data = read_json(Path(self.config["appliance_config"]))["data_dir"]
+                self._ha_config = str(Path(data) / "ha")
+            except (AppError, KeyError, OSError):
+                return None
+        return self._ha_config
+
+    @ha_config.setter
+    def ha_config(self, value):
+        self._ha_config = value
+
+    def _load_addons(self):
+        catalog.clear_dynamic()
+        for p in sorted((self.root / "apps").glob("*/addon.json")):
+            try:
+                app = addon_runtime.load_addon(p)
+                if app["slug"] == p.parent.name:
+                    catalog.register(app["slug"], app)
+            except AppError:
+                continue
 
     def close(self):
         self.worker.shutdown(wait=True, cancel_futures=False)
@@ -61,14 +95,18 @@ class Manager:
         catalog.options(slug, row["options"])
         image = row.get("image")
         expected = app["repository"].removeprefix("docker.io/")
-        if not isinstance(image, str) or not re.fullmatch(re.escape(expected) + r"@sha256:[0-9a-f]{64}", image.removeprefix("docker.io/").removeprefix("library/")):
+        if app.get("addon"):
+            pattern = r"sha256:[0-9a-f]{64}" if app["build"] else re.escape(expected) + r"@sha256:[0-9a-f]{64}"
+            if not isinstance(image, str) or not re.fullmatch(pattern, image):
+                raise AppError("Restored add-on image must be its local build ID or a digest in its manifest's repository")
+        elif not isinstance(image, str) or not re.fullmatch(re.escape(expected) + r"@sha256:[0-9a-f]{64}", image.removeprefix("docker.io/").removeprefix("library/")):
             raise AppError("Restored image must be a digest in the reviewed application repository")
         if not isinstance(row["image_id"], str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", row["image_id"]) or not isinstance(row["revision"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", row["revision"]):
             raise AppError("Invalid app image identity or revision")
         return row
 
     def records(self) -> dict[str, dict]:
-        return {slug: item for slug in catalog.CATALOG if (item := self.record(slug))}
+        return {slug: item for slug in catalog.all_slugs() if (item := self.record(slug))}
 
     def _assert_no_journal(self, slug: str):
         if (self.app_dir(slug) / "transaction.json").exists():
@@ -113,7 +151,8 @@ class Manager:
                   "resources": host, "reserve_mib": self.config["reserve_mib"],
                   "allocated_limit_mib": sum(r["options"]["memory_mib"] for r in records.values() if r.get("installed")),
                   "active_job": active_job,
-                  "supervisor": False, "changes_homeassistant": False}
+                  "supervisor": False, "changes_homeassistant": False,
+                  "shim": dict(self.shim_state)}
         if include_stats and not engine_error:
             ids = [c["Id"] for c in all_containers if (c.get("Config", {}).get("Labels") or {}).get(LABEL) == self.owner
                    and c.get("State", {}).get("Running")]
@@ -125,6 +164,8 @@ class Manager:
         return value.removeprefix("docker.io/").removeprefix("library/").split("@", 1)[0].split(":", 1)[0]
 
     def _external(self, slug: str, containers: list[dict]) -> list[dict]:
+        if catalog.is_addon(slug):
+            return []  # Add-ons share popular images; ownership is by name and label only.
         repo = self._canonical_image(catalog.entry(slug)["repository"])
         return [c for c in containers if self._canonical_image(c.get("Config", {}).get("Image", "")) == repo
                 and (c.get("Config", {}).get("Labels") or {}).get(LABEL) != self.owner]
@@ -141,8 +182,9 @@ class Manager:
             raise AppError("App memory ceilings would consume the reserved HA/kiosk/host headroom")
         if available < self.config["minimum_available_mib"] * 1024**2:
             raise AppError("Host memory is already under pressure; stop or resize another workload first")
-        if host.get("disk_free") is None or host["disk_free"] < 2 * 1024**3:
-            raise AppError("At least 2 GiB free storage is required before an app operation")
+        floor = 4 if catalog.entry(slug).get("build") else 2
+        if host.get("disk_free") is None or host["disk_free"] < floor * 1024**3:
+            raise AppError(f"At least {floor} GiB free storage is required before this app operation")
 
     def _architecture(self):
         info = self.engine.info()
@@ -181,8 +223,12 @@ class Manager:
         all_containers = self.engine.containers()
         existing = self.engine.owned(slug)
         record = self.record(slug)
-        if action not in {"install", "update", "start", "stop", "restart", "remove"}:
+        if action not in {"install", "update", "start", "stop", "restart", "remove", "configure"}:
             raise AppError("Unsupported lifecycle operation")
+        if action == "configure" and not catalog.is_addon(slug):
+            raise AppError("Only add-ons have editable options")
+        if catalog.is_addon(slug) and action in {"install", "update", "start", "restart", "configure"}:
+            addon_runtime.check_grants(catalog.entry(slug), opts)
         if action in {"install", "update"}:
             if self._external(slug, all_containers):
                 raise AppError("This application already has an external owner; preserve it or migrate it deliberately")
@@ -204,11 +250,11 @@ class Manager:
             if action in {"start", "restart"}:
                 self._hardware(slug, opts, all_containers)
         if action in {"install", "update"}:
-            wanted = {opts["port"]} | ({28554} if slug == "go2rtc" else {23000} if slug == "zwave" else set())
+            wanted = catalog.wanted_ports(slug, opts)
             if self.config["port"] in wanted:
                 raise AppError("App port conflicts with the manager API")
             for other, r in self.records().items():
-                if other != slug and r.get("installed") and r["options"]["port"] in wanted:
+                if other != slug and r.get("installed") and catalog.wanted_ports(other, r["options"]) & wanted:
                     raise AppError("App port conflicts with another managed app")
             if self.check_port:
                 for port in wanted:
@@ -229,11 +275,41 @@ class Manager:
                 "running": bool(existing and existing.get("State", {}).get("Running")),
                 "revision": record.get("revision") if record else None}
 
-    def plan(self, slug: str, action: str, supplied: dict | None = None) -> dict:
+    def plan_addon(self, repository: str, folder: str, supplied: dict | None = None) -> dict:
+        """Plan installing (or updating to) an add-on exactly as it exists in an added repository now."""
+        raw = self.repos.raw(repository, folder)
+        manifest = addons.parse(raw, repository=repository)
+        url = next((r["url"] for r in self.repos.list() if r["id"] == repository), "")
+        app = addon_runtime.entry_from(manifest, repository, folder, url)
+        slug = app["slug"]
+        source = self.repos.addon_dir(repository, folder)
+        info = {"raw": raw, "repo": repository, "folder": folder, "repo_url": url,
+                "source_hash": addon_runtime.tree_hash(source)}
+        with self.guard, catalog.override(slug, app):
+            old = self.record(slug)
+            action = "update" if old else "install"
+            options = {**(supplied or {}), "version": app["version"]}
+            if "port" not in options and not old:
+                taken = {p for r in self.records().values() if r.get("installed") for p in [r["options"]["port"]]}
+                port = app["port"]
+                while port in taken or port in addon_runtime.RESERVED_UI_PORTS:
+                    port += 1
+                options["port"] = port
+            value = self.plan(slug, action, options, addon=info)
+        return value
+
+    def _addon_entry(self, info: dict) -> dict:
+        return addon_runtime.entry_from(addons.parse(info["raw"], repository=info["repo"]), info["repo"], info["folder"], info["repo_url"])
+
+    def plan(self, slug: str, action: str, supplied: dict | None = None, *, addon: dict | None = None) -> dict:
         with self.guard:
             old = self.record(slug)
+            if catalog.is_addon(slug) and action in {"install", "update"} and addon is None:
+                raise AppError("Install or update add-ons from their repository listing")
             opts = catalog.options(slug, supplied if supplied is not None else old["options"] if old else None)
-            if action not in {"install", "update"} and old and opts != old["options"]:
+            if action not in {"install", "update"} and old and (
+                    {k: v for k, v in opts.items() if k != "config"} != {k: v for k, v in old["options"].items() if k != "config"}
+                    or (action != "configure" and opts != old["options"])):
                 raise AppError("Use update to change settings; lifecycle actions use the installed settings")
             baseline = self.preflight(slug, action, opts)
             for key in list(self.plans):
@@ -250,6 +326,15 @@ class Manager:
                                   "This app can reach your LAN through Docker NAT; it is not a production-state quarantine."],
                      "starts_app": action in {"start", "restart"},
                      "requires_host_reboot": False}
+            if addon is not None:
+                report = addons.report(app["manifest"])
+                value.update(addon=addon, report=report, privileges=report["privileges"],
+                             builds_locally=bool(app["build"]), source_hash=addon["source_hash"])
+                value["warnings"].append("Add-ons are third-party software from a repository you added. They are not reviewed by this project.")
+                if app["build"]:
+                    value["warnings"].append("This add-on is built on the device from its Dockerfile; that needs several GiB of free storage and can take many minutes.")
+                if opts["lan"]:
+                    value["warnings"].append("Published ports are reachable from your LAN, bypassing the host firewall's usual rules for Docker.")
             if action == "update":
                 value["warnings"].append("Only this app stops. A private rollback copy is retained; reserve storage for it.")
             self.plans[key] = value
@@ -280,12 +365,15 @@ class Manager:
 
     def _job(self, job_id: str, plan: dict):
         try:
-            with operation_lock(self.root):
+            entry = self._addon_entry(plan["addon"]) if plan.get("addon") else None
+            with operation_lock(self.root), (catalog.override(plan["app"], entry) if entry else contextlib.nullcontext()):
                 self._job_stage(job_id, "Revalidating approved plan", status="running")
                 baseline = self.preflight(plan["app"], plan["action"], plan["options"])
                 if baseline != plan["baseline"]:
                     raise AppError("Installed state changed after planning; review a new plan")
                 self._execute(plan, lambda message: self._job_stage(job_id, message))
+            if entry and (self.root / "apps" / plan["app"] / "addon.json").is_file():
+                catalog.register(plan["app"], entry)
             self._job_stage(job_id, "Completed", status="succeeded", finished=time.time())
         except (AppError, OSError, ValueError) as exc:
             message = str(exc) if isinstance(exc, AppError) else "Host operation failed; review local permissions and storage"
@@ -305,7 +393,9 @@ class Manager:
                 raise AppError("Unknown or expired job")
             return copy.deepcopy(self.jobs[identifier])
 
-    def _seed(self, slug: str, locked_image: str):
+    def _seed(self, slug: str, locked_image: str, opts: dict | None = None):
+        if catalog.is_addon(slug):
+            return addon_runtime.seed(self, slug, opts)
         app = catalog.entry(slug)
         root = self.app_dir(slug)
         root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -349,6 +439,8 @@ class Manager:
 
     def spec(self, slug: str, record: dict) -> dict:
         self.validate_record(slug, record)
+        if catalog.is_addon(slug):
+            return addon_runtime.spec(self, slug, record)
         app = catalog.entry(slug)
         opts = catalog.options(slug, record["options"])
         root = self.app_dir(slug)
@@ -372,6 +464,18 @@ class Manager:
         slug, action, opts = plan["app"], plan["action"], plan["options"]
         old = self.record(slug)
         existing = self.engine.owned(slug)
+        if action == "configure":
+            progress("Writing add-on options")
+            addon_runtime.write_options(self, slug, opts)
+            write_json(self.app_dir(slug) / "record.json", {**old, "options": opts, "revision": stamp()})
+            if existing.get("State", {}).get("Running"):
+                self.engine.action(existing["Id"], slug, "restart")
+            return
+        info = plan.get("addon")
+        if info:
+            source = self.repos.addon_dir(info["repo"], info["folder"])
+            if addon_runtime.tree_hash(source) != info["source_hash"]:
+                raise AppError("Repository content changed after planning; review a new plan")
         if action in {"start", "stop", "restart", "remove"}:
             progress("Applying " + action + " to this app only")
             if action == "remove" and existing.get("State", {}).get("Running"):
@@ -384,13 +488,35 @@ class Manager:
                 old["revision"] = stamp()
                 write_json(self.app_dir(slug) / "record.json", old)
             return
-        progress("Pulling and verifying native image")
-        reference = old["image"] if old and not existing and old["options"] == opts else catalog.image(slug, opts)
-        locked, image_id = self.engine.pull(reference, catalog.entry(slug)["repository"], self.config["architecture"])
-        self.engine.ensure_network(self.config["network"])
-        if not existing:
-            self._seed(slug, locked)
+        app = catalog.entry(slug)
         root = self.app_dir(slug)
+        if app.get("build"):
+            progress("Building the add-on image on this device (this can take many minutes)")
+            context = checked_path(root / "build")
+            root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            if context.exists():
+                shutil.rmtree(context)
+            addon_runtime.copy_source(source, context)
+            try:
+                tag = "opiha-addon-" + slug + ":" + app["version"].lower()
+                image_id = self.engine.build(tag, str(context), addon_runtime.build_args(app["manifest"], context), self.config["architecture"])
+            finally:
+                shutil.rmtree(context, ignore_errors=True)
+            locked = image_id
+        else:
+            progress("Pulling and verifying native image")
+            reference = old["image"] if old and not existing and old["options"] == opts else catalog.image(slug, opts)
+            locked, image_id = self.engine.pull(reference, app["repository"], self.config["architecture"])
+        if app.get("addon"):
+            self.engine.ensure_network(addon_runtime.NETWORK, addon_runtime.NETWORK_ARGS)
+        else:
+            self.engine.ensure_network(self.config["network"])
+        if not existing:
+            self._seed(slug, locked, opts)
+        old_addon = None
+        if info:
+            previous_addon = root / "addon.json"
+            old_addon = read_json(previous_addon) if previous_addon.is_file() else None
         new = {"schema": 1, "app": slug, "options": opts, "image": locked,
                "image_id": image_id, "revision": stamp(), "installed": True}
         if not existing:
@@ -399,6 +525,8 @@ class Manager:
             spec["autostart"] = False  # An installed but unreviewed app must not start on a later host boot.
             first = {"schema": 1, "app": slug, "phase": "first-install", "new": new, "old": old}
             write_json(root / "transaction.json", first)
+            if info:
+                addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"], info["repo_url"])
             try:
                 self.engine.create(slug, spec)
                 write_json(root / "record.json", new)
@@ -411,13 +539,19 @@ class Manager:
         backup = self.root / "rollbacks" / (slug + "-" + stamp())
         transaction = {"schema": 1, "app": slug, "old": old, "new": new,
                        "backup": str(backup), "was_running": was_running, "phase": "stopping"}
+        if old_addon:
+            transaction["old_addon"] = old_addon
         write_json(root / "transaction.json", transaction)
+        if info:
+            addon_runtime.save_addon(self, slug, info["raw"], info["repo"], info["folder"], info["repo_url"])
         try:
             progress("Stopping app and making a private rollback copy")
             self.engine.restart_policy(existing["Id"], slug, False)
             if was_running:
                 self.engine.action(existing["Id"], slug, "stop")
             copy_tree(root / "data", backup)
+            if info:
+                addon_runtime.write_options(self, slug, opts)
             transaction["phase"] = "copied"
             write_json(root / "transaction.json", transaction)
             self.engine.action(existing["Id"], slug, "remove")
@@ -469,8 +603,13 @@ class Manager:
                 write_json(root / "record.json", old)
             else:
                 (root / "record.json").unlink(missing_ok=True)
+                if catalog.is_addon(slug):
+                    (root / "addon.json").unlink(missing_ok=True)
             (root / "transaction.json").unlink()
             return
+        if transaction.get("old_addon"):
+            write_json(root / "addon.json", transaction["old_addon"])
+            catalog.register(slug, addon_runtime.load_addon(root / "addon.json"))
         backup = checked_path(transaction["backup"])
         if backup.parent != self.root / "rollbacks":
             raise AppError("Rollback directory is outside managed storage")
@@ -511,12 +650,24 @@ class Manager:
         return {"app": slug, "logs": self.engine.logs(row["Id"], slug), "private": True}
 
     def ingress(self, slug: str) -> dict:
-        if not catalog.entry(slug)["ingress"]:
+        app = catalog.entry(slug)
+        if not app["ingress"]:
             raise AppError("This adapter has no reviewed in-HA web route")
         row, record = self.engine.owned(slug), self.record(slug)
         if not row or not record or not row.get("State", {}).get("Running"):
             raise AppError("The requested app is not running")
-        return {"app": slug, "port": record["options"]["port"], "prefix": catalog.PREFIX + slug + "/"}
+        prefix = catalog.PREFIX + slug + "/"
+        if not app.get("addon"):
+            return {"app": slug, "port": record["options"]["port"], "prefix": prefix,
+                    "host": "127.0.0.1", "strip_prefix": slug == "esphome", "entry": ""}
+        networks = row.get("NetworkSettings", {}).get("Networks", {}) or {}
+        address = (networks.get(addon_runtime.NETWORK) or {}).get("IPAddress")
+        if not address or not re.fullmatch(r"172\.30\.3[23]\.\d{1,3}", address):
+            raise AppError("The add-on has no address on the add-on network")
+        port = record["options"]["port"] if app["dynamic_ingress"] else app["container_port"]
+        entry = app["manifest"]["ingress_entry"]
+        return {"app": slug, "port": port, "prefix": prefix, "host": address, "strip_prefix": True,
+                "entry": entry.strip("/") if isinstance(entry, str) and re.fullmatch(r"[A-Za-z0-9_./-]{0,100}", entry) else ""}
 
     def credentials(self, slug: str) -> dict:
         if slug != "mosquitto":
