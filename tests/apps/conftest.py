@@ -28,6 +28,8 @@ class FakeDocker:
     def pull(self,ref,repository,architecture):
         self.calls.append(('pull',ref,architecture));return repository+'@sha256:'+'a'*64,'sha256:'+'b'*64
     def ensure_network(self,name):self.calls.append(('network',name))
+    def build(self,tag,context,args,arch):
+        self.calls.append(('build',tag,context,dict(args),arch));return 'sha256:'+'c'*64
     def create(self,slug,spec):
         self.calls.append(('create',slug,copy.deepcopy(spec)))
         if self.fail_create:self.fail_create-=1;raise AppError('Synthetic create failure')
@@ -59,6 +61,18 @@ def manager(tmp_path):
     m=Manager(cfg,engine=engine,sampler=lambda _:copy.deepcopy(host),check_port=False);m.test_host=host
     yield m
     m.close()
+
+
+def wait(m,job):
+    deadline=time.monotonic()+5
+    while m.job(job['id'])['status'] in {'queued','running'}:
+        if time.monotonic()>deadline:raise AssertionError('Synthetic lifecycle timed out')
+        time.sleep(.005)
+    return m.job(job['id'])
+
+
+def execute_addon(m,repo,folder,options=None):
+    plan=m.plan_addon(repo,folder,options);return wait(m,m.submit(plan['id'],True))
 
 
 def execute(m,slug,action,options=None):

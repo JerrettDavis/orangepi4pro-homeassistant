@@ -6,8 +6,10 @@ explicitly selected other tag is pulled for the native architecture and then loc
 resolved content digest before container creation. See docs/native-apps/COMPATIBILITY.md.
 """
 from __future__ import annotations
+import contextlib
 import copy
 import re
+import threading
 from .common import AppError
 
 PREFIX = "/api/opiha_apps/ingress/"
@@ -55,15 +57,72 @@ CATALOG = {
 }
 
 COMMON_OPTIONS = {"version", "memory_mib", "cpu_shares", "autostart", "port", "device", "radio_reviewed"}
+ADDON_OPTIONS = COMMON_OPTIONS | {"config", "grants", "host_ports", "lan", "devices"}
+
+# Add-ons from administrator-added repositories, registered from their frozen manifests.
+# The reviewed CATALOG above always wins and cannot be shadowed.
+DYNAMIC: dict[str, dict] = {}
+_LOCK = threading.RLock()
+
+
+def register(slug: str, app: dict) -> None:
+    if slug in CATALOG:
+        raise AppError("Add-on slug collides with a reviewed application")
+    DYNAMIC[slug] = copy.deepcopy(app)
+
+
+@contextlib.contextmanager
+def override(slug: str, app: dict):
+    """Resolve `slug` to `app` for the duration of a plan/preflight without installing it."""
+    with _LOCK:
+        if slug in CATALOG:
+            raise AppError("Add-on slug collides with a reviewed application")
+        previous = DYNAMIC.get(slug)
+        DYNAMIC[slug] = copy.deepcopy(app)
+        try:
+            yield
+        finally:
+            if previous is None:
+                DYNAMIC.pop(slug, None)
+            else:
+                DYNAMIC[slug] = previous
+
+
+def forget(slug: str) -> None:
+    DYNAMIC.pop(slug, None)
+
+
+def clear_dynamic() -> None:
+    DYNAMIC.clear()
+
+
+def is_addon(slug: str) -> bool:
+    return isinstance(slug, str) and slug in DYNAMIC
+
+
+def all_slugs() -> list[str]:
+    return [*CATALOG, *DYNAMIC]
 
 
 def entry(slug: str) -> dict:
-    if not isinstance(slug, str) or slug not in CATALOG:
-        raise AppError("Unknown application; only the bundled reviewed catalog is accepted")
-    return copy.deepcopy(CATALOG[slug])
+    if isinstance(slug, str) and slug in CATALOG:
+        return copy.deepcopy(CATALOG[slug])
+    if isinstance(slug, str) and slug in DYNAMIC:
+        return copy.deepcopy(DYNAMIC[slug])
+    raise AppError("Unknown application; only the reviewed catalog and added repositories are accepted")
+
+
+def wanted_ports(slug: str, opts: dict) -> set[int]:
+    """Host ports an app will bind, for conflict checks."""
+    if is_addon(slug):
+        return {opts["port"]} | set(opts["host_ports"].values()) if DYNAMIC[slug].get("container_port") else set(opts["host_ports"].values())
+    return {opts["port"]} | ({28554} if slug == "go2rtc" else {23000} if slug == "zwave" else set())
 
 
 def options(slug: str, supplied: dict | None = None) -> dict:
+    if is_addon(slug):
+        from . import addon_runtime
+        return addon_runtime.options(entry(slug), supplied)
     app = entry(slug)
     supplied = {} if supplied is None else supplied
     if not isinstance(supplied, dict) or set(supplied) - COMMON_OPTIONS:
@@ -92,13 +151,20 @@ def options(slug: str, supplied: dict | None = None) -> dict:
 
 
 def public_catalog() -> list[dict]:
-    return [{"id": slug, **copy.deepcopy(app), "defaults": options(slug),
+    rows = [{"id": slug, **copy.deepcopy(app), "defaults": options(slug), "kind": "reviewed",
              "compatibility": "native-container-adapter", "hardware_validated": False}
             for slug, app in CATALOG.items()]
+    from . import addon_runtime
+    rows += [{"id": slug, **copy.deepcopy(app), "defaults": addon_runtime.defaults(app), "kind": "addon",
+              "compatibility": "unreviewed-addon", "hardware_validated": False}
+             for slug, app in DYNAMIC.items()]
+    return rows
 
 
 def image(slug: str, opts: dict) -> str:
     """The reviewed release is pulled by its multi-arch index digest; other tags remain tag-only until locked."""
     app, version = entry(slug), options(slug, opts)["version"]
+    if app.get("build"):
+        return "local-build:" + slug
     reference = app["repository"] + ":" + version
-    return reference + "@" + app["digest"] if version == app["version"] else reference
+    return reference + "@" + app["digest"] if app["digest"] and version == app["version"] else reference

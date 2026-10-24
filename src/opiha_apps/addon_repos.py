@@ -164,6 +164,9 @@ class Repositories:
                 rows.append({"repository": rid, "folder": folder.name, "error": str(exc)})
         return rows
 
+    def raw(self, rid: str, folder: str) -> dict:
+        return addons.read_document(addons.find_manifest(self.addon_dir(rid, folder)))
+
     def addon_dir(self, rid: str, folder: str) -> Path:
         if not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", folder) or folder.startswith("."):
             raise AppError("Unknown add-on folder")
