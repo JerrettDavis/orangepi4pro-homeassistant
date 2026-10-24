@@ -173,3 +173,20 @@ def test_port_check_tolerates_a_just_removed_apps_lingering_listener(manager):
     started = time.monotonic()
     plan = manager.plan('nodered', 'install', {'port': port})
     assert plan['action'] == 'install' and time.monotonic() - started >= 0.5
+
+
+def test_a_finished_job_never_blocks_the_next_submit(manager):
+    # Regression: "succeeded" used to be published before the worker was marked free, so an immediate follow-up
+    # submit could be refused ("Another app job is already running") under load.
+    seen = []
+    real = manager._job_stage
+
+    def spy(job_id, stage, **extra):
+        if extra.get("status") in {"succeeded", "failed"}:
+            seen.append(manager.active)
+        return real(job_id, stage, **extra)
+    manager._job_stage = spy
+    assert execute(manager, 'nodered', 'install')['status'] == 'succeeded'
+    assert execute(manager, 'nodered', 'start')['status'] == 'succeeded'
+    assert execute(manager, 'nodered', 'stop')['status'] == 'succeeded'
+    assert seen and not any(seen)
