@@ -121,6 +121,8 @@ class Docker:
             args += ["--security-opt", "no-new-privileges:true"]
         else:
             args += ["--privileged"]
+        if spec.get("host_pid"):
+            args += ["--pid", "host"]
         for cap in spec.get("cap_add", []):
             args += ["--cap-add", cap]
         if spec.get("init"):

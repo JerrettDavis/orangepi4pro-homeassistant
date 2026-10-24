@@ -11,7 +11,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Supervisor feature | Here |
 |---|---|
 | Repositories | Add any `https://` git repository. Suggested: official add-ons, Community Hass.io Add-ons, ESPHome, Zigbee2MQTT. Shallow clone, no submodules, no hooks, refreshed only when you ask. |
-| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Parsed on the Orange Pi: all 24 official add-ons (4 "works", 18 "reduced" with the reasons shown, 2 refused for needing the host PID namespace or another architecture; host D-Bus and the Docker API are explicit grants). |
+| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Parsed on the Orange Pi: all 24 official add-ons (4 "works", 18 "reduced" with the reasons shown, 2 refused for another architecture; host D-Bus, the Docker API and the host PID namespace are explicit high-risk grants). |
 | Images | `image:` add-ons are pulled for `linux/arm64` and locked to their digest. Add-ons with only a `Dockerfile` are built on the device with `BUILD_FROM`/`BUILD_ARCH` (needs 4 GiB free). |
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
@@ -61,7 +61,7 @@ The `core/websocket` relay was also exercised there: an add-on authenticated wit
   (registered by their URL). Matter was verified live on the Pi: the Matter Server add-on's registration created a loaded Matter entry in a throwaway Home Assistant. Z-Wave JS and OpenThread are covered by unit tests only (they need a controller or border router). Other services answer 501.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
 * No HAOS, the Supervisor's own D-Bus services (NetworkManager, rauc; the host's system bus can be granted), a PulseAudio server (raw ALSA is provided), AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or automatic add-on updates. The Add-ons tab does show "update X available" for an installed add-on when its (refreshed) repository offers a newer version; applying it is still a reviewed update.
-* Add-ons that need the host PID namespace or an architecture other than aarch64 are marked
+* Add-ons built for an architecture other than aarch64 are marked
   **Unsupported** and cannot be installed. Everything else is **Works** or **Reduced**, with the reasons shown first.
 * Every request to an endpoint the shim does not implement is recorded in `shim-unimplemented.json` in the state
   directory, so gaps are visible rather than guessed.
