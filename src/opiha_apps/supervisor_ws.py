@@ -290,3 +290,17 @@ def discover_wyoming(ha_url: str, token: str, host: str, port: int) -> str:
     """Register a Wyoming voice service (Piper, Whisper, openWakeWord, ...) with Home Assistant."""
     _address(host, port)
     return discover_flow(ha_url, token, "wyoming", {"host": host, "port": port})
+
+
+# Services whose Home Assistant setup form asks for one URL: (handler, URL template, default port).
+URL_SERVICES = {"zwave_js": ("zwave_js", "ws://{host}:{port}", 3000),
+                "matter": ("matter", "ws://{host}:{port}/ws", 5580),
+                "otbr": ("otbr", "http://{host}:{port}", 8081)}
+
+
+def discover_url_service(ha_url: str, token: str, service: str, host: str, port) -> str:
+    """Register Z-Wave JS, Matter Server or the OpenThread Border Router by the URL Home Assistant's form asks for."""
+    handler, template, default = URL_SERVICES[service]
+    port = default if port is None else port
+    _address(host, port)
+    return discover_flow(ha_url, token, handler, {"url": template.format(host=host, port=port)})

@@ -58,9 +58,14 @@ def test_report_works_reduced_and_unsupported():
     assert not any("AppArmor" in r for r in mq["reduced"])
     plain = addons.parse({**FILE_EDITOR, "apparmor": False, "hassio_role": "default", "homeassistant_api": False, "hassio_api": False})
     assert addons.report(plain)["status"] == "works"
-    for blocker in ({"arch": ["armv7", "amd64"]}, {"host_dbus": True}, {"docker_api": True}, {"host_pid": True}):
+    for blocker in ({"arch": ["armv7", "amd64"]}, {"docker_api": True}, {"host_pid": True}):
         r = addons.report(addons.parse({**FILE_EDITOR, **blocker}))
         assert r["status"] == "unsupported" and r["blocked"]
+
+
+def test_host_dbus_is_a_high_risk_grant_not_a_blocker():
+    r = addons.report(addons.parse({**FILE_EDITOR, "host_dbus": True}))
+    assert not r["blocked"] and any(p["id"] == "host_dbus" and p["risk"] == "high" for p in r["privileges"])
 
 
 def test_discovery_and_ha_api_are_reported_as_reduced_not_works():
@@ -137,3 +142,10 @@ def test_read_document_bounds_and_symlinks(tmp_path):
         pytest.skip("symlinks unavailable")
     with pytest.raises(AppError):
         addons.read_document(link)
+
+
+def test_a_list_of_optional_items_may_be_left_out():
+    schema = {"args": ["str?"], "required_list": ["str"]}
+    assert addons.validate_options(schema, {"required_list": ["a"]}) == {"required_list": ["a"]}
+    with pytest.raises(AppError):
+        addons.validate_options(schema, {})

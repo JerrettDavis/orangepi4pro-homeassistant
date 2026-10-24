@@ -336,3 +336,28 @@ def test_audio_is_a_grant_and_hands_over_the_alsa_devices(manager, repo, tmp_pat
 def test_partial_config_takes_defaults_for_the_rest(manager, repo):
     plan = manager.plan_addon(repo, "mosquitto", {"grants": ["ha_api"], "config": {"name": "front"}})
     assert plan["options"]["config"] == {"require_certificate": False, "name": "front"}
+
+
+def test_overview_flags_a_newer_version_in_the_repository(manager, repo):
+    job = execute_addon(manager, repo, "mosquitto", {"grants": ["ha_api"]})
+    assert job["status"] == "succeeded", job["stage"]
+    s = slug(repo, "mosquitto")
+    row = lambda: next(a for a in manager.overview()["apps"] if a["id"] == s)
+    assert row()["update_available"] is None
+    cfg = manager.repos.addon_dir(repo, "mosquitto") / "config.yaml"
+    cfg.write_text(cfg.read_text().replace("6.5.2", "6.6.0"))
+    assert row()["update_available"] == "6.6.0"
+
+
+def test_host_dbus_grant_mounts_the_system_bus(manager, repo):
+    bus = MOSQ.replace("slug: mosquitto", "slug: bus").replace("hassio_api: true", "hassio_api: true\nhost_dbus: true")
+    d = manager.repos.addon_dir(repo, "mosquitto").parent / "bus"
+    d.mkdir()
+    (d / "config.yaml").write_text(bus)
+    with pytest.raises(AppError, match="D-Bus"):
+        manager.plan_addon(repo, "bus", {"grants": ["ha_api"]})
+    plan = manager.plan_addon(repo, "bus", {"grants": ["ha_api", "host_dbus"]})
+    assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
+    create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
+    assert ("/run/dbus", "/run/dbus", False) in create["mounts"]
+    assert create["environment"]["DBUS_SYSTEM_BUS_ADDRESS"] == "unix:path=/run/dbus/system_bus_socket"

@@ -11,7 +11,7 @@ Design and reasoning: `docs/superpowers/specs/2026-10-23-addon-support-design.md
 | Supervisor feature | Here |
 |---|---|
 | Repositories | Add any `https://` git repository. Suggested: official add-ons, Community Hass.io Add-ons, ESPHome, Zigbee2MQTT. Shallow clone, no submodules, no hooks, refreshed only when you ask. |
-| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Parsed on the Orange Pi: all 24 official add-ons (4 "works", 18 "reduced" with the reasons shown, 2 refused for needing the host D-Bus / Docker API). |
+| Manifest parsing | `config.yaml/yml/json`; both the old (`addon_config`, `addons`) and new (`app_config`, `local_apps`) map names. Parsed on the Orange Pi: all 24 official add-ons (4 "works", 18 "reduced" with the reasons shown, 2 refused for needing the Docker API or host PID namespace; host D-Bus is an explicit grant). |
 | Images | `image:` add-ons are pulled for `linux/arm64` and locked to their digest. Add-ons with only a `Dockerfile` are built on the device with `BUILD_FROM`/`BUILD_ARCH` (needs 4 GiB free). |
 | `/data/options.json` | Written from the options form; validated against the add-on `schema` (`str`, `int(a,b)`, `bool`, `list(a|b)`, `match(re)`, `email`, `url`, `port`, `password`, nested lists/dicts, `?` optional). |
 | Directory maps | `/share`, `/media`, `/ssl`, `/backup`, `/addons`, add-on config, and Home Assistant's config directory (`/homeassistant`, or the path the add-on asks for). |
@@ -35,7 +35,7 @@ discovery could be exercised end to end.
 | **Run and do their job, then stop** (5) | RPC shutdown (run-once by design), Let's Encrypt (needs a real domain), Git pull (needs a real repository), CEC scan and Silicon Labs flasher (no adapter attached) |
 | **Need something this test could not give** (3) | nginx Proxy Manager (needs a real domain and certificate before nginx will start), Silicon Labs multiprotocol and OpenThread border router (need a radio) |
 | **Not exercised** (2) | DuckDNS (rejected the placeholder domain) and Z-Wave JS (needs a controller) |
-| **Refused before install** (2) | Matter Server and SSH & Web Terminal (host D-Bus / Docker API) |
+| **Refused before install** (1) | SSH & Web Terminal (Docker API). Matter Server installs behind the host D-Bus grant and runs healthy on the device (web server on the bridge gateway and loopback, BLE off; not yet paired with Home Assistant). |
 
 Of the 20 add-ons that could be started, 17 ran or completed as designed and 3 need real hardware or a real domain.
 An earlier version of this table listed dnsmasq, Samba and nginx Proxy Manager as unexplained failures; those were
@@ -50,11 +50,11 @@ recovered on its own when the shim came back.
 ## What does not, and what is said instead
 
 * **Discovery** works for MQTT and Wyoming (Piper, Whisper, openWakeWord; needs the Home Assistant access token),
-  filling Home Assistant's own form from its schema. Other services (Z-Wave JS, Matter, OpenThread) answer 501; add
-  that integration by hand.
+  filling Home Assistant's own form from its schema, and for Z-Wave JS, Matter Server and the OpenThread border router
+  (registered by their URL; covered by unit tests, not yet run against a live controller). Other services answer 501.
 * The HA WebSocket relay and REST proxy need the long-lived access token; without it they say so rather than failing silently.
-* No HAOS, host D-Bus, a PulseAudio server (raw ALSA is provided), AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or add-on store auto-updates.
-* Add-ons that need the host D-Bus, host PID namespace, Docker API or an architecture other than aarch64 are marked
+* No HAOS, the Supervisor's own D-Bus services (NetworkManager, rauc; the host's system bus can be granted), a PulseAudio server (raw ALSA is provided), AppArmor profiles, the Supervisor's own backup *file format* (backups here are this project's own archives) or automatic add-on updates. The Add-ons tab does show "update X available" for an installed add-on when its (refreshed) repository offers a newer version; applying it is still a reviewed update.
+* Add-ons that need the host PID namespace, Docker API or an architecture other than aarch64 are marked
   **Unsupported** and cannot be installed. Everything else is **Works** or **Reduced**, with the reasons shown first.
 * Every request to an endpoint the shim does not implement is recorded in `shim-unimplemented.json` in the state
   directory, so gaps are visible rather than guessed.

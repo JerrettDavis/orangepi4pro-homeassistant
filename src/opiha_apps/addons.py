@@ -191,7 +191,7 @@ def report(manifest: dict) -> dict:
     if ARCH not in manifest["arch"]:
         blocked.append("Not built for aarch64 (this host's architecture)")
     if manifest["host_dbus"]:
-        blocked.append("Needs the host D-Bus (NetworkManager/udisks/rauc), which this appliance does not offer")
+        notes.append("The Supervisor's own D-Bus services (NetworkManager/rauc) are not here; the host's system bus is")
     if manifest["host_pid"]:
         blocked.append("Needs the host process namespace")
     if manifest["docker_api"]:
@@ -224,6 +224,8 @@ def report(manifest: dict) -> dict:
         privileges.append({"id": "capabilities", "label": "Extra Linux capabilities: " + ", ".join(manifest["privileged"]), "risk": "high" if set(manifest["privileged"]) & {"SYS_ADMIN", "SYS_MODULE", "SYS_RAWIO", "SYS_PTRACE", "DAC_READ_SEARCH"} else "medium"})
     if manifest["audio"]:
         privileges.append({"id": "audio", "label": "Use the host's sound devices (ALSA)", "risk": "medium"})
+    if manifest["host_dbus"]:
+        privileges.append({"id": "host_dbus", "label": "Talk to the host's system D-Bus (it can manage services, network and Bluetooth)", "risk": "high"})
     if manifest["kernel_modules"]:
         privileges.append({"id": "kernel_modules", "label": "Load kernel modules", "risk": "high"})
     if manifest["devices"]:
@@ -329,6 +331,8 @@ def validate_options(schema, supplied: dict, *, path: str = "") -> dict:
                 raise AppError(f"Option '{where}' is required")
             result[key] = validate_options(rule, value, path=where + ".")
         elif isinstance(rule, list):
+            if value is None and len(rule) == 1 and isinstance(rule[0], str) and rule[0].strip().endswith("?"):
+                continue  # a list of optional items may be left out entirely (Matter Server's matter_server_args)
             if value is None:
                 raise AppError(f"Option '{where}' is required")
             if not isinstance(value, list) or len(value) > 512:

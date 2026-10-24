@@ -15,6 +15,19 @@ views:
           - binary_sensor.orange_pi_person
           - sensor.orange_pi_vision_status
           - sensor.orange_pi_free_storage
+      # Hidden until the Generic Camera entity exists (added in the HA UI with the
+      # go2rtc stream URL, see docs/HARDWARE.md); no broken tile before then.
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: camera.orange_pi_camera
+            state_not: unavailable
+        card:
+          type: picture-entity
+          entity: camera.orange_pi_camera
+          camera_view: live
+          show_name: true
+          show_state: false
       - type: markdown
         content: |
           **Camera privacy:** local processing; no recordings enabled.
