@@ -121,6 +121,8 @@ class Shim:
         networks = (row or {}).get("NetworkSettings", {}).get("Networks", {}) or {}
         address = (networks.get(addon_runtime.NETWORK) or {}).get("IPAddress")
         opts = record["options"] if record else app and addon_runtime.defaults(app)
+        if "host_network" in opts["grants"]:
+            address = addon_runtime.SUPERVISOR_IP  # as the Supervisor reports the network gateway for host-networked add-ons
         entry = m["ingress_entry"] if isinstance(m["ingress_entry"], str) else ""
         port = opts["port"] if app["dynamic_ingress"] else app["container_port"]
         return {

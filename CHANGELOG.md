@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.15
+
+- Host-networked add-ons are told the bridge gateway as their `ip_address` (an empty address made Matter Server listen twice on 127.0.0.1 and fail to start).
+
 ## 0.3.0-alpha.14
 
 - A list of optional items (`- str?`) can be left out of add-on options, as the Supervisor allows (found installing Matter Server).
