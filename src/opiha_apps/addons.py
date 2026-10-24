@@ -331,6 +331,8 @@ def validate_options(schema, supplied: dict, *, path: str = "") -> dict:
                 raise AppError(f"Option '{where}' is required")
             result[key] = validate_options(rule, value, path=where + ".")
         elif isinstance(rule, list):
+            if value is None and len(rule) == 1 and isinstance(rule[0], str) and rule[0].strip().endswith("?"):
+                continue  # a list of optional items may be left out entirely (Matter Server's matter_server_args)
             if value is None:
                 raise AppError(f"Option '{where}' is required")
             if not isinstance(value, list) or len(value) > 512:

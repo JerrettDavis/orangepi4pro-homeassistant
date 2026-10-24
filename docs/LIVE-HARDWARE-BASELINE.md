@@ -115,6 +115,25 @@ is outside the first deployment and needs its own rollback test.
   is loaded. Neither fact establishes a usable camera or NPU inference path.
 - GStreamer is installed. FFmpeg and Python OpenCV are absent.
 
+### Camera probe, 2026-10-21
+
+Kernel `5.15.147-sun60iw2-cyberdeck` ships the Allwinner VIN stack under
+`/lib/modules/$(uname -r)/kernel/bsp/drivers/vin/` (`vin_io`, `vin_v4l2`, plus
+sensor drivers `imx219`, `ov13850_mipi`, `gc030a_mipi`, `gc05a2_mipi`). None
+autoload. `sudo modprobe vin_v4l2` creates `/dev/media0` but no `/dev/video*`:
+the DT declares `imx219` (CCI 8), `ov13850_mipi` (CCI 9) and `imx219_2`
+(CCI 11, adapter missing), and each reports "chip found is not an target
+chip". `i2cdetect` on buses 8 and 9 shows no device, and the log has
+`get csi mipi clk fail`, `Get isp bus clk failed`, and no sensor supplies, so
+the sensor is likely unpowered/unclocked or is not one of the DT-declared
+models. Modules were unloaded again afterwards; nothing persistent changed.
+Identified camera: Arducam 5MP OV5647 Raspberry Pi module (Amazon B012V1HEP4,
+2-lane MIPI-CSI). The BSP has no OV5647 sensor driver (`modinfo ov5647` fails;
+only imx219/ov13850/gc030a/gc05a2 exist), and the DT declares no ov5647 node,
+so it cannot enumerate. Options: port/build a sunxi-VIN `ov5647` sensor driver
+plus DT node and ISP config (needs BSP sources), or use an imx219 module
+(Pi Camera v2) which the DT already declares, or a USB UVC camera.
+
 Camera work is therefore blocked on identifying the physical sensor and its
 matching vendor driver/ISP path. CPU detection can be installed independently,
 but it cannot be hardware-validated until a stream exists. A733 NPU support

@@ -142,3 +142,10 @@ def test_read_document_bounds_and_symlinks(tmp_path):
         pytest.skip("symlinks unavailable")
     with pytest.raises(AppError):
         addons.read_document(link)
+
+
+def test_a_list_of_optional_items_may_be_left_out():
+    schema = {"args": ["str?"], "required_list": ["str"]}
+    assert addons.validate_options(schema, {"required_list": ["a"]}) == {"required_list": ["a"]}
+    with pytest.raises(AppError):
+        addons.validate_options(schema, {})
