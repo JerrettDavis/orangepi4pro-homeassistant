@@ -52,7 +52,7 @@ recovered on its own when the shim came back.
 With a long-lived token saved in the Add-ons tab, on the Pi's own Home Assistant (2026.9.3): Whisper and Speech-to-Phrase each
 registered themselves through discovery and appear as loaded Wyoming entries; Speech-to-Phrase, which declares
 `homeassistant_api`, read the real entity and area names through the shim's `core/api` proxy and trained its model on them.
-A Matter Server add-on ran healthy but its registration was correctly skipped because Home Assistant already had a Matter entry.
+The `core/websocket` relay was also exercised there: an add-on authenticated with its own `SUPERVISOR_TOKEN` and ran `get_config`. A Matter Server add-on ran healthy but its registration was correctly skipped because Home Assistant already had a Matter entry.
 
 ## What does not, and what is said instead
 
