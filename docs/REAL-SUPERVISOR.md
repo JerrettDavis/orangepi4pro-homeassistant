@@ -37,6 +37,21 @@ real ones.
   readiness wait, so after a boot the Supervisor logs "assuming a fatal startup error" and raises a `fatal_error` issue,
   then carries on once Home Assistant answers. Boot-time apps start after that. Trimming the database would fix it.
 
+## AppArmor
+
+The vendor kernel (5.15.147-sun60iw2-cyberdeck) has `CONFIG_SECURITY_APPARMOR=y` but its built-in `CONFIG_LSM` list omits
+`apparmor`, so it was never active. Adding `lsm=landlock,lockdown,yama,loadpin,safesetid,integrity,apparmor,bpf apparmor=1`
+to the kernel arguments enables it (`/sys/module/apparmor/parameters/enabled` = `Y`, 50 Ubuntu profiles in enforce mode,
+snap Firefox kiosk and the container stack unaffected). Landlock, Yama, lockdown, loadpin and safesetid are not compiled in
+and are ignored.
+
+Where the arguments come from matters: this Pi boots from the **SD card's** `/boot/boot.scr` (the script U-Boot reads
+first), which then boots the NVMe system. The arguments are assembled on the `docker_optimizations` line of
+`boot.cmd`, so the AppArmor arguments were appended there and the script recompiled with
+`mkimage -C none -A arm -T script -d boot.cmd boot.scr`. The NVMe copies (`/boot`, `/boot/efi`) and `grub.cfg` carry the
+same change, but only the SD card's script is read on this hardware. Backups of every file touched are in
+`/boot/backups/pre-apparmor-*` and `/mnt/opisd-check/boot/backups/pre-apparmor-*`; restore the three files and reboot to undo.
+
 ## Rollback
 
 `/srv/cyberdeck-home/pre-supervisor/rollback.sh` (written during the cutover, with copies of the unit files, configs,
