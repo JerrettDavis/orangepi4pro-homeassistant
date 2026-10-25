@@ -289,6 +289,8 @@ class Manager:
 
     def plan_addon(self, repository: str, folder: str, supplied: dict | None = None) -> dict:
         """Plan installing (or updating to) an add-on exactly as it exists in an added repository now."""
+        if addon_runtime.real_supervisor():
+            raise AppError("The Home Assistant Supervisor manages add-ons on this host; use its Add-on store")
         raw = self.repos.raw(repository, folder)
         manifest = addons.parse(raw, repository=repository)
         url = next((r["url"] for r in self.repos.list() if r["id"] == repository), "")

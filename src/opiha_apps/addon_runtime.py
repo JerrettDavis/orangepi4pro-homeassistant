@@ -28,6 +28,13 @@ RESERVED_LAN_PORTS = {22, 80, 443, 3389, 5900, 8098, 8123, 18123}
 SHARED = {"share": "/share", "media": "/media", "ssl": "/ssl", "backup": "/backup", "addons": "/addons"}
 CONFIG_TYPES = {"config", "homeassistant_config"}
 MAX_SOURCE_BYTES = 150 * 1024 * 1024
+REAL_SUPERVISOR_MARKER = "/etc/orangepi-apps/real-supervisor"  # present when the actual Supervisor owns add-ons on this host
+
+
+def real_supervisor() -> bool:
+    return os.path.exists(REAL_SUPERVISOR_MARKER)
+
+
 DOCKER_SOCK = "/var/run/docker.sock"  # handed to add-ons that declare `docker_api` and are granted it
 DBUS_DIR = "/run/dbus"  # the host's system bus, handed to add-ons that declare `host_dbus` and are granted it
 SND = "/dev/snd"  # host ALSA devices handed to add-ons that declare `audio` and are granted it

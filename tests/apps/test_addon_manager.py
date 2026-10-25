@@ -387,3 +387,11 @@ def test_host_pid_grant_reaches_the_container_spec(manager, repo):
     assert wait(manager, manager.submit(plan["id"], True))["status"] == "succeeded"
     create = [c for c in manager.engine.calls if c[0] == "create"][-1][2]
     assert create["host_pid"] is True
+
+
+def test_add_ons_stand_down_when_the_real_supervisor_is_present(manager, repo, monkeypatch, tmp_path):
+    marker = tmp_path / "real-supervisor"
+    marker.write_text("")
+    monkeypatch.setattr(addon_runtime, "REAL_SUPERVISOR_MARKER", str(marker))
+    with pytest.raises(AppError, match="Supervisor manages add-ons"):
+        manager.plan_addon(repo, "mosquitto", {"grants": ["ha_api"]})

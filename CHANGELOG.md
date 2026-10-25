@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-alpha.18
+
+- When `/etc/orangepi-apps/real-supervisor` exists the real Home Assistant Supervisor owns add-ons: the add-on shim and its iptables redirects are not started and add-on installs through this manager are refused. The host panel is unaffected.
+
 ## 0.3.0-alpha.17
 
 - `host_pid` add-ons are installable behind an explicit high-risk grant (`--pid host`). Only an architecture other than aarch64 is refused now.
