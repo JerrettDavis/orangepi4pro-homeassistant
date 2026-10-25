@@ -22,6 +22,13 @@ real ones.
   no installs), because both would want 172.30.32.2. The host panel (Overview, Host, Docker, Updates, Terminal) is unchanged;
   use Home Assistant's own Apps page for add-ons.
 
+* Host logs: `systemd-journal-remote` (Ubuntu package) provides `systemd-journal-gatewayd`; its socket listens on
+  `/run/systemd-journal-gatewayd.sock` (drop-in `10-supervisor.conf`) and is mounted into `hassio_supervisor`.
+  That clears the Supervisor's `systemd_journal` unsupported reason.
+* Still flagged unsupported and why: `apparmor` (vendor kernel has none), `os` / `os_agent` (not Home Assistant OS; the
+  OS Agent is an optional download that has not been installed), `docker_configuration`, `connectivity_check`, and
+  `software` / `restart_policy` (the HTTPS proxy container is not managed by the Supervisor).
+
 ## Rollback
 
 `/srv/cyberdeck-home/pre-supervisor/rollback.sh` (written during the cutover, with copies of the unit files, configs,
