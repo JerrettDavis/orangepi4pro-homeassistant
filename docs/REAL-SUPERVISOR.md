@@ -25,9 +25,17 @@ real ones.
 * Host logs: `systemd-journal-remote` (Ubuntu package) provides `systemd-journal-gatewayd`; its socket listens on
   `/run/systemd-journal-gatewayd.sock` (drop-in `10-supervisor.conf`) and is mounted into `hassio_supervisor`.
   That clears the Supervisor's `systemd_journal` unsupported reason.
-* Still flagged unsupported and why: `apparmor` (vendor kernel has none), `os` / `os_agent` (not Home Assistant OS; the
-  OS Agent is an optional download that has not been installed), `docker_configuration`, `connectivity_check`, and
-  `software` / `restart_policy` (the HTTPS proxy container is not managed by the Supervisor).
+* OS Agent: the official `os-agent` 1.14.0 `.deb` (home-assistant/os-agent, arm64) provides the `io.hass.os` D-Bus
+  service. The Supervisor then lists `os_agent`, `journal`, `resolved`, `timedate` and `disk` host features.
+* Docker: `/etc/docker/daemon.json` sets `"log-driver": "journald"` (the Supervisor requires it; applies to containers
+  created afterwards). `hassio_supervisor` has restart policy `no` and is started by `hassio-supervisor.service`
+  (`docker start -a`), as the supervised installer does.
+* NetworkManager: `/etc/NetworkManager/conf.d/20-connectivity.conf` enables the connectivity check.
+* Unsupported reasons left: `apparmor` (the vendor kernel has none), `os` (not Home Assistant OS) and `software`
+  (the HTTPS proxy container is not Supervisor-managed). Down from seven before the hardening.
+* Startup: with this recorder database (about 11 GB) Home Assistant needs more than the Supervisor's roughly ten minute
+  readiness wait, so after a boot the Supervisor logs "assuming a fatal startup error" and raises a `fatal_error` issue,
+  then carries on once Home Assistant answers. Boot-time apps start after that. Trimming the database would fix it.
 
 ## Rollback
 
