@@ -1,0 +1,6 @@
+[Unit]
+Description=Prune regenerable caches when the root filesystem is nearly full
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/opiha-disk-guard

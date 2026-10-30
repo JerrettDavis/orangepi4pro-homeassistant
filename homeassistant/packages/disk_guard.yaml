@@ -1,0 +1,32 @@
+# Low-disk guard: watches the host root filesystem (HA's /config lives on it).
+# The host-side opiha-diskguard timer does the actual cleanup; this alerts.
+command_line:
+  - sensor:
+      name: Host root disk used
+      unique_id: opiha_root_disk_used_pct
+      command: "df -P /config | awk 'NR==2{gsub(\"%\",\"\",$5);print $5}'"
+      unit_of_measurement: "%"
+      state_class: measurement
+      scan_interval: 600
+
+automation:
+  - id: opiha_disk_low_alert
+    alias: "Host disk space low"
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.host_root_disk_used
+        above: 85
+        for: "00:10:00"
+    actions:
+      - action: persistent_notification.create
+        data:
+          notification_id: opiha_disk_low
+          title: "Home Assistant disk is {{ states('sensor.host_root_disk_used') }}% full"
+          message: >-
+            Root filesystem is above 85%. The disk guard has already pruned
+            caches; check the recorder database size and old backups.
+      - action: notify.mobile_app_jd_s23_ultra
+        data:
+          title: "Home Assistant disk low"
+          message: "Root filesystem {{ states('sensor.host_root_disk_used') }}% full."
