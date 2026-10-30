@@ -110,7 +110,11 @@ service settings are in `/srv/cyberdeck-home/ha-repairs-20261029`.
 
 `homeassistant/packages/auto_updates.yaml` installs Core patch releases, Supervisor, apps and HACS updates at 03:30
 local time (after a partial backup), skipping major-version jumps and notifying instead. Supervisor/app `auto_update`
-flags are off so that automation is the only updater. This host has no Home Assistant OS, so there is no OS update
-entity; Ubuntu security/updates are applied by `unattended-upgrades`, whose `apt-daily-upgrade.timer` is pinned to 03:45
-(`/etc/systemd/system/apt-daily-upgrade.timer.d/window.conf`). It never reboots automatically; the vendor kernel is
-only changed deliberately.
+flags are off so that automation is the only updater.
+
+This host has no Home Assistant OS, so there is no OS update entity. Ubuntu packages are applied by
+`unattended-upgrades`, run from `apt-daily-upgrade.timer` at 03:45 America/Chicago
+(`/etc/systemd/system/apt-daily-upgrade.timer.d/window.conf`). The Orange Pi image ships
+`/etc/apt/apt.conf.d/02-orangepi-periodic` with `APT::Periodic::Enable "0"`, which silently stopped it ever running;
+`99-auto-updates` re-enables it and adds `jammy-updates` and the Docker repo to the security/Orange Pi origins. The vendor
+kernel/headers/dtb and `wiringpi` are blacklisted and it never reboots automatically.
