@@ -1,0 +1,101 @@
+# Unattended updates. One nightly run in the 03:30 window (local time) so anything
+# that restarts a service happens while nobody is using it.
+#
+# Eligible: update entities from `hassio` (Core, Supervisor, apps) and `hacs`
+# (custom integrations/cards/themes). Device firmware is never touched.
+# "Non-breaking" is approximated by version: an update that bumps the major version
+# (Core: the year.month release) is skipped and reported instead.
+# Apps' own Supervisor auto_update flag is off so this is the only updater.
+automation:
+  - id: opiha_auto_updates
+    alias: "Nightly automatic updates"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "03:30:00"
+    variables:
+      core: update.home_assistant_core_update
+      supervisor: update.home_assistant_supervisor_update
+      pending: >-
+        {{ (integration_entities('hassio') + integration_entities('hacs'))
+           | select('match', '^update\.') | unique
+           | select('is_state', 'on') | list }}
+      # Compare the leading numbers of two versions: the major for everything,
+      # year.month for Core. Versions without leading digits (commit hashes) pass.
+      eligible: >-
+        {% set ns = namespace(ok=[]) %}
+        {% for e in pending %}
+          {% set i = state_attr(e, 'installed_version') | string %}
+          {% set l = state_attr(e, 'latest_version') | string %}
+          {% set n = 2 if e == core else 1 %}
+          {% set ip = (i | regex_findall('^v?(\d+)(?:\.(\d+))?'))[0] | default(none) %}
+          {% set lp = (l | regex_findall('^v?(\d+)(?:\.(\d+))?'))[0] | default(none) %}
+          {% if ip is none or lp is none or ip[:n] == lp[:n] %}
+            {% set ns.ok = ns.ok + [e] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.ok }}
+      held: "{{ pending | reject('in', eligible) | list }}"
+      hacs_updates: "{{ eligible | select('in', integration_entities('hacs')) | list }}"
+      app_updates: >-
+        {{ eligible | reject('in', [core, supervisor])
+           | reject('in', integration_entities('hacs')) | list }}
+    conditions:
+      - condition: template
+        value_template: "{{ pending | length > 0 }}"
+    actions:
+      - if:
+          - condition: template
+            value_template: "{{ eligible | length > 0 }}"
+        then:
+          - action: hassio.backup_partial
+            data:
+              name: "pre-update {{ now().strftime('%Y-%m-%d') }}"
+              homeassistant: true
+              homeassistant_exclude_database: true
+              compressed: true
+          - repeat:
+              for_each: "{{ hacs_updates + app_updates }}"
+              sequence:
+                - action: update.install
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  continue_on_error: true
+          # Custom integrations only load after a restart. Core/Supervisor
+          # updates restart things themselves, so do this only when they don't.
+          - if:
+              - condition: template
+                value_template: >-
+                  {{ hacs_updates | length > 0 and core not in eligible }}
+            then:
+              - action: homeassistant.restart
+          - if:
+              - condition: template
+                value_template: "{{ supervisor in eligible }}"
+            then:
+              - action: update.install
+                target:
+                  entity_id: "{{ supervisor }}"
+                continue_on_error: true
+          - if:
+              - condition: template
+                value_template: "{{ core in eligible }}"
+            then:
+              - action: update.install
+                target:
+                  entity_id: "{{ core }}"
+      - if:
+          - condition: template
+            value_template: "{{ held | length > 0 }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: opiha_updates_held
+              title: "Updates need a manual look"
+              message: >-
+                Skipped because the version jump may be breaking:
+                {{ held | map('state_attr', 'friendly_name') | join(', ') }}.
+          - action: notify.mobile_app_jd_s23_ultra
+            data:
+              title: "Updates held for review"
+              message: "{{ held | map('state_attr', 'friendly_name') | join(', ') }}"
