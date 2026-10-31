@@ -118,3 +118,7 @@ This host has no Home Assistant OS, so there is no OS update entity. Ubuntu pack
 `/etc/apt/apt.conf.d/02-orangepi-periodic` with `APT::Periodic::Enable "0"`, which silently stopped it ever running;
 `99-auto-updates` re-enables it and adds `jammy-updates` and the Docker repo to the security/Orange Pi origins. The vendor
 kernel/headers/dtb and `wiringpi` are blacklisted and it never reboots automatically.
+Docker (`docker-*`, `containerd.io`) is also blacklisted. The first unattended run on 2026-10-31 upgraded Docker to 29.8.2,
+which restarted dockerd and left Core, Matter and Whisper exited (137/0) with the Supervisor watchdog not restarting
+them; they were started by hand (`POST /core/start`, `/addons/<slug>/start`). Upgrade Docker deliberately and check
+that Core comes back. `/var/run/reboot-required` is set after upgrades; reboot at a convenient time.
