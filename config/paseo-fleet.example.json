@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "paseo_version": "0.15.0",
+  "node_version": "22.22.0",
+  "agents": [
+    "@github/copilot@1.0.105",
+    "@anthropic-ai/claude-code@2.1.318",
+    "@openai/codex@0.166.0"
+  ],
+  "defaults": {},
+  "hosts": [
+    {
+      "id": "workstation",
+      "platform": "windows",
+      "transport": "local",
+      "daemon_port": 6767,
+      "hub": true,
+      "labels": ["windows", "x64", "bare-metal"]
+    },
+    {
+      "id": "workstation-docker",
+      "platform": "docker",
+      "transport": "local",
+      "daemon_port": 6768,
+      "labels": ["linux", "x64", "docker"],
+      "limits": {"memory": "4G", "cpus": 2}
+    },
+    {
+      "id": "raspberrypi",
+      "platform": "linux",
+      "transport": "ssh",
+      "ssh": "USER@raspberrypi.example",
+      "daemon_port": 6767,
+      "labels": ["linux", "arm64", "bare-metal"],
+      "limits": {"nice": 10, "memory": "2G"}
+    },
+    {
+      "id": "macbook",
+      "platform": "macos",
+      "transport": "ssh",
+      "ssh": "USER@macbook.example",
+      "daemon_port": 6767,
+      "labels": ["macos", "arm64", "bare-metal"]
+    },
+    {
+      "id": "orangepi-ha",
+      "platform": "linux",
+      "transport": "ssh",
+      "ssh": "USER@homeassistant.example",
+      "daemon_port": 6767,
+      "labels": ["linux", "arm64", "home-assistant"],
+      "limits": {"nice": 15, "memory": "1G", "cpus": 1},
+      "enabled": false
+    }
+  ]
+}

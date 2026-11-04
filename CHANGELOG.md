@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Paseo fleet tooling (`scripts/paseo-fleet.py`, `docs/PASEO-FLEET.md`): inventory-driven, idempotent provisioning of Paseo daemons on bare-metal Windows/Linux/macOS hosts and Docker, SSH-tunnelled registration on a hub, workspace registration, and least-busy dispatch.
+
 - The hardened Paseo fork (`JerrettDavis/paseo-ha-addon`) is a suggested add-on repository. It is built on the device, maps only `/homeassistant` and `/config`, has no Supervisor manager role, and has the Paseo relay off by default.
 
 ## 0.3.0-alpha.18

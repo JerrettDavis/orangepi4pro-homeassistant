@@ -15,3 +15,12 @@ scan:
 
 package: test scan
 	$(PYTHON) scripts/package.py --output dist
+
+.PHONY: fleet-up fleet-status
+fleet-up:
+	$(PYTHON) scripts/paseo-fleet.py provision
+	$(PYTHON) scripts/paseo-fleet.py register
+	$(PYTHON) scripts/paseo-fleet.py workspaces --repos
+
+fleet-status:
+	$(PYTHON) scripts/paseo-fleet.py status
