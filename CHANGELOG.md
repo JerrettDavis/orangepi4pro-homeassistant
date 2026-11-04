@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The hardened Paseo fork (`JerrettDavis/paseo-ha-addon`) is a suggested add-on repository. It is built on the device, maps only `/homeassistant` and `/config`, has no Supervisor manager role, and has the Paseo relay off by default.
+
 ## 0.3.0-alpha.18
 
 - When `/etc/orangepi-apps/real-supervisor` exists the real Home Assistant Supervisor owns add-ons: the add-on shim and its iptables redirects are not started and add-on installs through this manager are refused. The host panel is unaffected.

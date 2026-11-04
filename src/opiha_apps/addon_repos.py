@@ -21,6 +21,7 @@ SUGGESTED = [
     {"url": "https://github.com/hassio-addons/repository", "name": "Community Hass.io Add-ons", "official": False},
     {"url": "https://github.com/esphome/home-assistant-addon", "name": "ESPHome add-ons", "official": False},
     {"url": "https://github.com/zigbee2mqtt/hassio-zigbee2mqtt", "name": "Zigbee2MQTT", "official": False},
+    {"url": "https://github.com/JerrettDavis/paseo-ha-addon", "name": "Paseo (hardened fork)", "official": False},
 ]
 MAX_REPO_BYTES = 300 * 1024 * 1024
 MAX_ADDONS = 400

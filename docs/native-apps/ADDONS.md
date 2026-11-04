@@ -84,6 +84,15 @@ Repositories are executable code you chose to run. Nothing is granted implicitly
 access**; it is stored in the manager's private state directory and used only for add-ons that declare
 `homeassistant_api`. Without it those requests get a clear 503.
 
+## Paseo (AI coding agents)
+
+Add the suggested **Paseo (hardened fork)** repository (`JerrettDavis/paseo-ha-addon`). It differs from upstream:
+no prebuilt image (built on the device, so keep ~4 GiB free), no Supervisor `manager` role, only `/homeassistant`
+and `/config` mapped read-write, `relay: false` by default, and the ingress shim understands
+`/api/opiha_apps/ingress/<app>/`. Approve the config-folder and Home Assistant API grants, paste a long-lived token
+under **Add-ons → Home Assistant access**, set `git_snapshot: true`, then start it. The `ha` CLI is not available;
+agents use the REST API instead.
+
 ## Host networking detail
 
 The reverse proxy on the host owns port 80, so the shim listens on `172.30.32.2:8180` and an iptables rule
