@@ -17,12 +17,15 @@ $ErrorActionPreference = "Stop"
 $ssh = (Get-Command ssh.exe).Source
 $sshArgs = "-N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 127.0.0.1:${TunnelPort}:127.0.0.1:${DaemonPort} $HaHost"
 
-$action = New-ScheduledTaskAction -Execute $ssh -Argument $sshArgs
+$loop = "while (`$true) { & '$ssh' $sshArgs; Start-Sleep -Seconds 15 }"
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -WindowStyle Hidden -Command `"$loop`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $settings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
     -ExecutionTimeLimit ([TimeSpan]::Zero) -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
-if ((Get-ScheduledTask -TaskName $TaskName).State -ne "Running") { Start-ScheduledTask -TaskName $TaskName }
+Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+Get-CimInstance Win32_Process -Filter "Name='ssh.exe'" | Where-Object { $_.CommandLine -match "-R 127.0.0.1:${TunnelPort}:" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+Start-ScheduledTask -TaskName $TaskName
 
 # Allow the add-on's restricted key to reach the tunnel port, then register host and workspace.
 $remote = @"
