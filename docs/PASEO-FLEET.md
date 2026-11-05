@@ -48,6 +48,23 @@ after you bump versions in the inventory. Add a machine by adding an inventory e
 and re-running; the macOS entry in the example only needs `enabled: true` once the
 machine is reachable over SSH.
 
+## Home Assistant add-on as a hub
+
+The Paseo add-on inside Home Assistant is its own hub daemon with its own host list.
+`scripts/paseo-ha-link.sh` (run on the Orange Pi, idempotent) gives it a host for the
+machine it runs on and that machine's `~/paseo-workspaces` as a project:
+
+```powershell
+(Get-Content scripts\paseo-ha-link.sh -Raw) -replace "`r`n","`n" | ssh jd@homeassistant 'bash -s'
+```
+
+It generates an SSH key inside the add-on (`/data/home/.ssh/id_paseo_fleet`, persisted and
+backed up with the add-on), authorizes it in `~/.ssh/authorized_keys` with
+`restrict,port-forwarding,permitopen="127.0.0.1:6767"` (tunnel to the daemon only, no
+shell), and registers `ssh://<user>@<add-on gateway>?daemonPort=6767` as host `orangepi-ha`.
+Add further machines later with `paseo host add ... --home /data/home/.paseo` inside the
+add-on, using the same key and an `~/.ssh/config` entry per host.
+
 ## Known limits
 
 - Agent CLIs (Claude, Codex, Copilot) are installed on each host but need
