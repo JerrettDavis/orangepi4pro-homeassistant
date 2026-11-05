@@ -4,6 +4,11 @@ Package: `homeassistant/packages/network_monitor.yaml` (automation
 `infra_critical_alerts` + `input_boolean.infra_alert_self_test`).
 Dashboard: `/dashboard-network/0` (storage mode; cards below were added to the top of the view).
 
+Deployed: `/usr/share/hassio/homeassistant/packages/network_monitor.yaml` on the host (the package is the
+only copy of the automation and the self-test helper; no UI duplicates). The Ping entries, entity names
+and the dashboard cards are UI/storage config, not in the package. Switch scope: the TP-Link at
+10.0.0.41 is the only managed switch in use.
+
 ## What is watched (from HA's vantage point)
 
 | Target | Source entity | Down when |
