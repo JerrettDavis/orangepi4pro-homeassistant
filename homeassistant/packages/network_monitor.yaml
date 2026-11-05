@@ -1,0 +1,98 @@
+# Critical infrastructure monitoring + alerting (gateway, both DCs, WAN, APs).
+#
+# Reachability sources (HA, not the dev PC, is the vantage point):
+#   * Ping integration entries (UI config entries, ICMP):
+#       10.0.0.1   -> Gateway JDH-GATEWAY-00      binary_sensor.10_0_0_1
+#       10.0.0.100 -> Domain Controller jdh-dc-00 binary_sensor.10_0_0_100
+#       10.0.0.101 -> Domain Controller jdh-dc-01 binary_sensor.10_0_0_101
+#       1.1.1.1    -> Internet                    binary_sensor.1_1_1_1
+#   * UniFi device trackers for the APs (10.0.0.240-242).
+#
+#       10.0.0.41  -> Switch TP-Link              binary_sensor.10_0_0_41
+#
+# Switch coverage: only 10.0.0.41 (TP-Link, switch web UI) was discoverable.
+# If there are more switches, add a Ping entry per switch and a
+# _down/_up trigger pair for it below.
+#
+# Alerts: high-priority push to every phone + persistent notification (local
+# fallback when the outage also kills the phones' path to HA), recovery
+# message with outage length. 2-minute debounce. The self-test boolean
+# exercises the full path: turn it off, wait 2 min, turn it on.
+#
+# Entity names below are set in the entity registry (Settings > Entities);
+# friendly names feed the notification text.
+
+input_boolean:
+  infra_alert_self_test:
+    name: Infra alert self-test
+    icon: mdi:bell-alert
+    initial: true
+
+automation:
+  - id: infra_critical_alerts
+    alias: "Infrastructure critical alerts"
+    description: >-
+      Alerts when gateway, either DC, WAN or an AP is down; recovery notice
+      with outage length.
+    mode: queued
+    max: 20
+    triggers:
+      - {trigger: state, entity_id: binary_sensor.10_0_0_1, to: "off", for: "00:02:00", id: gateway_down}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_1, from: "off", to: "on", id: gateway_up}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_100, to: "off", for: "00:02:00", id: dc00_down}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_100, from: "off", to: "on", id: dc00_up}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_101, to: "off", for: "00:02:00", id: dc01_down}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_101, from: "off", to: "on", id: dc01_up}
+      - {trigger: state, entity_id: binary_sensor.1_1_1_1, to: "off", for: "00:02:00", id: wan_down}
+      - {trigger: state, entity_id: binary_sensor.1_1_1_1, from: "off", to: "on", id: wan_up}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_00, to: not_home, for: "00:02:00", id: ap00_down}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_00, from: not_home, to: home, id: ap00_up}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_01, to: not_home, for: "00:02:00", id: ap01_down}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_01, from: not_home, to: home, id: ap01_up}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_02, to: not_home, for: "00:02:00", id: ap02_down}
+      - {trigger: state, entity_id: device_tracker.jdh_ap_02, from: not_home, to: home, id: ap02_up}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_41, to: "off", for: "00:02:00", id: sw41_down}
+      - {trigger: state, entity_id: binary_sensor.10_0_0_41, from: "off", to: "on", id: sw41_up}
+      - {trigger: state, entity_id: input_boolean.infra_alert_self_test, to: "off", for: "00:02:00", id: test_down}
+      - {trigger: state, entity_id: input_boolean.infra_alert_self_test, from: "off", to: "on", id: test_up}
+    conditions:
+      # Recovery only if it was down long enough to have alerted.
+      - condition: template
+        value_template: "{{ trigger.id.endswith('_down') or (now() - trigger.from_state.last_changed).total_seconds() > 120 }}"
+      # Internet-down only matters while the gateway itself is up (else the gateway alert covers it).
+      - condition: template
+        value_template: "{{ trigger.id != 'wan_down' or is_state('binary_sensor.10_0_0_1', 'on') }}"
+    variables:
+      n: "{{ trigger.to_state.attributes.friendly_name | default(trigger.entity_id) }}"
+      tag: "infra_{{ trigger.id.split('_')[0] }}"
+    actions:
+      - choose:
+          - conditions: "{{ trigger.id.endswith('_down') }}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  notification_id: "{{ tag }}"
+                  title: "🔴 {{ n }} is DOWN"
+                  message: "{{ n }} unreachable since {{ (now() - timedelta(minutes=2)).strftime('%H:%M') }}."
+              - action: notify.mobile_app_jd_s23_ultra
+                continue_on_error: true
+                data: &down
+                  title: "🔴 {{ n }} is DOWN"
+                  message: "{{ n }} has been unreachable for 2+ minutes (since {{ (now() - timedelta(minutes=2)).strftime('%H:%M') }})."
+                  data: {priority: high, ttl: 0, channel: infra_alerts, importance: max, tag: "{{ tag }}", color: "#d32f2f"}
+              - action: notify.mobile_app_samsung_s23_ultra
+                continue_on_error: true
+                data: *down
+          - conditions: "{{ trigger.id.endswith('_up') }}"
+            sequence:
+              - action: persistent_notification.dismiss
+                data: {notification_id: "{{ tag }}"}
+              - action: notify.mobile_app_jd_s23_ultra
+                continue_on_error: true
+                data: &up
+                  title: "✅ {{ n }} recovered"
+                  message: "{{ n }} is back after {{ ((now() - trigger.from_state.last_changed).total_seconds() / 60) | round(0) | int }} min down."
+                  data: {priority: high, ttl: 0, channel: infra_alerts, tag: "{{ tag }}", color: "#2e7d32"}
+              - action: notify.mobile_app_samsung_s23_ultra
+                continue_on_error: true
+                data: *up
