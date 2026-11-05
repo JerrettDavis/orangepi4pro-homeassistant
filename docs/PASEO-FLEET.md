@@ -65,6 +65,13 @@ shell), and registers `ssh://<user>@<add-on gateway>?daemonPort=6767` as host `o
 Add further machines later with `paseo host add ... --home /data/home/.paseo` inside the
 add-on, using the same key and an `~/.ssh/config` entry per host.
 
+**Workstation (no inbound port).** `scripts/paseo-ha-workstation-link.ps1` runs a logon
+scheduled task (`paseo-ha-reverse-tunnel`) holding `ssh -R 127.0.0.1:16767:127.0.0.1:6767`
+to the Orange Pi, extends the add-on key's `permitopen` to port 16767, and registers
+host `jdh-pro-05` plus its workspace root (`G:\git`, with its repos as projects) in the
+add-on. Trade-off: anything with a login on the Orange Pi can reach the workstation
+daemon on that loopback port. The host shows offline while the workstation is off or logged out.
+
 ## Known limits
 
 - Agent CLIs (Claude, Codex, Copilot) are installed on each host but need
