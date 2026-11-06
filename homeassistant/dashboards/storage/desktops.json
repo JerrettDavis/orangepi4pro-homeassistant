@@ -1,0 +1,689 @@
+{
+  "title": "Desktops",
+  "views": [
+    {
+      "type": "sections",
+      "title": "Fleet",
+      "path": "overview",
+      "icon": "mdi:desktop-tower-monitor",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Desktops",
+              "heading_style": "title",
+              "icon": "mdi:desktop-tower-monitor"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Active LAN probe",
+                  "secondary": "{% set c = namespace(on=0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:88' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '54:04:a6:6f:b1:27' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '74:56:3c:b2:bf:ad' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '08:71:90:a8:3e:dc' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:8b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '98:59:7a:b4:26:6b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{{ c.on }} of 6 desktops answering ARP",
+                  "icon": "mdi:lan-connect",
+                  "icon_color": "{% set c = namespace(on=0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:88' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '54:04:a6:6f:b1:27' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '74:56:3c:b2:bf:ad' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '08:71:90:a8:3e:dc' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:8b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '98:59:7a:b4:26:6b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% set c.on = c.on + (1 if status == 'online' else 0) %}{{ 'green' if c.on == 6 else 'orange' if c.on else 'red' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Wake-on-LAN",
+                  "secondary": "Sends a magic packet only; never shuts down or restarts a running PC",
+                  "icon": "mdi:power-sleep",
+                  "icon_color": "blue",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true,
+                  "multiline_secondary": true
+                }
+              ]
+            },
+            {
+              "type": "markdown",
+              "content": "<sub>Probed every 30 s by ARP, independent of ping. A reply proves network reachability, not OS power state; offline is declared after about 60–90 s. Home Assistant runs on HYPERV-00 and cannot wake it while it is off. Wake history is on the next tab.</sub>"
+            }
+          ],
+          "column_span": 3
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Fleet",
+              "heading_style": "title",
+              "icon": "mdi:server-network"
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-HYPERV-00",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:88' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.102 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:88' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Wake unverified",
+                      "icon": "mdi:help-circle-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:88' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% if is_state('binary_sensor.10_0_0_102','on') %}Ping reply{% elif is_state('binary_sensor.10_0_0_102','off') %}No ping{% else %}Ping unknown{% endif %}",
+                      "icon": "mdi:lan-pending",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_00_e0_42_68_0a_88",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_00_e0_42_68_0a_88"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-HYPERV-01",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '54:04:a6:6f:b1:27' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.103 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '54:04:a6:6f:b1:27' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Packet sent, no wake yet",
+                      "icon": "mdi:alert-circle-outline",
+                      "icon_color": "orange",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '54:04:a6:6f:b1:27' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% if is_state('binary_sensor.10_0_0_103','on') %}Ping reply{% elif is_state('binary_sensor.10_0_0_103','off') %}No ping{% else %}Ping unknown{% endif %}",
+                      "icon": "mdi:lan-pending",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_54_04_a6_6f_b1_27",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_54_04_a6_6f_b1_27"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-PRO-05",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '74:56:3c:b2:bf:ad' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.21 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '74:56:3c:b2:bf:ad' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Test pending",
+                      "icon": "mdi:flask-outline",
+                      "icon_color": "blue",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '74:56:3c:b2:bf:ad' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% if is_state('binary_sensor.10_0_0_21','on') %}Ping reply{% elif is_state('binary_sensor.10_0_0_21','off') %}No ping{% else %}Ping unknown{% endif %}",
+                      "icon": "mdi:lan-pending",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_74_56_3c_b2_bf_ad",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_74_56_3c_b2_bf_ad"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Workstations",
+              "heading_style": "title",
+              "icon": "mdi:desktop-classic"
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-PRO-69",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '08:71:90:a8:3e:dc' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.44 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '08:71:90:a8:3e:dc' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Wake failed",
+                      "icon": "mdi:close-circle-outline",
+                      "icon_color": "red",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '08:71:90:a8:3e:dc' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% if is_state('binary_sensor.10_0_0_44','on') %}Ping reply{% elif is_state('binary_sensor.10_0_0_44','off') %}No ping{% else %}Ping unknown{% endif %}",
+                      "icon": "mdi:lan-pending",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_08_71_90_a8_3e_dc",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_08_71_90_a8_3e_dc"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-PRO-00",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:8b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.12 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:8b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Wake failed",
+                      "icon": "mdi:close-circle-outline",
+                      "icon_color": "red",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '00:e0:42:68:0a:8b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_00_e0_42_68_0a_8b",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_00_e0_42_68_0a_8b"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "vertical-stack",
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JDH-PRO-01",
+                  "secondary": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '98:59:7a:b4:26:6b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}10.0.0.51 · {{ {'online': 'Online · ARP reply', 'offline': 'No recent reply', 'stale': 'Probe data stale', 'unavailable': 'Monitoring unavailable', 'undiscovered': 'Not discovered'}[status] }}",
+                  "icon": "mdi:desktop-tower-monitor",
+                  "icon_color": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '98:59:7a:b4:26:6b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{{ {'online': 'green', 'offline': 'red', 'stale': 'orange', 'unavailable': 'grey', 'undiscovered': 'grey'}[status] }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-chips-card",
+                  "alignment": "start",
+                  "chips": [
+                    {
+                      "type": "template",
+                      "content": "Wake failed",
+                      "icon": "mdi:close-circle-outline",
+                      "icon_color": "red",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    },
+                    {
+                      "type": "template",
+                      "content": "{% set p = namespace(e='') %}{% for e in integration_entities('nmap_tracker') %}{% if state_attr(e, 'mac') == '98:59:7a:b4:26:6b' and (not p.e or is_state(e, 'home')) %}{% set p.e = e %}{% endif %}{% endfor %}{% set seen = state_attr(p.e, 'last_time_reachable') if p.e else none %}{% set age = (as_timestamp(now()) - as_timestamp(seen, 0)) if seen else 0 %}{% if not p.e %}{% set status = 'undiscovered' %}{% elif states(p.e) in ['unknown', 'unavailable'] %}{% set status = 'unavailable' %}{% elif is_state(p.e, 'home') %}{% set status = 'stale' if seen and age > 120 else 'online' %}{% else %}{% set status = 'offline' %}{% endif %}{% if seen %}Last reply {{ relative_time(as_datetime(seen)) }} ago{% else %}No reply recorded{% endif %}",
+                      "icon": "mdi:clock-outline",
+                      "icon_color": "grey",
+                      "tap_action": {
+                        "action": "none"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "custom:mushroom-entity-card",
+                  "entity": "button.wake_on_lan_98_59_7a_b4_26_6b",
+                  "name": "Send wake packet",
+                  "icon": "mdi:power",
+                  "icon_color": "blue",
+                  "fill_container": true,
+                  "layout": "horizontal",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "button.press",
+                    "target": {
+                      "entity_id": "button.wake_on_lan_98_59_7a_b4_26_6b"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sections",
+      "title": "Wake log",
+      "path": "wake-log",
+      "icon": "mdi:clipboard-text-clock-outline",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Wake verification log",
+              "heading_style": "title",
+              "icon": "mdi:clipboard-text-clock-outline"
+            },
+            {
+              "type": "markdown",
+              "content": "Results of controlled wake tests (September 18, 2026). A responding NIC proves reachability, not that the OS is awake."
+            }
+          ],
+          "column_span": 3
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-HYPERV-00",
+              "secondary": "Hyper-V host · runs Home Assistant · 10.0.0.102",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "grey",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:help-circle-outline",
+              "badge_color": "grey",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Wake unverified.** Wake button configured; manually powered on. Firmware/NIC wake settings and a physical wake remain unverified. Home Assistant runs on this host and cannot wake it while it is off.\n\n<sub>MAC `00:e0:42:68:0a:88`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-HYPERV-01",
+              "secondary": "Hyper-V host · 10.0.0.103",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "orange",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:alert-circle-outline",
+              "badge_color": "orange",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Packet sent, no wake yet.** Correct magic packet verified on the LAN from Home Assistant. The machine is reported disconnected from the internet and its local LAN link is not confirmed. No successful physical wake has been verified.\n\n<sub>MAC `54:04:a6:6f:b1:27`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-PRO-05",
+              "secondary": "Workstation · off-system backup target · 10.0.0.21",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "blue",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:flask-outline",
+              "badge_color": "blue",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Test pending.** Windows NIC magic-packet wake is configured. Firmware settings and a physical wake test remain.\n\n<sub>MAC `74:56:3c:b2:bf:ad`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-PRO-69",
+              "secondary": "Workstation (possibly formerly JDH-PRO-000) · 10.0.0.44",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "red",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:close-circle-outline",
+              "badge_color": "red",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Wake failed.** One Home Assistant wake command and an independent local-PC wake attempt each produced no management-port response within five minutes. The sender's exact magic packet was captured on the LAN. BIOS/NIC power settings are unverified.\n\n<sub>MAC `08:71:90:a8:3e:dc`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-PRO-00",
+              "secondary": "Hyper-V host (historical identity) · reserved address · 10.0.0.12",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "red",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:close-circle-outline",
+              "badge_color": "red",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Wake failed.** Verified Realtek 2.5GbE adapter. Windows magic-packet, shutdown and device wake are verified and PCI-E wake in BIOS is user-confirmed (ErP unverified). On September 18 one Home Assistant wake (08:05 CDT) and one local-PC wake (08:31 CDT) each produced no LAN return or TCP 135/445 response. The cause is unknown. ArkServer VM recovery is unverified; manual power-on and the ErP setting check are pending.\n\n<sub>MAC `00:e0:42:68:0a:8b`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JDH-PRO-01",
+              "secondary": "Workstation (historical identity) · reserved address · 10.0.0.51",
+              "icon": "mdi:desktop-tower",
+              "icon_color": "red",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "badge_icon": "mdi:close-circle-outline",
+              "badge_color": "red",
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "**Wake failed.** Reserved address and MAC matched domain DNS and gateway history; the gateway saw this MAC after power-on. One Home Assistant wake and one local-PC wake produced no management-port response within five minutes. BIOS/NIC power settings are unverified.\n\n<sub>MAC `98:59:7a:b4:26:6b`</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Other desktops to identify",
+              "heading_style": "title",
+              "icon": "mdi:help-network-outline"
+            },
+            {
+              "type": "markdown",
+              "content": "JDH-PRO-000 may be an earlier name for JDH-PRO-69 (unconfirmed). Directory/DNS or Tailscale records also mention PRO-02, PRO-03, PRO-06 and DESKTOP-V8UEH1S; their current wired MACs and hardware identity need verification. PRO-06 has an old address overlapping PRO-05. PRO-00 and PRO-01 have separate historical-identity wake buttons based on corroborated wired NIC records."
+            }
+          ],
+          "column_span": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,916 @@
+{
+  "title": "Home Operations",
+  "views": [
+    {
+      "type": "sections",
+      "title": "Overview",
+      "path": "overview",
+      "icon": "mdi:home-heart",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Home Operations",
+              "heading_style": "title",
+              "icon": "mdi:home-heart"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "{% if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 %}All clear{% else %}{{ (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) }} active issue{{ 's' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) > 1 }}{% endif %}",
+              "secondary": "{% set sn = states('input_datetime.homeops_snooze_until') %}{% set snoozed = sn not in ['unknown','unavailable','none',''] and as_timestamp(sn, 0) > as_timestamp(now()) %}{% if snoozed %}Alerts snoozed until {{ as_local(as_datetime(sn)).strftime('%-I:%M %p') }}{% elif (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 %}No security or monitoring incidents · alerts active{% else %}See Alerts for details{% endif %}",
+              "icon": "{{ 'mdi:shield-check' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 else 'mdi:shield-alert' }}",
+              "icon_color": "{{ 'green' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 else 'red' }}",
+              "tap_action": {
+                "action": "navigate",
+                "navigation_path": "/dashboard-home-operations/alerts"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "multiline_secondary": true
+            },
+            {
+              "type": "custom:mushroom-chips-card",
+              "alignment": "start",
+              "chips": [
+                {
+                  "type": "entity",
+                  "entity": "input_boolean.homeops_presence_alerts_enabled",
+                  "icon": "mdi:account-switch",
+                  "content_info": "name",
+                  "name": "Presence"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_boolean.homeops_security_alerts_enabled",
+                  "icon": "mdi:shield-lock",
+                  "content_info": "name",
+                  "name": "Security"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_boolean.homeops_health_alerts_enabled",
+                  "icon": "mdi:heart-pulse",
+                  "content_info": "name",
+                  "name": "Health"
+                },
+                {
+                  "type": "entity",
+                  "entity": "input_boolean.homeops_digest_enabled",
+                  "icon": "mdi:email-newsletter",
+                  "content_info": "name",
+                  "name": "Digest"
+                },
+                {
+                  "type": "template",
+                  "content": "Snooze 1 h",
+                  "icon": "mdi:bell-sleep-outline",
+                  "icon_color": "blue",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "script.turn_on",
+                    "target": {
+                      "entity_id": "script.homeops_snooze_one_hour"
+                    }
+                  }
+                },
+                {
+                  "type": "template",
+                  "content": "Resume",
+                  "icon": "mdi:bell-ring-outline",
+                  "icon_color": "green",
+                  "tap_action": {
+                    "action": "perform-action",
+                    "perform_action": "script.turn_on",
+                    "target": {
+                      "entity_id": "script.homeops_resume_alerts"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "column_span": 3
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "People",
+              "heading_style": "title",
+              "icon": "mdi:account-multiple"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "JD",
+              "secondary": "{{ states('person.jd') | replace('_',' ') | title }} · {% set src = states['device_tracker.jd_s23_ultra'] %}{% set seen = src.last_reported | default(src.last_updated, true) %}{% set age = ((as_timestamp(now()) - as_timestamp(seen)) / 60) | round(0) %}{% set limit = states('input_number.homeops_phone_freshness_minutes') | float(120) %}{% if src.state in ['unknown','unavailable'] %}location unavailable{% elif age > limit %}stale · reported {{ relative_time(seen) }} ago{% else %}reported {{ relative_time(seen) }} ago{% endif %}",
+              "icon": "mdi:account-circle",
+              "icon_color": "{% set src = states['device_tracker.jd_s23_ultra'] %}{% set seen = src.last_reported | default(src.last_updated, true) %}{% set age = ((as_timestamp(now()) - as_timestamp(seen)) / 60) | round(0) %}{{ 'red' if src.state in ['unknown','unavailable'] else 'orange' if age > states('input_number.homeops_phone_freshness_minutes') | float(120) else 'green' if is_state('person.jd','home') else 'blue' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "entity": "person.jd",
+              "picture": "{{ state_attr('person.jd','entity_picture') }}"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Sam",
+              "secondary": "{{ states('person.sam') | replace('_',' ') | title }} · {% set src = states['device_tracker.sam_s_s23_ultra_2'] %}{% set seen = src.last_reported | default(src.last_updated, true) %}{% set age = ((as_timestamp(now()) - as_timestamp(seen)) / 60) | round(0) %}{% set limit = states('input_number.homeops_phone_freshness_minutes') | float(120) %}{% if src.state in ['unknown','unavailable'] %}location unavailable{% elif age > limit %}stale · reported {{ relative_time(seen) }} ago{% else %}reported {{ relative_time(seen) }} ago{% endif %}",
+              "icon": "mdi:account-circle",
+              "icon_color": "{% set src = states['device_tracker.sam_s_s23_ultra_2'] %}{% set seen = src.last_reported | default(src.last_updated, true) %}{% set age = ((as_timestamp(now()) - as_timestamp(seen)) / 60) | round(0) %}{{ 'red' if src.state in ['unknown','unavailable'] else 'orange' if age > states('input_number.homeops_phone_freshness_minutes') | float(120) else 'green' if is_state('person.sam','home') else 'blue' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "entity": "person.sam",
+              "picture": "{{ state_attr('person.sam','entity_picture') }}"
+            },
+            {
+              "type": "markdown",
+              "content": "<sub>Confidence uses the phone's last report time, not when someone changed zones. Unknown, unavailable or stale location is never treated as confirmed away.</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Doors & garage",
+              "heading_style": "title",
+              "icon": "mdi:door"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Front door",
+              "secondary": "{% set s = states('lock.front_door_deadbolt') %}{% if s in ['locked','unlocked'] %}{{ s | title }} · updated {{ relative_time(states.lock.front_door_deadbolt.last_updated) }} ago{% elif s == 'jammed' %}Jammed — security cannot be confirmed{% elif s in ['unknown','unavailable'] %}Unavailable — security cannot be confirmed{% else %}{{ s | replace('_',' ') | title }} — wait for a final state{% endif %}",
+              "icon": "{{ 'mdi:lock' if is_state('lock.front_door_deadbolt','locked') else 'mdi:lock-open-alert' }}",
+              "icon_color": "{{ 'green' if is_state('lock.front_door_deadbolt','locked') else 'red' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "entity": "lock.front_door_deadbolt",
+              "multiline_secondary": true
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "lock.front_door_deadbolt",
+                  "state": "unlocked"
+                }
+              ],
+              "card": {
+                "type": "custom:mushroom-template-card",
+                "primary": "Lock front door",
+                "secondary": "Tap to lock · asks to confirm",
+                "icon": "mdi:lock",
+                "icon_color": "green",
+                "tap_action": {
+                  "action": "perform-action",
+                  "perform_action": "lock.lock",
+                  "target": {
+                    "entity_id": "lock.front_door_deadbolt"
+                  },
+                  "confirmation": {
+                    "text": "Lock the front door now?"
+                  }
+                },
+                "hold_action": {
+                  "action": "none"
+                },
+                "layout": "horizontal",
+                "fill_container": true
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "lock.front_door_deadbolt",
+                  "state": "locked"
+                }
+              ],
+              "card": {
+                "type": "custom:mushroom-template-card",
+                "primary": "Unlock front door",
+                "secondary": "Tap to unlock · asks to confirm",
+                "icon": "mdi:lock-open-variant",
+                "icon_color": "orange",
+                "tap_action": {
+                  "action": "perform-action",
+                  "perform_action": "lock.unlock",
+                  "target": {
+                    "entity_id": "lock.front_door_deadbolt"
+                  },
+                  "confirmation": {
+                    "text": "Unlock the front door now?"
+                  }
+                },
+                "hold_action": {
+                  "action": "none"
+                },
+                "layout": "horizontal",
+                "fill_container": true
+              }
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Garage door",
+              "secondary": "{% set s = states('cover.garage_door') %}{% if s in ['open','opening','closed','closing'] %}{{ s | title }} · updated {{ relative_time(states.cover.garage_door.last_updated) }} ago{% elif s in ['unknown','unavailable'] %}Unavailable — security cannot be confirmed{% else %}{{ s | replace('_',' ') | title }}{% endif %}",
+              "icon": "{{ 'mdi:garage' if is_state('cover.garage_door','closed') else 'mdi:garage-open' }}",
+              "icon_color": "{{ 'green' if is_state('cover.garage_door','closed') else 'orange' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "entity": "cover.garage_door",
+              "multiline_secondary": true
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "cover.garage_door",
+                  "state": "open"
+                }
+              ],
+              "card": {
+                "type": "custom:mushroom-template-card",
+                "primary": "Close garage",
+                "secondary": "Tap to close · asks to confirm",
+                "icon": "mdi:garage",
+                "icon_color": "green",
+                "tap_action": {
+                  "action": "perform-action",
+                  "perform_action": "cover.close_cover",
+                  "target": {
+                    "entity_id": "cover.garage_door"
+                  },
+                  "confirmation": {
+                    "text": "Close the garage door now?"
+                  }
+                },
+                "hold_action": {
+                  "action": "none"
+                },
+                "layout": "horizontal",
+                "fill_container": true
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "cover.garage_door",
+                  "state": "closed"
+                }
+              ],
+              "card": {
+                "type": "custom:mushroom-template-card",
+                "primary": "Open garage",
+                "secondary": "Tap to open · asks to confirm",
+                "icon": "mdi:garage-open",
+                "icon_color": "orange",
+                "tap_action": {
+                  "action": "perform-action",
+                  "perform_action": "cover.open_cover",
+                  "target": {
+                    "entity_id": "cover.garage_door"
+                  },
+                  "confirmation": {
+                    "text": "Open the garage door now?"
+                  }
+                },
+                "hold_action": {
+                  "action": "none"
+                },
+                "layout": "horizontal",
+                "fill_container": true
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "<sub>Controls move physical devices; each asks for confirmation.</sub>"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "System health",
+              "heading_style": "title",
+              "icon": "mdi:heart-pulse"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Backup",
+              "secondary": "{% set l = states('sensor.backup_last_successful_automatic_backup') %}{% if l in ['unknown','unavailable'] %}No successful backup timestamp{% else %}Last success {{ relative_time(as_datetime(l)) }} ago{% endif %}",
+              "icon": "mdi:backup-restore",
+              "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_backup_stale','on') else 'green' }}",
+              "tap_action": {
+                "action": "navigate",
+                "navigation_path": "/dashboard-home-operations/maintenance"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Storage",
+              "secondary": "{{ states('sensor.system_monitor_disk_usage_config') }}% used · {{ states('sensor.system_monitor_disk_free_config') }} GiB free",
+              "icon": "mdi:harddisk",
+              "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_disk_pressure','on') else 'green' }}",
+              "tap_action": {
+                "action": "navigate",
+                "navigation_path": "/dashboard-home-operations/maintenance"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Internet",
+              "secondary": "WAN {{ states('sensor.jdh_gateway_00_interface_wan_status') }} · {{ 'DNS reachable' if is_state('binary_sensor.1_1_1_1','on') else 'no reply from 1.1.1.1' }}",
+              "icon": "mdi:wan",
+              "icon_color": "{{ 'green' if is_state('sensor.jdh_gateway_00_interface_wan_status','up') and is_state('binary_sensor.1_1_1_1','on') else 'red' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sections",
+      "title": "Alerts",
+      "path": "alerts",
+      "icon": "mdi:alert-circle-outline",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Alerts",
+              "heading_style": "title",
+              "icon": "mdi:alert-circle-outline"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "{% if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 %}All clear{% else %}{{ (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) }} active issue{{ 's' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) > 1 }}{% endif %}",
+              "secondary": "{% set sn = states('input_datetime.homeops_snooze_until') %}{% set snoozed = sn not in ['unknown','unavailable','none',''] and as_timestamp(sn, 0) > as_timestamp(now()) %}{% if snoozed %}Alerts snoozed until {{ as_local(as_datetime(sn)).strftime('%-I:%M %p') }}{% elif (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 %}No security or monitoring incidents · alerts active{% else %}See Alerts for details{% endif %}",
+              "icon": "{{ 'mdi:shield-check' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 else 'mdi:shield-alert' }}",
+              "icon_color": "{{ 'green' if (['input_boolean.homeops_security_front_door_active', 'input_boolean.homeops_security_garage_active', 'input_boolean.homeops_health_front_door_unavailable', 'input_boolean.homeops_health_garage_unavailable', 'input_boolean.homeops_health_jd_location_stale', 'input_boolean.homeops_health_sam_location_stale', 'input_boolean.homeops_health_backup_stale', 'input_boolean.homeops_health_disk_pressure'] | select('is_state','on') | list | count) == 0 else 'red' }}",
+              "tap_action": {
+                "action": "navigate",
+                "navigation_path": "/dashboard-home-operations/alerts"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "{% set sn = states('input_datetime.homeops_snooze_until') %}Notifications this incident — front door: **{{ states('input_number.homeops_security_front_door_notification_count')|int(0) }}** · garage: **{{ states('input_number.homeops_security_garage_notification_count')|int(0) }}**."
+            }
+          ],
+          "column_span": 3
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Incident & monitoring state",
+              "heading_style": "title",
+              "icon": "mdi:list-status"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Front door risk",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_security_front_door_active','on') else 'Clear' }}",
+                  "icon": "mdi:door-open",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_security_front_door_active','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Garage door risk",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_security_garage_active','on') else 'Clear' }}",
+                  "icon": "mdi:garage-open",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_security_garage_active','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Front door monitoring unavailable",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_front_door_unavailable','on') else 'Clear' }}",
+                  "icon": "mdi:lock-alert",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_front_door_unavailable','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Garage monitoring unavailable",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_garage_unavailable','on') else 'Clear' }}",
+                  "icon": "mdi:garage-alert",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_garage_unavailable','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "JD's phone location",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_jd_location_stale','on') else 'Clear' }}",
+                  "icon": "mdi:cellphone-marker",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_jd_location_stale','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Sam's phone location",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_sam_location_stale','on') else 'Clear' }}",
+                  "icon": "mdi:cellphone-marker",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_sam_location_stale','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Automatic backup",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_backup_stale','on') else 'Clear' }}",
+                  "icon": "mdi:backup-restore",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_backup_stale','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                },
+                {
+                  "type": "custom:mushroom-template-card",
+                  "primary": "Home Assistant disk pressure",
+                  "secondary": "{{ 'Active' if is_state('input_boolean.homeops_health_disk_pressure','on') else 'Clear' }}",
+                  "icon": "mdi:harddisk-remove",
+                  "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_disk_pressure','on') else 'green' }}",
+                  "tap_action": {
+                    "action": "none"
+                  },
+                  "hold_action": {
+                    "action": "none"
+                  },
+                  "layout": "horizontal",
+                  "fill_container": true
+                }
+              ]
+            }
+          ],
+          "column_span": 2
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Controls",
+              "heading_style": "title",
+              "icon": "mdi:tune-variant"
+            },
+            {
+              "type": "entities",
+              "title": "Enable alerts",
+              "show_header_toggle": false,
+              "entities": [
+                "input_boolean.homeops_presence_alerts_enabled",
+                "input_boolean.homeops_security_alerts_enabled",
+                "input_boolean.homeops_health_alerts_enabled",
+                "input_boolean.homeops_digest_enabled",
+                "input_boolean.homeops_health_include_sam"
+              ]
+            },
+            {
+              "type": "entities",
+              "title": "Timing",
+              "show_header_toggle": false,
+              "entities": [
+                "input_datetime.homeops_security_night_start",
+                "input_datetime.homeops_security_night_end",
+                "input_number.homeops_security_followup_minutes",
+                "input_number.homeops_security_reminder_minutes",
+                "input_number.homeops_availability_grace_minutes"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sections",
+      "title": "Calendar",
+      "path": "calendar",
+      "icon": "mdi:calendar-month-outline",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Family calendar",
+              "heading_style": "title",
+              "icon": "mdi:calendar-month-outline"
+            },
+            {
+              "type": "calendar",
+              "entities": [
+                "calendar.family"
+              ],
+              "initial_view": "listWeek"
+            }
+          ],
+          "column_span": 2
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Source status",
+              "heading_style": "title",
+              "icon": "mdi:calendar-sync-outline"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Google",
+              "secondary": "Connected · Family calendar supplies the agenda",
+              "icon": "mdi:google",
+              "icon_color": "green",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "multiline_secondary": true
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Outlook",
+              "secondary": "Sign-in complete, but Microsoft rejected calendar access (HTTP 401); no entity yet",
+              "icon": "mdi:microsoft-outlook",
+              "icon_color": "orange",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "multiline_secondary": true
+            },
+            {
+              "type": "markdown",
+              "content": "<sub>Only the shared Family calendar is shown; personal, work, birthday, holiday, Todoist and automated calendars are excluded. No automatic reminders are enabled.</sub>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sections",
+      "title": "Maintenance",
+      "path": "maintenance",
+      "icon": "mdi:tools",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Backup",
+              "heading_style": "title",
+              "icon": "mdi:backup-restore"
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Automatic backup",
+              "secondary": "{% set l = states('sensor.backup_last_successful_automatic_backup') %}{% if l in ['unknown','unavailable'] %}No successful-backup timestamp{% else %}{{ as_local(as_datetime(l)).strftime('%b %-d at %-I:%M %p') }} ({{ relative_time(as_datetime(l)) }} ago){% endif %} · manager {{ states('sensor.backup_backup_manager_state') | replace('_',' ') }}",
+              "icon": "mdi:cloud-check-outline",
+              "icon_color": "{{ 'red' if is_state('input_boolean.homeops_health_backup_stale','on') else 'green' }}",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true,
+              "multiline_secondary": true
+            },
+            {
+              "type": "entities",
+              "title": "Schedule",
+              "show_header_toggle": false,
+              "entities": [
+                {
+                  "entity": "sensor.backup_last_attempted_automatic_backup",
+                  "name": "Last attempt"
+                },
+                {
+                  "entity": "sensor.backup_next_scheduled_automatic_backup",
+                  "name": "Next scheduled"
+                }
+              ]
+            },
+            {
+              "type": "markdown",
+              "content": "**Off-system archive (PRO-05)** — 141,037 snapshots and 154 Home Assistant backups, checksum-verified through Sep 18, 6:26 PM CDT. Daily pull at 6:00 AM while jd is logged on and PRO-05 is awake; failures raise a persistent notification.\n\n**Camera snapshots** — full verified history on PRO-05; most recent 30 days (37,583 files, 2.47 GB) kept on Home Assistant."
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Storage & connectivity",
+              "heading_style": "title",
+              "icon": "mdi:harddisk"
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.system_monitor_disk_usage_config",
+              "name": "/config used",
+              "min": 0,
+              "max": 100,
+              "needle": true,
+              "severity": {
+                "green": 0,
+                "yellow": 80,
+                "red": 85
+              }
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "Free space",
+              "secondary": "{{ states('sensor.system_monitor_disk_free_config') }} GiB available on /config",
+              "icon": "mdi:harddisk",
+              "icon_color": "blue",
+              "tap_action": {
+                "action": "none"
+              },
+              "hold_action": {
+                "action": "none"
+              },
+              "layout": "horizontal",
+              "fill_container": true
+            },
+            {
+              "type": "custom:mushroom-chips-card",
+              "alignment": "start",
+              "chips": [
+                {
+                  "type": "template",
+                  "content": "Gateway {{ 'up' if is_state('binary_sensor.10_0_0_1','on') else 'down' }}",
+                  "icon": "mdi:router-network",
+                  "icon_color": "{{ 'green' if is_state('binary_sensor.10_0_0_1','on') else 'red' }}",
+                  "tap_action": {
+                    "action": "none"
+                  }
+                },
+                {
+                  "type": "template",
+                  "content": "Internet {{ 'up' if is_state('binary_sensor.1_1_1_1','on') else 'down' }}",
+                  "icon": "mdi:web",
+                  "icon_color": "{{ 'green' if is_state('binary_sensor.1_1_1_1','on') else 'red' }}",
+                  "tap_action": {
+                    "action": "none"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "entities",
+              "title": "Disk health thresholds",
+              "show_header_toggle": false,
+              "entities": [
+                "input_number.homeops_disk_warning_percent",
+                "input_number.homeops_disk_recovery_percent"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Devices",
+              "heading_style": "title",
+              "icon": "mdi:battery-heart-variant"
+            },
+            {
+              "type": "custom:mushroom-entity-card",
+              "entity": "sensor.front_door_deadbolt_battery_level",
+              "name": "Front door lock",
+              "fill_container": true
+            },
+            {
+              "type": "custom:mushroom-entity-card",
+              "entity": "sensor.jd_s23_ultra_battery_level",
+              "name": "JD's phone",
+              "fill_container": true
+            },
+            {
+              "type": "custom:mushroom-entity-card",
+              "entity": "sensor.samsung_s23_ultra_battery_level",
+              "name": "Sam's phone",
+              "fill_container": true
+            },
+            {
+              "type": "markdown",
+              "content": "{% if states('lock.front_door_deadbolt') in ['unknown','unavailable'] %}**Door monitoring disconnected:** Home Assistant cannot reach the external Z-Wave JS server, so front-door security cannot be confirmed.{% elif is_state('lock.front_door_deadbolt','jammed') %}**Lock fault:** the front door reports jammed.{% else %}Door monitoring healthy.{% endif %}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sections",
+      "title": "Settings",
+      "path": "settings",
+      "icon": "mdi:tune-variant",
+      "max_columns": 3,
+      "sections": [
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Alerts",
+              "heading_style": "title",
+              "icon": "mdi:bell-cog-outline"
+            },
+            {
+              "type": "entities",
+              "title": "Alert switches",
+              "show_header_toggle": false,
+              "entities": [
+                "input_boolean.homeops_presence_alerts_enabled",
+                "input_boolean.homeops_security_alerts_enabled",
+                "input_boolean.homeops_health_alerts_enabled",
+                "input_boolean.homeops_digest_enabled",
+                "input_boolean.homeops_health_include_sam"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Presence",
+              "heading_style": "title",
+              "icon": "mdi:account-switch"
+            },
+            {
+              "type": "entities",
+              "title": "Presence",
+              "show_header_toggle": false,
+              "entities": [
+                "input_datetime.homeops_presence_quiet_start",
+                "input_datetime.homeops_presence_quiet_end",
+                "input_number.homeops_presence_debounce_seconds",
+                "input_number.homeops_phone_freshness_minutes"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Security & health",
+              "heading_style": "title",
+              "icon": "mdi:shield-lock"
+            },
+            {
+              "type": "entities",
+              "title": "Security and health",
+              "show_header_toggle": false,
+              "entities": [
+                "input_datetime.homeops_security_night_start",
+                "input_datetime.homeops_security_night_end",
+                "input_datetime.homeops_snooze_until",
+                "input_number.homeops_security_followup_minutes",
+                "input_number.homeops_security_reminder_minutes",
+                "input_number.homeops_availability_grace_minutes"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
