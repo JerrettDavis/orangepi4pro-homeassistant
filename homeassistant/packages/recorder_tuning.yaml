@@ -1,0 +1,27 @@
+# 14 days on-box keeps the database small on a 49 GiB root disk (live DB was 3 GB).
+# Older history lives in the off-box sinks, see docs/DATA-RETENTION.md. Long-term
+# statistics (sensors with a state_class) are never purged by the recorder.
+# Measured on the live host: camera/image states rewrite a rotating access-token
+# attribute on every change (~700 MB of attributes), and the HomeOps automations
+# and light "status" mirrors were among the top state writers.
+recorder:
+  purge_keep_days: 14
+  commit_interval: 30
+  exclude:
+    domains:
+      - update
+      - camera
+      - image
+    entity_globs:
+      - sensor.*_uptime
+      - sensor.*_last_boot
+      - sensor.*_interface_*_per_second
+      - automation.homeops_*
+      - sensor.*_lights_status
+      - sensor.office_hexa_status
+      - sensor.k1_memory_used
+      - sensor.k1_system_load
+      - sensor.k1_mcu_*
+    entities:
+      - sensor.date
+      - sensor.time

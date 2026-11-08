@@ -1,0 +1,8 @@
+# One notify target for "every household phone". Add a phone here once and use
+# notify.household in new automations instead of listing mobile_app_* services.
+notify:
+  - platform: group
+    name: household
+    services:
+      - action: mobile_app_jd_s23_ultra
+      - action: mobile_app_samsung_s23_ultra

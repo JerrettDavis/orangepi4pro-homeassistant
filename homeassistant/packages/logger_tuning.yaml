@@ -1,0 +1,11 @@
+# Quiet repeat offenders that produced thousands of identical lines per day.
+# Everything else stays at warning. Remove an entry to debug that integration.
+logger:
+  default: warning
+  logs:
+    meshtastic: critical
+    custom_components.cync_lights.cync_hub: critical
+    roombapy: critical
+    custom_components.moonraker: error
+    music_assistant_client.connection: critical
+    homeassistant.components.waze_travel_time.coordinator: critical
