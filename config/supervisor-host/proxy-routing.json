@@ -1,0 +1,102 @@
+{
+  "captured_at": "2026-11-27",
+  "proxy_hosts": [
+    {
+      "id": 1,
+      "domain_names": [
+        "ha.jerrettdavis.com",
+        "homeassistant.jerrettdavis.com"
+      ],
+      "forward_host": "172.30.32.1",
+      "forward_port": 8123,
+      "forward_scheme": "http",
+      "ssl_forced": 1,
+      "caching_enabled": 0,
+      "block_exploits": 1,
+      "allow_websocket_upgrade": 1,
+      "http2_support": 1,
+      "enabled": 1,
+      "hsts_enabled": 0,
+      "hsts_subdomains": 0,
+      "trust_forwarded_proto": 0,
+      "certificate_id": 3,
+      "access_list_id": 0
+    },
+    {
+      "id": 2,
+      "domain_names": [
+        "ha-ext.jerrettdavis.com"
+      ],
+      "forward_host": "172.30.32.1",
+      "forward_port": 8123,
+      "forward_scheme": "http",
+      "ssl_forced": 1,
+      "caching_enabled": 0,
+      "block_exploits": 1,
+      "allow_websocket_upgrade": 1,
+      "http2_support": 1,
+      "enabled": 1,
+      "hsts_enabled": 0,
+      "hsts_subdomains": 0,
+      "trust_forwarded_proto": 0,
+      "certificate_id": 4,
+      "access_list_id": 0
+    }
+  ],
+  "streams": [],
+  "certificates": [
+    {
+      "id": 3,
+      "provider": "letsencrypt",
+      "domain_names": [
+        "ha.jerrettdavis.com",
+        "homeassistant.jerrettdavis.com"
+      ],
+      "options": {
+        "dns_challenge": true,
+        "dns_provider": "cloudflare",
+        "letsencrypt_agree": true
+      }
+    },
+    {
+      "id": 4,
+      "provider": "letsencrypt",
+      "domain_names": [
+        "ha-ext.jerrettdavis.com"
+      ],
+      "options": {
+        "dns_challenge": true,
+        "dns_provider": "cloudflare",
+        "letsencrypt_agree": true
+      }
+    }
+  ],
+  "renewal_settings": [
+    {
+      "file": "npm-2.conf",
+      "settings": {
+        "key_type": "ecdsa",
+        "authenticator": "dns-cloudflare",
+        "server": "https://acme-v02.api.letsencrypt.org/directory"
+      }
+    },
+    {
+      "file": "npm-3.conf",
+      "settings": {
+        "key_type": "ecdsa",
+        "authenticator": "dns-cloudflare",
+        "dns_cloudflare_propagation_seconds": "120",
+        "server": "https://acme-v02.api.letsencrypt.org/directory"
+      }
+    },
+    {
+      "file": "npm-4.conf",
+      "settings": {
+        "key_type": "ecdsa",
+        "authenticator": "dns-cloudflare",
+        "dns_cloudflare_propagation_seconds": "120",
+        "server": "https://acme-v02.api.letsencrypt.org/directory"
+      }
+    }
+  ]
+}
