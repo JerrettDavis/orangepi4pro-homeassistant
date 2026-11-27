@@ -1,0 +1,6 @@
+{
+  "provider": "authentik",
+  "client_id": "homeassistant-oidc",
+  "homeassistant_url": "https://homeassistant.jerrettdavis.com",
+  "discovery_url": "https://auth.jerrettdavis.com/application/o/homeassistant/.well-known/openid-configuration"
+}

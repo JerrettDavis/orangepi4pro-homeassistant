@@ -107,6 +107,16 @@ def parser() -> argparse.ArgumentParser:
     a.add_argument("--public", type=Path, required=True)
     a = sub.add_parser("vendor-hacs", help="Fetch a specific public HACS release and record its checksum")
     a.add_argument("--version", required=True)
+    a = sub.add_parser("auth-oidc", help="Install or configure the pinned Authentik OIDC integration")
+    oidc_sub = a.add_subparsers(dest="oidc_command", required=True)
+    install = oidc_sub.add_parser("install", help="Install into a stopped HA configuration without overwriting")
+    install.add_argument("--ha-config", type=Path, required=True)
+    install.add_argument("--source-stopped", action="store_true", required=True)
+    install.add_argument("--apply", action="store_true", required=True)
+    setup = oidc_sub.add_parser("configure", help="Configure via the supported HA integration flow")
+    setup.add_argument("--token-file", type=Path, required=True)
+    setup.add_argument("--ha-url")
+    setup.add_argument("--apply", action="store_true", required=True)
     a = sub.add_parser("recover", help="Signed unattended recovery from explicitly mounted private media")
     a.add_argument("--media", type=Path, required=True)
     a.add_argument("--trust-key", type=Path, required=True)
@@ -424,6 +434,16 @@ def dispatch(args) -> int:
     if command == "vendor-hacs":
         from .vendor import fetch_hacs
         emit(fetch_hacs(args.version))
+        return 0
+    if command == "auth-oidc":
+        if args.oidc_command == "install":
+            from .vendor import seed_oidc
+            if not args.ha_config.is_dir():
+                raise ApplianceError("Home Assistant configuration directory does not exist")
+            emit({"installed": seed_oidc(args.ha_config)})
+        else:
+            from .oidc import configure
+            emit(configure(args.token_file, args.ha_url))
         return 0
     if command == "inventory" and args.ha_config:
         emit(inventory.inventory(args.ha_config), args.output)

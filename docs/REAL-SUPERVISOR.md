@@ -34,6 +34,14 @@ real ones.
   `/etc/hassio.json`. The `20-official-launcher.conf` service drop-in selects this launcher. It recreates the container
   when Supervisor updates its `latest` image tag. A bare `docker start -a` restarts the old container and caused the
   October 26 update rollback; do not restore that command.
+  The boot drop-in `30-apparmor-profile.conf` loads the existing
+  `/usr/share/hassio/apparmor/hassio-supervisor` policy before the launcher
+  starts, after `apparmor.service`. Without it, a reboot can leave the policy
+  unloaded, so Docker rejects Supervisor with `label not found`. The
+  repository copy is `config/hassio-supervisor-apparmor.conf`; restore it as
+  `/etc/systemd/system/hassio-supervisor.service.d/30-apparmor-profile.conf`
+  and run `systemctl daemon-reload` as part of host recovery.
+  It does not disable AppArmor or create the policy.
 * NetworkManager: `/etc/NetworkManager/conf.d/20-connectivity.conf` enables the connectivity check.
 * Unsupported reason left: `os` (the Orange Pi Ubuntu-based OS is unsupported). The standalone proxy's `software`
   warning was resolved by migrating it to the community app. AppArmor is now enabled as described below.

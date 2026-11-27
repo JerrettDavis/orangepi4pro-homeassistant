@@ -16,6 +16,13 @@ Inspect the base partition layout read-only with appropriate Linux tooling. Set 
 
 Set public defaults in `config/image-defaults.json`. On first migration, its `ha_version` and HA image tag should match the source VM exactly. No feature flags, serial IDs, network credentials, tokens, SSIDs or household URLs belong in this public file.
 
+The pinned, MIT-licensed Authentik OIDC integration is included separately in
+`vendor/` and installed in fresh HA config seeds. The public deployment-specific
+OIDC endpoint and client ID are in `config/authentik-sso.json`; no credentials
+or account links are bundled. See [SSO recovery and setup](AUTHENTIK-SSO.md)
+for private token provisioning, automatic configuration, and restoring an
+existing account link.
+
 ## Optional HACS software cache
 
 ```bash
@@ -24,7 +31,8 @@ Set public defaults in `config/image-defaults.json`. On first migration, its `ha
 
 This fetches the official release archive, records a SHA256 lock, and verifies a GitHub asset digest when one is available. The image can seed HACS code into a new HA config. It never replaces restored HACS code or writes fabricated HACS `.storage` records. GitHub OAuth/device enrollment is still required for a fresh household. For the first migration, restoring existing HACS code/state is usually preferable.
 
-Review the archive's license before redistributing it. No archive is included in the delivered source package.
+Review the HACS archive's license before redistributing it. HACS is not included
+unless explicitly vendored.
 
 ## Optional public offline container cache
 

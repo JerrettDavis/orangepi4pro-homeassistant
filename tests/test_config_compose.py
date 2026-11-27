@@ -109,6 +109,18 @@ def test_seed_new_install(cfg):
     d = Path(cfg['data_dir'])
     assert (d / 'ha/configuration.yaml').exists()
     assert (d / 'ha/dashboards/orangepi.yaml').exists()
+    assert (d / 'ha/custom_components/auth_oidc/manifest.json').exists()
+
+
+def test_seed_preserves_restored_auth_storage(cfg):
+    ha = Path(cfg['data_dir']) / 'ha'
+    storage = ha / '.storage'
+    storage.mkdir()
+    auth = storage / 'auth'
+    auth.write_text('existing authentication state')
+    config.seed(cfg)
+    assert auth.read_text() == 'existing authentication state'
+    assert not (ha / 'custom_components').exists()
 
 
 def test_zwave_session_secrets_only_in_private_state(prod):

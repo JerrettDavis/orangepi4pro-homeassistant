@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Check allowlisted source files for known private artifacts; not a general secret detector."""
 import argparse
+import hashlib
+import json
 import re
 from pathlib import Path
 from release_manifest import ROOT, candidates
@@ -42,6 +44,15 @@ def scan(root=ROOT, include_all=False):
         if path.name in ('identity.txt','appliance.json','secrets.yaml') or relative.endswith(BAD_SUFFIXES):
             problems.append((relative, 'private/generated artifact name'))
         if path.suffix in ('.zip','.tar','.gz'):
+            if relative == 'vendor/auth-oidc.zip':
+                try:
+                    lock = json.loads((root/'vendor/auth-oidc.lock.json').read_text())
+                    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                    if digest != lock['sha256'] or not (root/'vendor/auth-oidc-LICENSE.txt').is_file():
+                        problems.append((relative, 'OIDC archive checksum or license mismatch'))
+                except (OSError, ValueError, KeyError, TypeError):
+                    problems.append((relative, 'missing or invalid OIDC archive lock'))
+                continue
             if not (relative == 'vendor/hacs.zip' and (root/'vendor/hacs.lock.json').is_file()):
                 problems.append((relative, 'unreviewed binary archive'))
             # Optional HACS archive provenance is handled by its fetch/seed checksum checks.

@@ -30,6 +30,8 @@ Run `./bin/opiha --help` or `./bin/opiha COMMAND --help` for exact flags. An ins
 | `repair-restore --apply --source-stopped` | Recover interrupted directory transaction; remain disarmed |
 | `signing-keygen --private --public` | Generate Ed25519 keys without overwriting files |
 | `vendor-hacs --version` | Fetch specific public HACS release/lock |
+| `auth-oidc install --ha-config --source-stopped --apply` | Install pinned OIDC code without replacing existing code |
+| `auth-oidc configure --token-file --apply` | Configure OIDC through HA's UI flow, preserving existing entries |
 | `recover --media --trust-key --confirm-unattended` | Signed encrypted fresh-state appliance recovery |
 
 `--offline --source-stopped` bypasses Docker coordination only with explicit operator attestation that all writers are already stopped. It is not safe against a running host service or remote file writer. Production `backup` does not allow plaintext output.

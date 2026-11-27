@@ -1,6 +1,15 @@
 # Optional public software vendoring
 
-No archive is bundled in this source release. `opiha vendor-hacs --version EXPLICIT_RELEASE` downloads an official HACS release ZIP and writes a SHA256 lock. The image overlay can seed that archive only into a new config. It does not replace a restored integration or authenticate HACS. Review upstream licenses before redistributing software. Never put household state, keys or private package credentials in this directory.
+`auth-oidc.zip` is the unmodified upstream hass-oidc-auth v1.3.0 release,
+verified against `auth-oidc.lock.json`; its MIT notice is in
+`auth-oidc-LICENSE.txt`. It is installed only where no existing copy is
+present. See `docs/AUTHENTIK-SSO.md`.
+
+`opiha vendor-hacs --version EXPLICIT_RELEASE` optionally downloads an
+official HACS ZIP and writes a SHA256 lock. The image overlay can seed that
+archive only into a new config. It does not replace a restored integration or
+authenticate HACS. Review upstream licenses before redistributing software.
+Never put household state, keys or private package credentials here.
 
 ## Bundled in the Home Assistant panel
 

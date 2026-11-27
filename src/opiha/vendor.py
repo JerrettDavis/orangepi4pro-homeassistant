@@ -9,18 +9,18 @@ import zipfile
 from .common import ApplianceError, REPO, atomic_json, read_json, safe_relative, sha256
 
 
-def seed_hacs(config: Path) -> bool:
-    archive = REPO / "vendor/hacs.zip"
-    lock = REPO / "vendor/hacs.lock.json"
-    target = config / "custom_components/hacs"
+def _seed_archive(config: Path, name: str, archive: Path, lock: Path) -> bool:
+    target = config / "custom_components" / name
     if target.exists() or not archive.exists():
         return False
+    if target.is_symlink() or target.parent.is_symlink():
+        raise ApplianceError(f"Refusing symlinked {name} destination")
     metadata = read_json(lock)
     if sha256(archive) != metadata["sha256"]:
-        raise ApplianceError("Vendored HACS checksum mismatch")
+        raise ApplianceError(f"Vendored {name} checksum mismatch")
     target.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix=".hacs-", dir=target.parent) as tmp:
-        stage = Path(tmp) / "hacs"
+    with tempfile.TemporaryDirectory(prefix=f".{name}-", dir=target.parent) as tmp:
+        stage = Path(tmp) / name
         stage.mkdir()
         total = 0
         with zipfile.ZipFile(archive) as z:
@@ -30,19 +30,34 @@ def seed_hacs(config: Path) -> bool:
                     continue
                 p = safe_relative(info.filename)
                 if p.as_posix() in seen or (info.external_attr >> 16) & 0o170000 == 0o120000:
-                    raise ApplianceError("Invalid HACS zip member")
+                    raise ApplianceError(f"Invalid {name} zip member")
                 seen.add(p.as_posix())
                 total += info.file_size
                 if total > 150 * 1024 * 1024 or len(seen) > 10000:
-                    raise ApplianceError("HACS zip exceeds size limits")
+                    raise ApplianceError(f"{name} zip exceeds size limits")
                 dest = stage.joinpath(*p.parts)
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 with z.open(info) as source, dest.open("xb") as output:
                     shutil.copyfileobj(source, output)
         if not (stage / "manifest.json").is_file():
-            raise ApplianceError("Expected official hacs.zip with manifest.json at the root")
+            raise ApplianceError(f"Expected {name} archive with manifest.json at the root")
+        if name == "auth_oidc":
+            manifest = read_json(stage / "manifest.json")
+            if manifest.get("domain") != name or manifest.get("version") != metadata.get("version"):
+                raise ApplianceError("OIDC archive manifest does not match its lock")
         stage.rename(target)
     return True
+
+
+def seed_hacs(config: Path) -> bool:
+    return _seed_archive(config, "hacs", REPO / "vendor/hacs.zip", REPO / "vendor/hacs.lock.json")
+
+
+def seed_oidc(config: Path) -> bool:
+    archive = REPO / "vendor/auth-oidc.zip"
+    if not archive.is_file():
+        raise ApplianceError("Vendored OIDC archive is missing")
+    return _seed_archive(config, "auth_oidc", archive, REPO / "vendor/auth-oidc.lock.json")
 
 
 def fetch_hacs(version: str) -> dict:

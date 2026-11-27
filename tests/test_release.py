@@ -1,4 +1,6 @@
 import importlib.util
+import hashlib
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -31,6 +33,22 @@ def test_source_scanner_blocks_real_shaped_private_key(tmp_path, monkeypatch):
     assert issues and 'credential' in issues[0][1]
 
 
+def test_source_scanner_checks_oidc_archive_and_license(tmp_path, monkeypatch):
+    scanner = load_scanner(monkeypatch)
+    vendor = tmp_path / "vendor"
+    vendor.mkdir()
+    archive = vendor / "auth-oidc.zip"
+    archive.write_bytes(b"reviewed release")
+    (vendor / "auth-oidc.lock.json").write_text(json.dumps({
+        "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+    }))
+    assert scanner.scan(tmp_path)[1]
+    (vendor / "auth-oidc-LICENSE.txt").write_text("license")
+    assert not scanner.scan(tmp_path)[1]
+    archive.write_bytes(b"altered release")
+    assert scanner.scan(tmp_path)[1]
+
+
 def test_packages_only_public_files_and_is_deterministic(tmp_path):
     archives=[]
     for name in ('first','second'):
@@ -42,6 +60,8 @@ def test_packages_only_public_files_and_is_deterministic(tmp_path):
         names=archive.namelist()
         assert 'orangepi4pro-homeassistant/README.md' in names
         assert 'orangepi4pro-homeassistant/src/opiha/cli.py' in names
+        assert 'orangepi4pro-homeassistant/vendor/auth-oidc.zip' in names
+        assert 'orangepi4pro-homeassistant/vendor/auth-oidc-LICENSE.txt' in names
         assert not any('/.local/' in name or '/__pycache__/' in name for name in names)
         assert not any(name.endswith(('identity.txt','.age','appliance.json')) for name in names)
 

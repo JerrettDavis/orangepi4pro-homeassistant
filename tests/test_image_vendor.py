@@ -27,10 +27,13 @@ def test_overlay_never_copies_local_state(tmp_path):
     module.apply(root, False, False, REPO / 'config/image-defaults.json')
     dest = root / 'opt/orangepi4pro-homeassistant'
     assert (dest / 'bin/opiha').exists()
+    assert sha256(dest / 'vendor/auth-oidc.zip') == sha256(REPO / 'vendor/auth-oidc.zip')
+    assert (dest / 'vendor/auth-oidc-LICENSE.txt').is_file()
     assert not (dest / '.local').exists()
     assert not (root / 'etc/opiha/appliance.json').exists()
     assert boot.read_bytes() == b'known-boot-asset'
     assert (root / 'etc/systemd/system/multi-user.target.wants/opiha-firstboot.service').is_symlink()
+    assert (root / 'etc/systemd/system/multi-user.target.wants/opiha-auth-oidc.service').is_symlink()
 
 
 def test_overlay_ships_native_apps_code_without_tokens_or_enabled_units(tmp_path):

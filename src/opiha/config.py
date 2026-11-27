@@ -150,6 +150,8 @@ def seed(cfg: dict) -> None:
     data = ensure_state(cfg)
     if (data / "ha/configuration.yaml").exists() or (data / "ha/.storage").exists():
         return
+    from .vendor import seed_oidc
+    seed_oidc(data / "ha")
     import shutil
     shutil.copytree(REPO / "homeassistant", data / "ha", dirs_exist_ok=True)
     # Optional HACS software is only seeded into a fresh configuration.

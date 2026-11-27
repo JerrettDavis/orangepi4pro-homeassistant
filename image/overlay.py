@@ -52,7 +52,8 @@ def apply(root: Path, live: bool, kiosk: bool, public_defaults: Path, trust_key:
     units.mkdir(parents=True, exist_ok=True)
     for unit in (REPO / 'systemd').glob('*'):
         shutil.copy2(unit, units / unit.name)
-    enabled = ['opiha-firstboot.service', 'opiha-stack.service', 'opiha-status.service', 'opiha-vision.service']
+    enabled = ['opiha-firstboot.service', 'opiha-stack.service', 'opiha-status.service', 'opiha-vision.service',
+               'opiha-auth-oidc.service']
     if kiosk:
         enabled.append('opiha-kiosk.service')
         lightdm = root / 'etc/lightdm/lightdm.conf.d/80-opiha-kiosk.conf'

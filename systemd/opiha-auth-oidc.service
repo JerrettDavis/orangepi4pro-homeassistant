@@ -1,0 +1,17 @@
+[Unit]
+Description=Configure Home Assistant Authentik SSO when private credentials are provisioned
+Wants=network-online.target
+After=network-online.target opiha-stack.service hassio-supervisor.service
+ConditionPathExists=/etc/opiha/auth-oidc-token
+StartLimitIntervalSec=3600
+StartLimitBurst=60
+
+[Service]
+Type=oneshot
+ExecStart=/opt/orangepi4pro-homeassistant/bin/opiha auth-oidc configure --token-file /etc/opiha/auth-oidc-token --apply
+Restart=on-failure
+RestartSec=30
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
