@@ -11,4 +11,4 @@ log_level: info
 dictation: false
 voice_mode: false
 speech_provider: local
-relay: false
+relay: true

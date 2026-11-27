@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Repaired Paseo relay configuration across the fleet and HA add-on, preserving identities and host/workspace registrations. Restored private Docker config ownership after root-owned files caused an EACCES restart loop; documented per-user editing and Supervisor's relay override.
+
 - Captured deployed HA YAML, dashboard and add-on recovery inputs with credential placeholders, plus host Supervisor settings. Audited third-party integrations/frontend releases and preserved the local Govee, LocalTuya and Wyze compatibility patches with provenance and license notices.
 
 - Auth hardening phase 1: the seed configuration.yaml declares the TOTP MFA module and enables IP banning after 5 failed logins; docs/HA-AUTH-HARDENING.md covers applying it to a deployed instance, per-user enrollment, and the planned dedicated-admin / non-admin-remote-user phases.

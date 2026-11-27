@@ -72,6 +72,57 @@ host `jdh-pro-05` plus a single workspace (`G:\git`, no per-repo projects) in th
 add-on. Trade-off: anything with a login on the Orange Pi can reach the workstation
 daemon on that loopback port. The host shows offline while the workstation is off or logged out.
 
+## Relay configuration and recovery
+
+Relay access is an explicit opt-in; the fleet still binds bare-metal daemons
+to loopback and Docker publishes only a loopback host port. The deployed fleet
+and HA add-on have relay enabled. No public inbound port or wildcard CORS
+origin is needed. The relay carries the encrypted connection; treat pairing
+URLs and QR codes as credentials, and never commit or paste them into logs.
+
+On each bare-metal host, run the CLI as the **same user that runs its daemon**:
+
+```text
+paseo daemon config set daemon.relay.enabled true
+paseo daemon reload --json
+```
+
+In the HA add-on, the **relay option in Supervisor is authoritative**:
+set it to `true` in the add-on configuration and restart only that add-on.
+A saved `daemon.relay.enabled: true` cannot override an add-on environment
+setting that forces relay off. Keep existing providers, host registrations,
+workspaces, identity keys and credentials; do not replace the entire config
+to change one setting.
+
+The fleet Docker image runs as UID/GID 1000 (`paseo`). Edit its config as that
+user, not root:
+
+```powershell
+docker exec --user 1000:1000 --env HOME=/home/paseo paseo-fleet-jdh-pro-05-docker paseo daemon config set daemon.relay.enabled true
+docker exec --user 1000:1000 --env HOME=/home/paseo paseo-fleet-jdh-pro-05-docker paseo daemon reload --json
+```
+
+The November 27 restart loop was caused by root-owned, mode-0600
+`/home/paseo/.paseo/config.json` and `cli-client-id`. Recovery backed up those
+two files privately and restored their owner to `1000:1000`, keeping mode
+0600. It did not delete the volume, regenerate identity keys, reset passwords,
+or expose the daemon publicly. If the container cannot stay up, use a temporary
+container from the **existing fleet image**, with its existing home volume
+mounted and networking disabled, to repair only those ownerships. Never use
+world-readable/writable permissions as a workaround.
+
+After repair, `paseo-fleet.py status` should report every enabled host up and
+the HA add-on's `paseo host ls` should show its Pi and workstation online.
+Check relay operation with an authenticated `project ls --json` using a fresh
+pairing URL kept private. A local `/api/health` response alone does not prove
+the relay works. Password-protected Docker daemons still require their existing
+`PASEO_PASSWORD` over the relay. The 0.15.0 `daemon status` provider enumeration
+can exceed its 1500 ms request timeout even after a successful relay connection;
+do not reset a working configuration solely for that timeout.
+
+Public recovery settings are in `examples/deployed-paseo/`; identities,
+pairing material, provider login state and Docker passwords remain private.
+
 ## Known limits
 
 - Agent CLIs (Claude, Codex, Copilot) are installed on each host but need

@@ -1,0 +1,184 @@
+{
+  "captured_at": "2026-11-27",
+  "supervisor_addon_relay_option": true,
+  "profiles": [
+    {
+      "id": "jdh-pro-05",
+      "kind": "windows",
+      "config": {
+        "version": 1,
+        "daemon": {
+          "listen": "127.0.0.1:6767",
+          "cors": {
+            "allowedOrigins": [
+              "https://app.paseo.sh"
+            ]
+          },
+          "relay": {
+            "enabled": true
+          }
+        },
+        "app": {
+          "baseUrl": "https://app.paseo.sh"
+        }
+      }
+    },
+    {
+      "id": "jdh-pro-05-docker",
+      "kind": "docker",
+      "config": {
+        "version": 1,
+        "daemon": {
+          "listen": "127.0.0.1:6767",
+          "cors": {
+            "allowedOrigins": [
+              "https://app.paseo.sh"
+            ]
+          },
+          "relay": {
+            "enabled": true
+          }
+        },
+        "app": {
+          "baseUrl": "https://app.paseo.sh"
+        },
+        "features": {
+          "dictation": {
+            "enabled": false
+          },
+          "voiceMode": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "jdh-pi-02",
+      "kind": "linux",
+      "config": {
+        "version": 1,
+        "daemon": {
+          "listen": "127.0.0.1:6767",
+          "cors": {
+            "allowedOrigins": [
+              "https://app.paseo.sh"
+            ]
+          },
+          "relay": {
+            "enabled": true
+          }
+        },
+        "app": {
+          "baseUrl": "https://app.paseo.sh"
+        }
+      }
+    },
+    {
+      "id": "orangepi-ha",
+      "kind": "linux",
+      "config": {
+        "version": 1,
+        "daemon": {
+          "listen": "127.0.0.1:6767",
+          "cors": {
+            "allowedOrigins": [
+              "https://app.paseo.sh"
+            ]
+          },
+          "relay": {
+            "enabled": true
+          }
+        },
+        "app": {
+          "baseUrl": "https://app.paseo.sh"
+        },
+        "features": {
+          "dictation": {
+            "enabled": true
+          },
+          "voiceMode": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "homeassistant-addon",
+      "kind": "supervisor-addon",
+      "config": {
+        "version": 1,
+        "daemon": {
+          "listen": "127.0.0.1:6767",
+          "enableTerminalAgentHooks": true,
+          "cors": {
+            "allowedOrigins": [
+              "https://app.paseo.sh"
+            ]
+          },
+          "relay": {
+            "enabled": true
+          }
+        },
+        "app": {
+          "baseUrl": "https://app.paseo.sh"
+        },
+        "worktrees": {},
+        "agents": {
+          "providers": {
+            "claude": {
+              "enabled": true
+            },
+            "codex": {
+              "enabled": true
+            },
+            "copilot": {
+              "enabled": true
+            },
+            "opencode": {
+              "enabled": false
+            },
+            "pi": {
+              "enabled": true
+            },
+            "omp": {
+              "enabled": false
+            },
+            "muse": {
+              "enabled": false
+            },
+            "antigravity": {
+              "enabled": false
+            },
+            "gemini": {
+              "extends": "acp",
+              "label": "Gemini CLI",
+              "description": "Google's official CLI for Gemini",
+              "command": [
+                "npx",
+                "-y",
+                "@google/gemini-cli@0.65.0",
+                "--acp"
+              ],
+              "env": {},
+              "enabled": false
+            },
+            "minimax-code": {
+              "extends": "acp",
+              "label": "MiniMax Code",
+              "description": "MiniMax's coding agent for the terminal",
+              "command": [
+                "npx",
+                "-y",
+                "-p",
+                "@minimax-ai/code@0.6.13",
+                "mcode",
+                "acp"
+              ],
+              "env": {}
+            }
+          }
+        }
+      }
+    }
+  ]
+}
