@@ -23,6 +23,14 @@ The launcher is provided by the official supervised installer. Also restore
 `docs/REAL-SUPERVISOR.md`, then run `systemctl daemon-reload`.
 Do not restart Docker casually: it interrupts HA and the add-ons.
 
+`proxy-renewal-deploy.sh` is the deployed Certbot hook. Restore it executable
+as `letsencrypt/renewal-hooks/deploy/20-opiha-nginx-reload` under the Nginx Proxy
+Manager app's config directory. `proxy-routing.json` records its non-secret
+proxy hosts, stream and certificate-provider settings. Recreate these through
+NPM's UI/API; IDs alone are not portable. Certificate private keys, DNS API
+credentials, ACME identity and NPM user/authentication records require the
+private app backup. Do not copy a live SQLite database into Git.
+
 The active app-manager code and kiosk user units matched files already in
 this repository or its history. The deployed panel/storage/disk-guard changes
 are preserved in the main source tree. The older compose deployment remains
@@ -33,3 +41,9 @@ personal Codex sessions, SSH authorization/host trust, certificates, account
 storage and private network mounts are not public recovery assets. Preserve
 those separately with a host backup. Bootloader/AppArmor kernel arguments
 and data mounts still need the host recovery steps in `docs/REAL-SUPERVISOR.md`.
+
+The final container-overlay check found no modified Home Assistant Core or
+Paseo source. Changed Python library files in Core matched their installed
+distribution RECORD hashes (dependency installations rather than local
+source patches). Generated add-on configuration and private runtime data are
+not forks of those applications.
