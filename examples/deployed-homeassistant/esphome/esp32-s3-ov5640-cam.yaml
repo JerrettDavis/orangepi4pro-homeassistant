@@ -1,0 +1,131 @@
+esphome:
+  name: esp32-s3-ov5640-cam
+  friendly_name: ESP32-S3 OV5640 Cam
+  platformio_options:
+    board_build.flash_size: 16MB
+    board_build.arduino.memory_type: qio_opi
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+    advanced:
+      include_builtin_idf_components:
+      - fatfs
+      - spiffs
+      disable_vfs_support_termios: false
+      disable_vfs_support_select: false
+      disable_vfs_support_dir: false
+    sdkconfig_options:
+      CONFIG_FATFS_LFN_STACK: y
+external_components:
+- source: github://n-serrette/esphome_sd_card@v0.2.0
+  components:
+  - sd_mmc_card
+  - sd_file_server
+logger:
+  level: INFO
+api:
+  encryption:
+    key: !secret 'esphome_esp32_s3_ov5640_cam_api_encryption_key'
+ota:
+- platform: esphome
+  password: !secret 'esphome_esp32_s3_ov5640_cam_ota_0_password'
+- platform: web_server
+wifi:
+  ssid: !secret 'wifi_ssid'
+  password: !secret 'wifi_password'
+  power_save_mode: none
+  ap:
+    ssid: Esp32-S3-Ov5640-Cam
+    password: !secret 'esphome_esp32_s3_ov5640_cam_wifi_ap_password'
+captive_portal: null
+web_server:
+  port: 80
+  version: 3
+  include_internal: true
+  local: true
+mdns: null
+psram:
+  mode: octal
+  speed: 80MHz
+i2c:
+  id: cam_i2c
+  sda: GPIO4
+  scl: GPIO5
+  scan: false
+esp32_camera:
+  id: board_camera
+  name: ESP32-S3 OV5640 Camera
+  external_clock:
+    pin: GPIO15
+    frequency: 20MHz
+  i2c_id: cam_i2c
+  data_pins:
+  - GPIO11
+  - GPIO9
+  - GPIO8
+  - GPIO10
+  - GPIO12
+  - GPIO18
+  - GPIO17
+  - GPIO16
+  vsync_pin: GPIO6
+  href_pin: GPIO7
+  pixel_clock_pin: GPIO13
+  resolution: 1600x1200
+  jpeg_quality: 10
+  max_framerate: 5 fps
+  idle_framerate: 0.1 fps
+  frame_buffer_count: 2
+  frame_buffer_location: PSRAM
+  vertical_flip: false
+  horizontal_mirror: false
+esp32_camera_web_server:
+- port: 8080
+  mode: stream
+- port: 8081
+  mode: snapshot
+sd_mmc_card:
+  id: sd_card
+  mode_1bit: true
+  clk_pin: GPIO39
+  cmd_pin: GPIO38
+  data0_pin: GPIO40
+sd_file_server:
+  id: file_server
+  url_prefix: file
+  root_path: /
+  enable_deletion: true
+  enable_download: true
+  enable_upload: true
+button:
+- platform: restart
+  name: ESP32-S3 OV5640 Cam Restart
+- platform: safe_mode
+  name: ESP32-S3 OV5640 Cam Safe Mode
+- platform: template
+  name: ESP32-S3 OV5640 Cam SD Write Test
+  on_press:
+  - sd_mmc_card.write_file:
+      path: /esphome-test.txt
+      data: !lambda 'std::string value = "ESPHome SD write test, uptime_ms=" + to_string(millis())
+        + "\n";
+
+        return std::vector<uint8_t>(value.begin(), value.end());'
+sensor:
+- platform: wifi_signal
+  name: ESP32-S3 OV5640 Cam WiFi Signal
+  update_interval: 60s
+- platform: uptime
+  name: ESP32-S3 OV5640 Cam Uptime
+text_sensor:
+- platform: wifi_info
+  ip_address:
+    name: ESP32-S3 OV5640 Cam IP Address
+  ssid:
+    name: ESP32-S3 OV5640 Cam Connected SSID
+  mac_address:
+    name: ESP32-S3 OV5640 Cam MAC Address
+binary_sensor:
+- platform: status
+  name: ESP32-S3 OV5640 Cam Status

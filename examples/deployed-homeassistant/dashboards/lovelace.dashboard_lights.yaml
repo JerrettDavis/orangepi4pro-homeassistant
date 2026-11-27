@@ -1,0 +1,646 @@
+config:
+  title: Lights
+  views:
+  - type: sections
+    title: Rooms
+    path: rooms
+    icon: mdi:lightbulb-group
+    max_columns: 3
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Lights
+        heading_style: title
+        icon: mdi:lightbulb-group
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+        - type: custom:mushroom-template-card
+          primary: 'On'
+          secondary: '{{ ([''light.living_room_lights'', ''light.fireplace_light'',
+            ''light.entertainment_center_dimmer'', ''light.tv_backlight'', ''light.tv_floor_lights'',
+            ''light.kitchen_lights'', ''light.dining_room_light'', ''light.desk_lights'',
+            ''light.office_hexa'', ''light.bedroom_ceiling_fan'', ''light.jd_bed_light'',
+            ''light.sam_bed_light'', ''light.maya_lamp'', ''light.back_string_lights'',
+            ''light.driveway_cam_floodlight'', ''light.garage_door_light'', ''light.baby_cam_floodlight'',
+            ''switch.yard_lights'', ''switch.pole_lights'', ''switch.inflatable_tree'']
+            | select(''is_state'', ''on'') | list | count) }} of 20'
+          icon: mdi:lightbulb-on
+          icon_color: '{{ ''amber'' if ([''light.living_room_lights'', ''light.fireplace_light'',
+            ''light.entertainment_center_dimmer'', ''light.tv_backlight'', ''light.tv_floor_lights'',
+            ''light.kitchen_lights'', ''light.dining_room_light'', ''light.desk_lights'',
+            ''light.office_hexa'', ''light.bedroom_ceiling_fan'', ''light.jd_bed_light'',
+            ''light.sam_bed_light'', ''light.maya_lamp'', ''light.back_string_lights'',
+            ''light.driveway_cam_floodlight'', ''light.garage_door_light'', ''light.baby_cam_floodlight'',
+            ''switch.yard_lights'', ''switch.pole_lights'', ''switch.inflatable_tree'']
+            | select(''is_state'', ''on'') | list | count) > 0 else ''grey'' }}'
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Offline
+          secondary: '{{ ([''light.living_room_lights'', ''light.fireplace_light'',
+            ''light.entertainment_center_dimmer'', ''light.tv_backlight'', ''light.tv_floor_lights'',
+            ''light.kitchen_lights'', ''light.dining_room_light'', ''light.desk_lights'',
+            ''light.office_hexa'', ''light.bedroom_ceiling_fan'', ''light.jd_bed_light'',
+            ''light.sam_bed_light'', ''light.maya_lamp'', ''light.back_string_lights'',
+            ''light.driveway_cam_floodlight'', ''light.garage_door_light'', ''light.baby_cam_floodlight'',
+            ''switch.yard_lights'', ''switch.pole_lights'', ''switch.inflatable_tree'',
+            ''light.kitchen_p2s_chamber_light'', ''light.x2d_20p5aj661102691_chamber_light'',
+            ''light.v0_1_neopixel_bed'', ''light.v0_1_neopixel_caselight'', ''light.v0_1_neopixel_hotend_rgb'',
+            ''light.living_room_air_filter'', ''light.office_air_purifier'', ''light.jdh_ap_00_led'',
+            ''light.jdh_ap_01_led'', ''light.jdh_ap_02_led'', ''light.rfid_esp32_screen_status_led'']
+            | select(''is_state'', [''unavailable'',''unknown'']) | list | count)
+            }} of 31'
+          icon: mdi:lightbulb-alert-outline
+          icon_color: '{{ ''red'' if ([''light.living_room_lights'', ''light.fireplace_light'',
+            ''light.entertainment_center_dimmer'', ''light.tv_backlight'', ''light.tv_floor_lights'',
+            ''light.kitchen_lights'', ''light.dining_room_light'', ''light.desk_lights'',
+            ''light.office_hexa'', ''light.bedroom_ceiling_fan'', ''light.jd_bed_light'',
+            ''light.sam_bed_light'', ''light.maya_lamp'', ''light.back_string_lights'',
+            ''light.driveway_cam_floodlight'', ''light.garage_door_light'', ''light.baby_cam_floodlight'',
+            ''switch.yard_lights'', ''switch.pole_lights'', ''switch.inflatable_tree'',
+            ''light.kitchen_p2s_chamber_light'', ''light.x2d_20p5aj661102691_chamber_light'',
+            ''light.v0_1_neopixel_bed'', ''light.v0_1_neopixel_caselight'', ''light.v0_1_neopixel_hotend_rgb'',
+            ''light.living_room_air_filter'', ''light.office_air_purifier'', ''light.jdh_ap_00_led'',
+            ''light.jdh_ap_01_led'', ''light.jdh_ap_02_led'', ''light.rfid_esp32_screen_status_led'']
+            | select(''is_state'', [''unavailable'',''unknown'']) | list | count)
+            > 0 else ''green'' }}'
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Hidden
+          secondary: '{{ states.light | selectattr(''entity_id'',''search'',''_segment_'')
+            | list | count }} segments'
+          icon: mdi:filter-variant
+          icon_color: blue
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+      - type: markdown
+        content: '{% set f = [''light.living_room_lights'', ''light.fireplace_light'',
+          ''light.entertainment_center_dimmer'', ''light.tv_backlight'', ''light.tv_floor_lights'',
+          ''light.kitchen_lights'', ''light.dining_room_light'', ''light.desk_lights'',
+          ''light.office_hexa'', ''light.bedroom_ceiling_fan'', ''light.jd_bed_light'',
+          ''light.sam_bed_light'', ''light.maya_lamp'', ''light.back_string_lights'',
+          ''light.driveway_cam_floodlight'', ''light.garage_door_light'', ''light.baby_cam_floodlight'',
+          ''switch.yard_lights'', ''switch.pole_lights'', ''switch.inflatable_tree'',
+          ''light.kitchen_p2s_chamber_light'', ''light.x2d_20p5aj661102691_chamber_light'',
+          ''light.v0_1_neopixel_bed'', ''light.v0_1_neopixel_caselight'', ''light.v0_1_neopixel_hotend_rgb'',
+          ''light.living_room_air_filter'', ''light.office_air_purifier'', ''light.jdh_ap_00_led'',
+          ''light.jdh_ap_01_led'', ''light.jdh_ap_02_led'', ''light.rfid_esp32_screen_status_led'']
+          %}{% set off = f | select(''is_state'', [''unavailable'',''unknown'']) |
+          list %}{% if off %}**{{ off | count }} fixtures are offline:** {% for e
+          in off %}{{ state_attr(e,''friendly_name'') }}{{ '', '' if not loop.last
+          }}{% endfor %}. Offline Govee entities usually mean the Govee-to-MQTT bridge,
+          or the wall switch feeding the bulb, is off.{% else %}All fixtures are reporting.{%
+          endif %}'
+      column_span: 3
+    - type: grid
+      cards:
+      - type: heading
+        heading: Living Room
+        heading_style: title
+        icon: mdi:sofa
+      - type: vertical-stack
+        cards:
+        - type: custom:mushroom-template-card
+          primary: Wall dimmer
+          secondary: HS220 · {% if is_state('light.living_room_lights','off') %}Off
+            at the wall — bulbs have no power{% elif is_state('light.living_room_lights','unavailable')
+            %}Wall control unavailable{% else %}{{ ['light.ne_living_room_light',
+            'light.nw_living_room_light', 'light.se_living_room_light', 'light.sw_living_room_light']
+            | select('is_state','on') | list | count }} of 4 bulbs on{% endif %}
+          icon: mdi:light-switch
+          icon_color: '{{ ''amber'' if is_state(''light.living_room_lights'',''on'')
+            else ''grey'' }}'
+          tap_action:
+            action: toggle
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+          entity: light.living_room_lights
+          badge_icon: mdi:link-variant
+          badge_color: blue
+        - type: custom:mushroom-chips-card
+          alignment: start
+          chips:
+          - type: light
+            entity: light.ne_living_room_light
+            use_light_color: true
+            content_info: name
+            name: NE
+          - type: light
+            entity: light.nw_living_room_light
+            use_light_color: true
+            content_info: name
+            name: NW
+          - type: light
+            entity: light.se_living_room_light
+            use_light_color: true
+            content_info: name
+            name: SE
+          - type: light
+            entity: light.sw_living_room_light
+            use_light_color: true
+            content_info: name
+            name: SW
+        - type: markdown
+          content: <sub>Powers the four Govee ceiling bulbs. Leave it on and control
+            the bulbs as a group.</sub>
+      - type: custom:mushroom-light-card
+        entity: light.living_room_light_bulbs
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: true
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Ceiling bulbs · all four
+      - type: vertical-stack
+        cards:
+        - type: custom:mushroom-template-card
+          primary: Fireplace wall switch
+          secondary: HS200 · {% if is_state('light.fireplace_light','off') %}Off at
+            the wall — bulbs have no power{% elif is_state('light.fireplace_light','unavailable')
+            %}Wall control unavailable{% else %}{{ ['light.fireplace_bulb'] | select('is_state','on')
+            | list | count }} of 1 bulbs on{% endif %}
+          icon: mdi:light-switch
+          icon_color: '{{ ''amber'' if is_state(''light.fireplace_light'',''on'')
+            else ''grey'' }}'
+          tap_action:
+            action: toggle
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+          entity: light.fireplace_light
+          badge_icon: mdi:link-variant
+          badge_color: blue
+        - type: custom:mushroom-chips-card
+          alignment: start
+          chips:
+          - type: light
+            entity: light.fireplace_bulb
+            use_light_color: true
+            content_info: name
+            name: Bulb
+        - type: markdown
+          content: <sub>On/off switch that feeds the Govee fireplace bulb.</sub>
+      - type: custom:mushroom-light-card
+        entity: light.fireplace_bulb
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: true
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Fireplace bulb
+      - type: custom:mushroom-light-card
+        entity: light.entertainment_center_dimmer
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Entertainment center
+      - type: custom:mushroom-light-card
+        entity: light.tv_backlight
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: TV backlight
+      - type: custom:mushroom-light-card
+        entity: light.tv_floor_lights
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: TV floor lights
+    - type: grid
+      cards:
+      - type: heading
+        heading: Kitchen & Dining
+        heading_style: title
+        icon: mdi:silverware-fork-knife
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_lights
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Kitchen
+      - type: custom:mushroom-light-card
+        entity: light.dining_room_light
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Dining room
+    - type: grid
+      cards:
+      - type: heading
+        heading: Office
+        heading_style: title
+        icon: mdi:desk
+      - type: custom:mushroom-light-card
+        entity: light.desk_lights
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Desk lights
+      - type: custom:mushroom-light-card
+        entity: light.office_hexa
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Office hexa
+    - type: grid
+      cards:
+      - type: heading
+        heading: Bedrooms
+        heading_style: title
+        icon: mdi:bed
+      - type: custom:mushroom-light-card
+        entity: light.bedroom_ceiling_fan
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Bedroom ceiling fan light
+      - type: custom:mushroom-fan-card
+        entity: fan.bedroom_ceiling_fan
+        name: Bedroom ceiling fan
+        show_percentage_control: true
+        collapsible_controls: true
+        fill_container: true
+      - type: custom:mushroom-light-card
+        entity: light.jd_bed_light
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: JD bed light
+      - type: custom:mushroom-light-card
+        entity: light.sam_bed_light
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Sam bed light
+      - type: custom:mushroom-light-card
+        entity: light.maya_lamp
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Maya's lamp
+    - type: grid
+      cards:
+      - type: heading
+        heading: Outside & Garage
+        heading_style: title
+        icon: mdi:home-lightbulb-outline
+      - type: custom:mushroom-light-card
+        entity: light.back_string_lights
+        use_light_color: true
+        show_brightness_control: true
+        show_color_control: true
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Back string lights
+      - type: custom:mushroom-light-card
+        entity: light.driveway_cam_floodlight
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Driveway floodlight
+      - type: custom:mushroom-light-card
+        entity: light.baby_cam_floodlight
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Baby cam floodlight
+      - type: custom:mushroom-light-card
+        entity: light.garage_door_light
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+        name: Garage door light
+      - type: custom:mushroom-entity-card
+        entity: switch.yard_lights
+        name: Yard lights
+        icon: mdi:string-lights
+        fill_container: true
+      - type: custom:mushroom-entity-card
+        entity: switch.pole_lights
+        name: Pole lights
+        icon: mdi:led-strip-variant
+        fill_container: true
+      - type: custom:mushroom-entity-card
+        entity: switch.inflatable_tree
+        name: Inflatable tree
+        icon: mdi:pine-tree
+        fill_container: true
+  - type: sections
+    title: Accessories
+    path: accessories
+    icon: mdi:printer-3d
+    max_columns: 3
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Accessory & device lights
+        heading_style: title
+        icon: mdi:led-strip-variant
+      column_span: 3
+    - type: grid
+      cards:
+      - type: heading
+        heading: 3D printers
+        heading_style: title
+      - type: custom:mushroom-light-card
+        entity: light.kitchen_p2s_chamber_light
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.x2d_20p5aj661102691_chamber_light
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.v0_1_neopixel_bed
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.v0_1_neopixel_caselight
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.v0_1_neopixel_hotend_rgb
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+    - type: grid
+      cards:
+      - type: heading
+        heading: Air purifier nightlights
+        heading_style: title
+      - type: custom:mushroom-light-card
+        entity: light.living_room_air_filter
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.office_air_purifier
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+    - type: grid
+      cards:
+      - type: heading
+        heading: Network & status LEDs
+        heading_style: title
+      - type: custom:mushroom-light-card
+        entity: light.jdh_ap_00_led
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.jdh_ap_01_led
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.jdh_ap_02_led
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+      - type: custom:mushroom-light-card
+        entity: light.rfid_esp32_screen_status_led
+        use_light_color: true
+        show_brightness_control: false
+        show_color_control: false
+        show_color_temp_control: false
+        collapsible_controls: true
+        secondary_info: state
+        fill_container: true
+        layout: horizontal
+  - type: sections
+    title: Device map
+    path: device-map
+    icon: mdi:sitemap
+    max_columns: 3
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: How lights are organised
+        heading_style: title
+        icon: mdi:sitemap
+      - type: markdown
+        content: '**One tile per physical fixture.** Govee strips publish a cloud
+          entity, a duplicate MQTT entity and one entity per LED segment. TP-Link,
+          Tuya and SmartThings can all expose the same switch or bulb. Only the entity
+          in *Entity shown* is used here, so nothing is controlled twice.
+
+
+          **Wall switches that feed bulbs.** The HS200/HS220 wall controls power Govee
+          bulbs. Turning the wall control off cuts power, and the bulbs then show
+          as offline. Use the wall control for on/off and the bulb group for colour
+          and brightness.'
+      column_span: 3
+    - type: grid
+      cards:
+      - type: markdown
+        content: '| Fixture | Room | Controlled by | Entity shown | Now | Left out
+          of dashboard |
+
+          |---|---|---|---|---|---|
+
+          | Living room ceiling bulbs ×4 | Living Room | HS220 wall dimmer → 4 Govee
+          bulbs | `light.living_room_lights` | {{ ''🟢 on'' if is_state(''light.living_room_lights'',''on'')
+          else ''⚪ off'' if is_state(''light.living_room_lights'',''off'') else ''🔴
+          offline'' }} | light.living_room_lights_st (SmartThings copy of the dimmer)
+          |
+
+          | Fireplace bulb | Living Room | HS200 wall switch → Govee bulb | `light.fireplace_light`
+          | {{ ''🟢 on'' if is_state(''light.fireplace_light'',''on'') else ''⚪ off''
+          if is_state(''light.fireplace_light'',''off'') else ''🔴 offline'' }} | switch.fireplace_light_switch,
+          switch.fireplace_light_st |
+
+          | Entertainment center | Living Room | Cync dimmer | `light.entertainment_center_dimmer`
+          | {{ ''🟢 on'' if is_state(''light.entertainment_center_dimmer'',''on'')
+          else ''⚪ off'' if is_state(''light.entertainment_center_dimmer'',''off'')
+          else ''🔴 offline'' }} | — |
+
+          | TV backlight | Living Room | Govee strip | `light.tv_backlight` | {{ ''🟢
+          on'' if is_state(''light.tv_backlight'',''on'') else ''⚪ off'' if is_state(''light.tv_backlight'',''off'')
+          else ''🔴 offline'' }} | light.tv_backlight_2 + 15 segments |
+
+          | TV floor lights | Living Room | Govee strip | `light.tv_floor_lights`
+          | {{ ''🟢 on'' if is_state(''light.tv_floor_lights'',''on'') else ''⚪ off''
+          if is_state(''light.tv_floor_lights'',''off'') else ''🔴 offline'' }} | light.tv_floor_lights_2
+          + 15 segments |
+
+          | Dining room light | Kitchen & Dining | HS200 wall switch | `light.dining_room_light`
+          | {{ ''🟢 on'' if is_state(''light.dining_room_light'',''on'') else ''⚪ off''
+          if is_state(''light.dining_room_light'',''off'') else ''🔴 offline'' }} |
+          switch.dining_room_light_switch, switch.dining_room_light_st |
+
+          | Kitchen lights | Kitchen & Dining | Cync | `light.kitchen_lights` | {{
+          ''🟢 on'' if is_state(''light.kitchen_lights'',''on'') else ''⚪ off'' if
+          is_state(''light.kitchen_lights'',''off'') else ''🔴 offline'' }} | — |
+
+          | Desk lights | Office | Govee strip | `light.desk_lights` | {{ ''🟢 on''
+          if is_state(''light.desk_lights'',''on'') else ''⚪ off'' if is_state(''light.desk_lights'',''off'')
+          else ''🔴 offline'' }} | light.desk_lights_2 + 15 segments |
+
+          | Office hexa panels | Office | Govee panels | `light.office_hexa` | {{
+          ''🟢 on'' if is_state(''light.office_hexa'',''on'') else ''⚪ off'' if is_state(''light.office_hexa'',''off'')
+          else ''🔴 offline'' }} | light.office_hexa_2 + 21 segments |
+
+          | JD bed light | Bedrooms | Tuya bulb | `light.jd_bed_light` | {{ ''🟢 on''
+          if is_state(''light.jd_bed_light'',''on'') else ''⚪ off'' if is_state(''light.jd_bed_light'',''off'')
+          else ''🔴 offline'' }} | light.jd_bed_light_2 (SmartThings copy) |
+
+          | Back string lights | Outside & Garage | Govee string | `light.back_string_lights`
+          | {{ ''🟢 on'' if is_state(''light.back_string_lights'',''on'') else ''⚪
+          off'' if is_state(''light.back_string_lights'',''off'') else ''🔴 offline''
+          }} | light.back_string_lights_2 + 30 segments |'
+      column_span: 3

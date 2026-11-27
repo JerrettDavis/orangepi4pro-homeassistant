@@ -1,0 +1,118 @@
+homeops_send_jd:
+  alias: HomeOps Send JD
+  description: Recipient-isolated HomeOps sender. Dry-run emits an event and never
+    contacts a phone.
+  mode: parallel
+  max: 20
+  fields:
+    title:
+      required: true
+      selector:
+        text: {}
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    tag:
+      required: true
+      selector:
+        text: {}
+    dry_run:
+      required: false
+      default: false
+      selector:
+        boolean: {}
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ dry_run | default(false) | bool }}'
+      sequence:
+      - event: homeops_dry_run_notification
+        event_data:
+          recipient: jd
+          title: '{{ title }}'
+          message: '{{ message }}'
+          tag: '{{ tag }}'
+    default:
+    - action: notify.mobile_app_jd_s23_ultra
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data:
+          tag: '{{ tag }}'
+          url: /dashboard-home-operations/alerts
+          clickAction: /dashboard-home-operations/alerts
+          ttl: 0
+          priority: high
+          channel: Home security
+homeops_send_sam:
+  alias: HomeOps Send SAM
+  description: Recipient-isolated HomeOps sender. Dry-run emits an event and never
+    contacts a phone.
+  mode: parallel
+  max: 20
+  fields:
+    title:
+      required: true
+      selector:
+        text: {}
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    tag:
+      required: true
+      selector:
+        text: {}
+    dry_run:
+      required: false
+      default: false
+      selector:
+        boolean: {}
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ dry_run | default(false) | bool }}'
+      sequence:
+      - event: homeops_dry_run_notification
+        event_data:
+          recipient: sam
+          title: '{{ title }}'
+          message: '{{ message }}'
+          tag: '{{ tag }}'
+    default:
+    - action: notify.mobile_app_samsung_s23_ultra
+      data:
+        title: '{{ title }}'
+        message: '{{ message }}'
+        data:
+          tag: '{{ tag }}'
+          url: /dashboard-home-operations/alerts
+          clickAction: /dashboard-home-operations/alerts
+          ttl: 0
+          priority: high
+          channel: Home security
+homeops_snooze_one_hour:
+  alias: HomeOps Snooze One Hour
+  description: Snooze HomeOps notifications for one hour.
+  mode: restart
+  sequence:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.homeops_snooze_until
+    data:
+      datetime: '{{ (now()+timedelta(hours=1)).strftime(''%Y-%m-%d %H:%M:%S'') }}'
+homeops_resume_alerts:
+  alias: HomeOps Resume Alerts
+  description: End the HomeOps notification snooze immediately.
+  mode: restart
+  sequence:
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.homeops_snooze_until
+    data:
+      datetime: '2000-01-01 00:00:00'

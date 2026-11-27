@@ -1,0 +1,14 @@
+workspace: /homeassistant
+git_snapshot: false
+providers:
+- pi
+- claude
+- copilot
+- codex
+env_vars: []
+hostnames: []
+log_level: info
+dictation: false
+voice_mode: false
+speech_provider: local
+relay: false

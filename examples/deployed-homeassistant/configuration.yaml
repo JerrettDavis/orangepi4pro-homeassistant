@@ -1,0 +1,23 @@
+default_config: null
+frontend:
+  themes: !include_dir_merge_named 'themes'
+tts:
+- platform: google_translate
+automation: !include 'automations.yaml'
+script: !include 'scripts.yaml'
+scene: !include 'scenes.yaml'
+homeassistant:
+  packages: !include_dir_named 'packages'
+  media_dirs:
+    media: /media
+mqtt: !include 'mqtt.yaml'
+lovelace:
+  mode: storage
+  dashboards:
+    three-d-print-work:
+      mode: yaml
+      title: 3D Print Work
+      icon: mdi:clipboard-list
+      show_in_sidebar: true
+      filename: three_d_print_work_dashboard.yaml
+opiha_apps: null

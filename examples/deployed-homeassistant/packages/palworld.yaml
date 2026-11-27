@@ -1,0 +1,49 @@
+command_line:
+- sensor:
+    name: Palworld Cloudnium Status
+    unique_id: palworld_cloudnium_status
+    command: ssh -i /config/ssh/palworld_cloudnium_monitor -o BatchMode=yes -o StrictHostKeyChecking=yes
+      -o UserKnownHostsFile=/config/ssh/known_hosts -o ConnectTimeout=10 paladmin@185.126.158.41
+      status
+    scan_interval: 60
+    command_timeout: 20
+    value_template: '{{ value_json.player_count }}'
+    json_attributes:
+    - online
+    - container_state
+    - container_health
+    - server_info
+    - version
+    - player_count
+    - players
+    - checked_at
+template:
+- binary_sensor:
+  - name: Palworld Cloudnium Online
+    unique_id: palworld_cloudnium_online
+    state: '{{ state_attr(''sensor.palworld_cloudnium_status'', ''online'') == true
+      }}'
+    device_class: connectivity
+    availability: '{{ states(''sensor.palworld_cloudnium_status'') not in [''unknown'',
+      ''unavailable''] }}'
+- sensor:
+  - name: Palworld Cloudnium Players
+    unique_id: palworld_cloudnium_players
+    state: '{{ state_attr(''sensor.palworld_cloudnium_status'', ''player_count'')
+      | int(0) }}'
+    unit_of_measurement: players
+    icon: mdi:account-group
+  - name: Palworld Cloudnium Version
+    unique_id: palworld_cloudnium_version
+    state: '{{ state_attr(''sensor.palworld_cloudnium_status'', ''version'') or ''unknown''
+      }}'
+    icon: mdi:tag
+  - name: Palworld Cloudnium Player Names
+    unique_id: palworld_cloudnium_player_names
+    state: '{% set players = state_attr(''sensor.palworld_cloudnium_status'', ''players'')
+      or [] %} {{ players | join('', '') if players else ''None'' }}'
+    icon: mdi:account-multiple
+  - name: Palworld Cloudnium Last Check
+    unique_id: palworld_cloudnium_last_check
+    state: '{{ state_attr(''sensor.palworld_cloudnium_status'', ''checked_at'') }}'
+    device_class: timestamp

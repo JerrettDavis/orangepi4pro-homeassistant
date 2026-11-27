@@ -3,6 +3,15 @@ default_config:
 
 homeassistant:
   packages: !include_dir_named packages
+  # TOTP is HA's default; declared so the intent is explicit and reviewable.
+  # Each user still enrolls in Profile > Security > Multi-factor Authentication.
+  auth_mfa_modules:
+    - type: totp
+      name: Authenticator app
+
+http:
+  ip_ban_enabled: true
+  login_attempts_threshold: 5
 
 frontend:
   themes: !include_dir_merge_named themes

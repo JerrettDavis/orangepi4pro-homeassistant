@@ -1,0 +1,80 @@
+{
+  "created_utc": "2026-11-27T06:38:46.343080+00:00",
+  "results": [
+    {
+      "integration": "govee",
+      "ref": "2025.1.1",
+      "commit_sha": "16913791803a94e8166ce43928d2cdc6c10a10c0",
+      "patch_sha256": "393eeb6a9e15f8b99dd1b90d1afca85e8cce74b0ae803c73dcdf375a430b5995",
+      "apply_check": true,
+      "apply": true,
+      "all_modified_files_match_live": true,
+      "files": [
+        {
+          "path": "__init__.py",
+          "scratch_sha256": "2354d0b57b5781be6957183f01e2f76130d78a3326725a21e5262611e3dcf093",
+          "live_sha256": "2354d0b57b5781be6957183f01e2f76130d78a3326725a21e5262611e3dcf093",
+          "match": true
+        },
+        {
+          "path": "learning_storage.py",
+          "scratch_sha256": "be034a1e83c1db764483e8fe70282275a4ae0b7a2720eb7569d9d116f3fef4c0",
+          "live_sha256": "be034a1e83c1db764483e8fe70282275a4ae0b7a2720eb7569d9d116f3fef4c0",
+          "match": true
+        },
+        {
+          "path": "light.py",
+          "scratch_sha256": "531d1e2ef6c77418d13fc49a8a915d6a362075c8e341f5becce1141c9ebd39ab",
+          "live_sha256": "531d1e2ef6c77418d13fc49a8a915d6a362075c8e341f5becce1141c9ebd39ab",
+          "match": true
+        }
+      ]
+    },
+    {
+      "integration": "localtuya",
+      "ref": "v5.2.3",
+      "commit_sha": "5f2c027c1e9421a93dcc937bf151b9456add04c6",
+      "patch_sha256": "4f63d2174886ab977bb973866229aa541a2de1eadb830e6cafdff66a444a31b7",
+      "apply_check": true,
+      "apply": true,
+      "all_modified_files_match_live": true,
+      "files": [
+        {
+          "path": "__init__.py",
+          "scratch_sha256": "33bf50a8f910db37699ba94df0ff41ae07f716a35f79b871fde68d3f177820cc",
+          "live_sha256": "33bf50a8f910db37699ba94df0ff41ae07f716a35f79b871fde68d3f177820cc",
+          "match": true
+        },
+        {
+          "path": "config_flow.py",
+          "scratch_sha256": "4057dc3549370eb6f0e033670fb88f155649a65a5d0a56d627219b2799f3c1df",
+          "live_sha256": "4057dc3549370eb6f0e033670fb88f155649a65a5d0a56d627219b2799f3c1df",
+          "match": true
+        },
+        {
+          "path": "vacuum.py",
+          "scratch_sha256": "265c79b628749f0a40a693be7dabaac4b3e0f1bc35ee2b3b29afa0f7345f3f32",
+          "live_sha256": "265c79b628749f0a40a693be7dabaac4b3e0f1bc35ee2b3b29afa0f7345f3f32",
+          "match": true
+        }
+      ]
+    },
+    {
+      "integration": "wyzeapi",
+      "ref": "v0.1.38",
+      "commit_sha": "0abd389b5aa45c5ad28867faa4534797ca55c395",
+      "patch_sha256": "5d6c9c3b99c17ffe2340112b0f2cb6525713c31b88551b9f0ec5d7cebfa7b183",
+      "apply_check": true,
+      "apply": true,
+      "all_modified_files_match_live": true,
+      "files": [
+        {
+          "path": "__init__.py",
+          "scratch_sha256": "93104aea25597d92a1a1121588464616b2f9ee42dbfeec3809462f4e195f3cba",
+          "live_sha256": "93104aea25597d92a1a1121588464616b2f9ee42dbfeec3809462f4e195f3cba",
+          "match": true
+        }
+      ]
+    }
+  ]
+}

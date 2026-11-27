@@ -1,0 +1,91 @@
+--- a/custom_components/wyzeapi/__init__.py
++++ b/custom_components/wyzeapi/__init__.py
+@@ -3,8 +3,10 @@
+ from __future__ import annotations
+ 
+ import logging
++import ssl
+ 
+ from aiohttp.client_exceptions import ClientConnectorError
++from aiohttp import TCPConnector
+ from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady, SOURCE_IMPORT
+ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+ from homeassistant.core import HomeAssistant
+@@ -45,6 +47,62 @@
+     "camera",
+ ]  # Fixme: Re add scene
+ _LOGGER = logging.getLogger(__name__)
++_WYZE_SSL_CONTEXT: ssl.SSLContext | None = None
++
++_DIGICERT_GLOBAL_ROOT_CA = """-----BEGIN CERTIFICATE-----
++MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
++MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
++d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
++QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
++MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
++b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
++9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
++CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
++nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
++43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
++T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
++gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
++BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
++TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
++DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
++hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
++06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
++PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
++YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
++CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
++-----END CERTIFICATE-----"""
++
++
++def _build_wyze_ssl_context() -> ssl.SSLContext:
++    """Build an SSL context that still trusts Wyze's current DigiCert root."""
++    global _WYZE_SSL_CONTEXT
++    try:
++        import certifi
++
++        context = ssl.create_default_context(cafile=certifi.where())
++    except ImportError:
++        context = ssl.create_default_context()
++    context.load_verify_locations(cadata=_DIGICERT_GLOBAL_ROOT_CA)
++    _WYZE_SSL_CONTEXT = context
++    return context
++
++
++def _get_wyze_ssl_context() -> ssl.SSLContext:
++    """Return the prebuilt Wyze SSL context."""
++    return _WYZE_SSL_CONTEXT or _build_wyze_ssl_context()
++
++
++def _patch_legacy_wyzeapy_ssl() -> None:
++    """Add the newer wyzeapy SSL helper behavior to older installed builds."""
++    import wyzeapy.wyze_auth_lib as wyze_auth_lib
++
++    class WyzeTCPConnector(TCPConnector):
++        def __init__(self, *args, **kwargs):
++            kwargs.setdefault("ssl", _get_wyze_ssl_context())
++            super().__init__(*args, **kwargs)
++
++    wyze_auth_lib.get_ssl_context = _get_wyze_ssl_context
++    wyze_auth_lib.TCPConnector = WyzeTCPConnector
+ 
+ 
+ # noinspection PyUnusedLocal
+@@ -105,6 +163,14 @@
+     key_id = config_entry.data.get(KEY_ID)
+     api_key = config_entry.data.get(API_KEY)
+ 
++    try:
++        from wyzeapy.wyze_auth_lib import get_ssl_context
++
++        await hass.async_add_executor_job(get_ssl_context)
++    except ImportError:
++        await hass.async_add_executor_job(_build_wyze_ssl_context)
++        _patch_legacy_wyzeapy_ssl()
++
+     client = await Wyzeapy.create()
+     token = None
+     if config_entry.data.get(ACCESS_TOKEN):

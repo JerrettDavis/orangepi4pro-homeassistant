@@ -1,0 +1,10 @@
+model: tiny-int8
+language: en
+beam_size: 0
+custom_model_type: faster-whisper
+stt_library: faster-whisper
+whisper_task: transcribe
+sherpa_streaming: false
+vad_clip: false
+local_files_only: false
+debug_logging: false

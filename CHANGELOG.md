@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Captured deployed HA YAML, dashboard and add-on recovery inputs with credential placeholders, plus host Supervisor settings. Audited third-party integrations/frontend releases and preserved the local Govee, LocalTuya and Wyze compatibility patches with provenance and license notices.
+
+- Auth hardening phase 1: the seed configuration.yaml declares the TOTP MFA module and enables IP banning after 5 failed logins; docs/HA-AUTH-HARDENING.md covers applying it to a deployed instance, per-user enrollment, and the planned dedicated-admin / non-admin-remote-user phases.
+
+- Documented adding MiniMax Code to the Paseo add-on and the `mcode login` step needed before its models appear (`docs/native-apps/ADDONS.md`).
+
+- Disk space: `opiha-disk-guard` now takes `auto|light|deep`. The hourly run always clears caches, Docker build cache and unused images older than a week, and prunes harder (unused images, stopped non-managed containers, rotated automatic HA backups beyond the newest 3) once root passes 75%. The Orange Pi panel gains a Storage tab (usage, recorder size, backups, Docker, deep clean and recorder purge/repack buttons), and the disk package adds a 75% heads-up beside the 85% emergency alert.
+
+- Paseo add-on in Home Assistant now has a host (`orangepi-ha`, the Orange Pi itself over a forwarding-restricted SSH key) and workspace (`~/paseo-workspaces`), set up by `scripts/paseo-ha-link.sh`.
+
 - Paseo fleet tooling (`scripts/paseo-fleet.py`, `docs/PASEO-FLEET.md`): inventory-driven, idempotent provisioning of Paseo daemons on bare-metal Windows/Linux/macOS hosts and Docker, SSH-tunnelled registration on a hub, workspace registration, and least-busy dispatch.
 
 - The hardened Paseo fork (`JerrettDavis/paseo-ha-addon`) is a suggested add-on repository. It is built on the device, maps only `/homeassistant` and `/config`, has no Supervisor manager role, and has the Paseo relay off by default.

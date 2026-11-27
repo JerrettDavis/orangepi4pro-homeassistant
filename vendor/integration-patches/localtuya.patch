@@ -1,0 +1,110 @@
+--- a/custom_components/localtuya/__init__.py
++++ b/custom_components/localtuya/__init__.py
+@@ -26,6 +26,7 @@
+ from homeassistant.exceptions import HomeAssistantError
+ from homeassistant.helpers.device_registry import DeviceEntry
+ from homeassistant.helpers.event import async_track_time_interval
++from homeassistant.helpers.service import async_register_admin_service
+ 
+ from .cloud_api import TuyaCloudApi
+ from .common import TuyaDevice, async_config_entry_by_device_id
+@@ -162,7 +163,8 @@
+ 
+     async_track_time_interval(hass, _async_reconnect, RECONNECT_INTERVAL)
+ 
+-    hass.helpers.service.async_register_admin_service(
++    async_register_admin_service(
++        hass,
+         DOMAIN,
+         SERVICE_RELOAD,
+         _handle_reload,
+@@ -261,19 +263,19 @@
+             res = await tuya_api.async_get_devices_list()
+     hass.data[DOMAIN][DATA_CLOUD] = tuya_api
+ 
++    platforms = set()
++    for dev_id in entry.data[CONF_DEVICES].keys():
++        entities = entry.data[CONF_DEVICES][dev_id][CONF_ENTITIES]
++        platforms = platforms.union(
++            set(entity[CONF_PLATFORM] for entity in entities)
++        )
++        hass.data[DOMAIN][TUYA_DEVICES][dev_id] = TuyaDevice(hass, entry, dev_id)
++
++    # Setup all platforms at once, letting HA handling each platform and avoiding
++    # potential integration restarts while elements are still initialising.
++    await hass.config_entries.async_forward_entry_setups(entry, platforms)
++
+     async def setup_entities(device_ids):
+-        platforms = set()
+-        for dev_id in device_ids:
+-            entities = entry.data[CONF_DEVICES][dev_id][CONF_ENTITIES]
+-            platforms = platforms.union(
+-                set(entity[CONF_PLATFORM] for entity in entities)
+-            )
+-            hass.data[DOMAIN][TUYA_DEVICES][dev_id] = TuyaDevice(hass, entry, dev_id)
+-
+-        # Setup all platforms at once, letting HA handling each platform and avoiding
+-        # potential integration restarts while elements are still initialising.
+-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+-
+         for dev_id in device_ids:
+             hass.data[DOMAIN][TUYA_DEVICES][dev_id].async_connect()
+ 
+--- a/custom_components/localtuya/config_flow.py
++++ b/custom_components/localtuya/config_flow.py
+@@ -393,7 +393,7 @@
+ 
+     def __init__(self, config_entry):
+         """Initialize localtuya options flow."""
+-        self.config_entry = config_entry
++        self._config_entry = config_entry
+         # self.dps_strings = config_entry.data.get(CONF_DPS_STRINGS, gen_dps_strings())
+         # self.entities = config_entry.data[CONF_ENTITIES]
+         self.selected_device = None
+--- a/custom_components/localtuya/vacuum.py
++++ b/custom_components/localtuya/vacuum.py
+@@ -5,13 +5,7 @@
+ import voluptuous as vol
+ from homeassistant.components.vacuum import (
+     DOMAIN,
+-    STATE_CLEANING,
+-    STATE_DOCKED,
+-    STATE_ERROR,
+-    STATE_IDLE,
+-    STATE_PAUSED,
+-    STATE_RETURNING,
+-    StateVacuumEntity, VacuumEntityFeature,
++    StateVacuumEntity, VacuumActivity, VacuumEntityFeature,
+ )
+ 
+ from .common import LocalTuyaEntity, async_setup_entry
+@@ -207,15 +201,15 @@
+         state_value = str(self.dps(self._dp_id))
+ 
+         if state_value in self._idle_status_list:
+-            self._state = STATE_IDLE
++            self._state = VacuumActivity.IDLE
+         elif state_value in self._docked_status_list:
+-            self._state = STATE_DOCKED
++            self._state = VacuumActivity.DOCKED
+         elif state_value == self._config[CONF_RETURNING_STATUS_VALUE]:
+-            self._state = STATE_RETURNING
++            self._state = VacuumActivity.RETURNING
+         elif state_value == self._config[CONF_PAUSED_STATE]:
+-            self._state = STATE_PAUSED
++            self._state = VacuumActivity.PAUSED
+         else:
+-            self._state = STATE_CLEANING
++            self._state = VacuumActivity.CLEANING
+ 
+         if self.has_config(CONF_BATTERY_DP):
+             self._battery_level = self.dps_conf(CONF_BATTERY_DP)
+@@ -241,7 +235,7 @@
+         if self.has_config(CONF_FAULT_DP):
+             self._attrs[FAULT] = self.dps_conf(CONF_FAULT_DP)
+             if self._attrs[FAULT] != 0:
+-                self._state = STATE_ERROR
++                self._state = VacuumActivity.ERROR
+ 
+ 
+ async_setup_entry = partial(async_setup_entry, DOMAIN, LocaltuyaVacuum, flow_schema)

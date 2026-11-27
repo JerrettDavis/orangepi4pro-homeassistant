@@ -1,0 +1,11 @@
+- id: '1726889754830'
+  name: Using 3D Printers
+  entities:
+    switch.qidi_x_plus_3_outlet:
+      friendly_name: 'Qidi X-Plus 3 Outlet '
+      state: 'on'
+    switch.k1_outlet:
+      friendly_name: 'K1 Outlet '
+      state: 'on'
+  icon: mdi:printer-3d-nozzle
+  metadata: {}

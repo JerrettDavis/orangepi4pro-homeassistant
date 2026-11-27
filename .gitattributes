@@ -5,3 +5,4 @@ bin/opiha text eol=lf
 *.ps1 text eol=crlf
 *.png binary
 *.zip binary
+vendor/integration-patches/*.patch text eol=lf -whitespace

@@ -1,0 +1,2507 @@
+- id: '1726799015592'
+  alias: Turn Off Inside Lights at Night
+  description: ''
+  triggers:
+  - hours: /1
+    trigger: time_pattern
+  conditions:
+  - condition: time
+    after: 00:00:00
+    before: 07:00:00
+  - condition: not
+    conditions:
+    - condition: device
+      device_id: d09007581ca90f495ba8a94803f0f68b
+      domain: media_player
+      entity_id: 9e3116e1d30f38064c00eca6471861e3
+      type: is_playing
+    alias: Confirm Living Room TV not in use
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - light.entertainment_center_dimmer
+      - light.kitchen_lights
+      - light.living_room_lights
+      - light.dining_room_light
+      - light.fireplace_light
+      - light.office_hexa_2
+  - type: turn_off
+    device_id: 0bdb693b1dddfb26111e30c3ffc67cbd
+    entity_id: 83b36a32f3704649c76d8d8e257b5d2d
+    domain: switch
+  mode: single
+- id: '1731958807366'
+  alias: Turn Lights on at Sunset
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 595828b16288b1f920b2d37f158a7a4a
+    entity_id: 270d93090c28313bb62d5b2b89a9cfe1
+    domain: light
+    brightness_pct: 30
+  mode: single
+- id: '1731961371778'
+  alias: Bedtime Outside Devices Off
+  description: Turns off outside devices at bedtime.
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+  - trigger: time
+    at: 00:00:00
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 0bdb693b1dddfb26111e30c3ffc67cbd
+    entity_id: 83b36a32f3704649c76d8d8e257b5d2d
+    domain: switch
+  - type: turn_off
+    device_id: 2ef88177d16a3a0618b0729e8aa96898
+    entity_id: b4bb28c7091fc2f653a4f1189abc90bd
+    domain: light
+  - type: turn_off
+    device_id: 7337e33f32b98708574763406c4768e1
+    entity_id: 602f9f8892fc6f7d4d8de2693ff210fd
+    domain: switch
+  - action: switch.turn_off
+    target:
+      entity_id: switch.inflatable_tree
+  - action: switch.turn_off
+    target:
+      entity_id: switch.pole_lights
+  - type: turn_off
+    device_id: 620eb9d22d0ee3f176e3fb757ad4fd02
+    entity_id: 6d4c7cb210b25232680065dbe1e2048c
+    domain: light
+  - action: switch.turn_off
+    target:
+      entity_id: switch.wyze_plug_outdoor
+  mode: single
+- id: '1733038656476'
+  alias: Turn Off Outside Lights at Bedtime
+  description: ''
+  triggers:
+  - trigger: time
+    at: 00:00:00
+  conditions: []
+  actions:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      device_id:
+      - 7337e33f32b98708574763406c4768e1
+      - e273cc0d0c7f65ea3c83daf906d81786
+  mode: single
+- id: '1734391280109'
+  alias: When Sam Arrives at Work
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.sam
+    zone: zone.sam_s_job
+    event: enter
+  conditions: []
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    metadata: {}
+    data:
+      message: Sam has arrived at work.
+  mode: single
+- id: '1734391342716'
+  alias: When Sam Leaves Work
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.sam
+    zone: zone.sam_s_job
+    event: leave
+  conditions: []
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    metadata: {}
+    data:
+      message: Sam has left work.
+  mode: single
+- id: '1734391408984'
+  alias: When Sam Arrives at Home
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.sam
+    zone: zone.home
+    event: enter
+  conditions: []
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    metadata: {}
+    data:
+      message: Sam has arrived at home.
+  mode: single
+- id: '1734391569587'
+  alias: When Sam Arrives at Maya's Daycare
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.sam
+    zone: zone.daycare
+    event: enter
+  conditions: []
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    metadata: {}
+    data:
+      message: Sam has arrived at Maya's daycare.
+  mode: single
+- id: '1734391643938'
+  alias: When Sam Leaves Maya's Daycare
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.sam
+    zone: zone.daycare
+    event: leave
+  conditions: []
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    metadata: {}
+    data:
+      message: Sam has left Maya's daycare.
+  mode: single
+- id: '1735193193004'
+  alias: Set Night Time Filter Routine
+  description: ''
+  triggers:
+  - trigger: time
+    at: '22:00:00'
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 350bda9f8fe9e85f5b7ffaeb5c57d576
+    entity_id: ea4861ef0d503440e5bd45c021d3ccee
+    domain: fan
+  - action: fan.set_preset_mode
+    metadata: {}
+    data:
+      preset_mode: sleep
+    target:
+      entity_id: fan.piper
+  mode: single
+- id: '1735193367771'
+  alias: Set Morning Air Filter Routine
+  description: ''
+  triggers:
+  - trigger: time
+    at: 08:00:00
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 350bda9f8fe9e85f5b7ffaeb5c57d576
+    entity_id: ea4861ef0d503440e5bd45c021d3ccee
+    domain: fan
+  - action: fan.set_percentage
+    metadata: {}
+    data:
+      percentage: 100
+    target:
+      entity_id: fan.piper
+  mode: single
+- id: '1779472534475'
+  alias: Enable Office Lights on Occupied
+  description: ''
+  triggers:
+  - type: occupied
+    device_id: b118a1cc1c18b1833bdadc22e774ac0a
+    entity_id: 6be137831b25307c1c4a48f56748754b
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      device_id: 4f71dd4d1f9097091e72ea8695cb2215
+  mode: single
+- id: '1779472602557'
+  alias: Disable Office Lights on Unoccupied
+  description: ''
+  triggers:
+  - type: not_occupied
+    device_id: b118a1cc1c18b1833bdadc22e774ac0a
+    entity_id: 6be137831b25307c1c4a48f56748754b
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    target:
+      device_id: 4f71dd4d1f9097091e72ea8695cb2215
+    data:
+      transition: 2
+  mode: single
+- id: '1781226118134'
+  alias: Maya Bedtime Start
+  description: ''
+  triggers:
+  - trigger: time
+    at: '20:00:00'
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  conditions: []
+  actions:
+  - action: tts.cloud_say
+    metadata: {}
+    data:
+      entity_id: media_player.office_speaker_3
+      message: It's time to start winding down for bed Maya!
+  mode: single
+- id: '1786128000000'
+  alias: Internet outage and recovery notifications
+  description: Requires both the external Cloudflare probe and OPNsense WAN monitor
+    to agree, with debounce periods for outage and recovery.
+  triggers:
+  - trigger: template
+    value_template: '{{ is_state(''binary_sensor.1_1_1_1'', ''off'') and states(''sensor.jdh_gateway_00_gateway_wan_dhcp_status'')
+      != ''online'' }}'
+    for: 00:02:00
+    id: outage
+  - trigger: template
+    value_template: '{{ is_state(''binary_sensor.1_1_1_1'', ''on'') and is_state(''sensor.jdh_gateway_00_gateway_wan_dhcp_status'',
+      ''online'') }}'
+    for: 00:01:00
+    id: recovery
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - outage
+      sequence:
+      - action: persistent_notification.create
+        data:
+          notification_id: internet_outage
+          title: Internet outage
+          message: Internet connectivity is down. Both the external probe and OPNsense
+            WAN monitor have failed for two minutes.
+      - action: notify.mobile_app_jd_s23_ultra
+        data:
+          title: JDH Internet Down
+          message: Internet connectivity is down. Both external and gateway checks
+            have failed for two minutes.
+      - action: notify.mobile_app_samsung_s23_ultra
+        data:
+          title: JDH Internet Down
+          message: Internet connectivity is down. Both external and gateway checks
+            have failed for two minutes.
+    - conditions:
+      - condition: trigger
+        id:
+        - recovery
+      sequence:
+      - action: notify.mobile_app_jd_s23_ultra
+        data:
+          title: JDH Internet Restored
+          message: Internet connectivity is back up. Both external and gateway checks
+            have been healthy for one minute.
+      - action: notify.mobile_app_samsung_s23_ultra
+        data:
+          title: JDH Internet Restored
+          message: Internet connectivity is back up. Both external and gateway checks
+            have been healthy for one minute.
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: internet_outage
+  mode: single
+- id: housecat_publish_home_snapshot
+  alias: House Cat - Publish home snapshot
+  description: Publishes live JDH weather and Hallway readings to the House Cat panel.
+  triggers:
+  - trigger: time_pattern
+    minutes: /5
+  - trigger: state
+    entity_id:
+    - weather.forecast_jdh_ha
+    - sensor.hallway_temperature
+    - sensor.hallway_humidity
+  - trigger: homeassistant
+    event: start
+  conditions:
+  - condition: template
+    value_template: '{{ is_number(state_attr(''weather.forecast_jdh_ha'', ''temperature''))
+      and is_number(states(''sensor.hallway_temperature'')) and is_number(states(''sensor.hallway_humidity''))
+      }}'
+  actions:
+  - action: mqtt.publish
+    data:
+      topic: housecat/housecat-desk-01/command/home
+      retain: true
+      payload: "{% set outside = state_attr('weather.forecast_jdh_ha', 'temperature')\
+        \ | float %}\n{% set unit = state_attr('weather.forecast_jdh_ha', 'temperature_unit')\
+        \ %}\n{% set outside_f = (outside * 9 / 5 + 32) if unit in ['°C', 'C'] else\
+        \ outside %}\n{% set inside_f = states('sensor.hallway_temperature') | float\
+        \ %}\n{% set inside_humidity = states('sensor.hallway_humidity') | float %}\n\
+        {% set hour = now().hour %}\n{% if hour < 6 %}\n  {% set pal_message = 'Still\
+        \ nighttime. Cozy paws.' %}\n{% elif hour < 12 %}\n  {% set pal_message =\
+        \ 'Good morning! Home feels comfy.' %}\n{% elif outside_f >= 90 %}\n  {% set\
+        \ pal_message = 'Hot outside. Stay cool, pal.' %}\n{% elif inside_humidity\
+        \ >= 60 %}\n  {% set pal_message = 'A little muggy inside today.' %}\n{% elif\
+        \ hour < 18 %}\n  {% set pal_message = 'Everything looks comfy.' %}\n{% elif\
+        \ hour < 22 %}\n  {% set pal_message = 'Good evening! Home feels cozy.' %}\n\
+        {% else %}\n  {% set pal_message = 'Good night. Cozy paws.' %}\n{% endif %}\n\
+        {{ {\n  'outside_f': outside_f | round(1),\n  'inside_f': inside_f,\n  'condition':\
+        \ states('weather.forecast_jdh_ha'),\n  'condition_label': states('weather.forecast_jdh_ha')\
+        \ | replace('_', ' ') | title,\n  'pal_label': 'PAL',\n  'pal_message': pal_message,\n\
+        \  'epoch_s': now().timestamp() | int,\n  'weather_entity': 'weather.forecast_jdh_ha',\n\
+        \  'observed_at': now().isoformat(),\n  'rooms': [{\n    'name': 'Hallway',\n\
+        \    'temperature_f': states('sensor.hallway_temperature') | float,\n    'humidity':\
+        \ states('sensor.hallway_humidity') | float\n  }]\n} | to_json }}"
+  mode: restart
+- id: housecat_bedtime_reminder
+  alias: House Cat - Bedtime reminder
+  description: Reminds the panel when neither House Cat nor available Samsung Health
+    data reports sleep.
+  triggers:
+  - trigger: time
+    at: 01:00:00
+  conditions:
+  - condition: template
+    value_template: '{{ states(''sensor.house_cat_activity'') != ''sleep'' }}'
+  - condition: template
+    value_template: '{{ not (false) }}'
+  actions:
+  - action: mqtt.publish
+    data:
+      topic: housecat/housecat-desk-01/command/notification
+      payload: '{{ {''id'':''bedtime-reminder'',''title'':''Bedtime, pal'',''body'':''You
+        have not started sleep yet. Wind down together?'',''kind'':''warning'',''priority'':''important'',''ttl_s'':7200,''ack'':false}
+        | to_json }}'
+  mode: single
+- id: housecat_focus_phase_changed
+  alias: House Cat - Focus phase changed
+  description: Shows a gentle panel notification when the 25/5 work phase changes.
+  triggers:
+  - trigger: state
+    entity_id: sensor.house_cat_focus_phase
+    from: focus
+    to: break
+  - trigger: state
+    entity_id: sensor.house_cat_focus_phase
+    from: break
+    to: focus
+  actions:
+  - action: mqtt.publish
+    data:
+      topic: housecat/housecat-desk-01/command/notification
+      payload: '{{ {''id'':''focus-phase-'' ~ now().timestamp()|int,''title'':(''Break
+        time'' if trigger.to_state.state == ''break'' else ''Focus time''),''body'':(''Stretch
+        and reset for five minutes.'' if trigger.to_state.state == ''break'' else
+        ''Ready for another focused block?''),''kind'':''mission'',''priority'':''notice'',''ttl_s'':600,''ack'':false}
+        | to_json }}'
+  mode: restart
+- id: lease_refresh_history
+  alias: Lease - Refresh weighted driving baselines
+  description: Refresh weighted driving baselines and reconcile calendar-month mileage
+    from recorded odometers daily and after startup.
+  triggers:
+  - trigger: time
+    at: 00:15:00
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: recorder.get_statistics
+    data:
+      start_time: '{{ (today_at(''00:00'')-timedelta(days=30,hours=1)).isoformat()
+        }}'
+      end_time: '{{ (today_at(''00:00'')-timedelta(days=30)).isoformat() }}'
+      statistic_ids:
+      - sensor.2025_ioniq_5_n_odometer
+      - sensor.dodge_charger_odometer
+      period: hour
+      types:
+      - state
+    response_variable: history
+  - if:
+    - condition: template
+      value_template: '{{ history.statistics.get(''sensor.2025_ioniq_5_n_odometer'',
+        [])|length > 0 and is_number((history.statistics.get(''sensor.2025_ioniq_5_n_odometer'',
+        []))[0].get(''state'')) }}'
+    then:
+    - action: input_number.set_value
+      data:
+        entity_id: input_number.lease_ioniq_rolling_baseline
+        value: '{{ (history.statistics.get(''sensor.2025_ioniq_5_n_odometer'', []))[0].state
+          }}'
+    - action: input_datetime.set_datetime
+      data:
+        entity_id: input_datetime.lease_ioniq_rolling_baseline_at
+        timestamp: '{{ as_timestamp((history.statistics.get(''sensor.2025_ioniq_5_n_odometer'',
+          []))[0].end) }}'
+  - if:
+    - condition: template
+      value_template: '{{ history.statistics.get(''sensor.dodge_charger_odometer'',
+        [])|length > 0 and is_number((history.statistics.get(''sensor.dodge_charger_odometer'',
+        []))[0].get(''state'')) }}'
+    then:
+    - action: input_number.set_value
+      data:
+        entity_id: input_number.lease_charger_rolling_baseline
+        value: '{{ (history.statistics.get(''sensor.dodge_charger_odometer'', []))[0].state
+          }}'
+    - action: input_datetime.set_datetime
+      data:
+        entity_id: input_datetime.lease_charger_rolling_baseline_at
+        timestamp: '{{ as_timestamp((history.statistics.get(''sensor.dodge_charger_odometer'',
+          []))[0].end) }}'
+  - action: recorder.get_statistics
+    data:
+      start_time: '{{ (today_at(''00:00'')-timedelta(days=7,hours=1)).isoformat()
+        }}'
+      end_time: '{{ (today_at(''00:00'')-timedelta(days=7)).isoformat() }}'
+      statistic_ids:
+      - sensor.2025_ioniq_5_n_odometer
+      - sensor.dodge_charger_odometer
+      period: hour
+      types:
+      - state
+    response_variable: weekly
+  - if:
+    - condition: template
+      value_template: '{{ weekly.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[])|length>0
+        and is_number((weekly.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].get(''state''))
+        }}'
+    then:
+    - action: input_number.set_value
+      data:
+        entity_id: input_number.lease_ioniq_weekly_baseline
+        value: '{{ (weekly.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].state
+          }}'
+    - action: input_datetime.set_datetime
+      data:
+        entity_id: input_datetime.lease_ioniq_weekly_baseline_at
+        timestamp: '{{ as_timestamp((weekly.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].end)
+          }}'
+  - if:
+    - condition: template
+      value_template: '{{ weekly.statistics.get(''sensor.dodge_charger_odometer'',[])|length>0
+        and is_number((weekly.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].get(''state''))
+        }}'
+    then:
+    - action: input_number.set_value
+      data:
+        entity_id: input_number.lease_charger_weekly_baseline
+        value: '{{ (weekly.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].state
+          }}'
+    - action: input_datetime.set_datetime
+      data:
+        entity_id: input_datetime.lease_charger_weekly_baseline_at
+        timestamp: '{{ as_timestamp((weekly.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].end)
+          }}'
+  - action: recorder.get_statistics
+    data:
+      start_time: '{{ (today_at(''00:00'').replace(day=1)-timedelta(hours=1)).isoformat()
+        }}'
+      end_time: '{{ today_at(''00:00'').replace(day=1).isoformat() }}'
+      statistic_ids:
+      - sensor.2025_ioniq_5_n_odometer
+      - sensor.dodge_charger_odometer
+      period: hour
+      types:
+      - state
+    response_variable: month
+  - if:
+    - condition: template
+      value_template: '{{ month.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[])|length>0
+        and is_number((month.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].get(''state''))
+        and is_number(states(''sensor.2025_ioniq_5_n_odometer'')) and states(''sensor.2025_ioniq_5_n_odometer'')|float(0)
+        >= (month.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].state|float(0)
+        }}'
+    then:
+    - action: utility_meter.calibrate
+      data:
+        entity_id: sensor.lease_ioniq_monthly_miles
+        value: '{{ (states(''sensor.2025_ioniq_5_n_odometer'')|float - (month.statistics.get(''sensor.2025_ioniq_5_n_odometer'',[]))[0].state|float)|round(3)
+          }}'
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.lease_ioniq_month_complete
+    else:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.lease_ioniq_month_complete
+  - if:
+    - condition: template
+      value_template: '{{ month.statistics.get(''sensor.dodge_charger_odometer'',[])|length>0
+        and is_number((month.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].get(''state''))
+        and is_number(states(''sensor.dodge_charger_odometer'')) and states(''sensor.dodge_charger_odometer'')|float(0)
+        >= (month.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].state|float(0)
+        }}'
+    then:
+    - action: utility_meter.calibrate
+      data:
+        entity_id: sensor.lease_charger_monthly_miles
+        value: '{{ (states(''sensor.dodge_charger_odometer'')|float - (month.statistics.get(''sensor.dodge_charger_odometer'',[]))[0].state|float)|round(3)
+          }}'
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.lease_charger_month_complete
+    else:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.lease_charger_month_complete
+  mode: single
+- id: lease_mileage_warning
+  alias: Lease - Mileage budget warning to JD and Sam
+  description: At most once daily, 08:00-21:00 local. Warns on monthly limit, ahead-of-month
+    pace, or projected lease overage.
+  triggers:
+  - trigger: time
+    at: '18:00:00'
+  - trigger: state
+    entity_id:
+    - binary_sensor.lease_ioniq_monthly_over_budget
+    - binary_sensor.lease_charger_monthly_over_budget
+    to: 'on'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.lease_notifications_enabled
+    state: 'on'
+  - condition: time
+    after: 08:00:00
+    before: '21:00:00'
+  - condition: template
+    value_template: '{{ (is_number(states(''sensor.lease_ioniq_monthly_miles'')) and
+      (states(''sensor.lease_ioniq_monthly_miles'')|float(0)>states(''sensor.lease_ioniq_monthly_allowance'')|float(0)
+      or states(''sensor.lease_ioniq_month_pace_delta'')|float(0)>states(''input_number.lease_warning_pace_miles'')|float(100)))
+      or (is_number(states(''sensor.lease_charger_monthly_miles'')) and (states(''sensor.lease_charger_monthly_miles'')|float(0)>states(''sensor.lease_charger_monthly_allowance'')|float(0)
+      or states(''sensor.lease_charger_month_pace_delta'')|float(0)>states(''input_number.lease_warning_pace_miles'')|float(100)))
+      or states(''sensor.lease_ioniq_projected_overage'')|float(0)>100 or states(''sensor.lease_charger_projected_overage'')|float(0)>100
+      }}'
+  - condition: template
+    value_template: '{{ states(''input_datetime.lease_last_warning'')[:10] != now().strftime(''%Y-%m-%d'')
+      }}'
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    data:
+      title: Vehicle mileage warning
+      message: '{% for car,name in [(''ioniq'',''Ioniq''),(''charger'',''Charger'')]
+        %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_monthly_miles'')) and is_number(states(''sensor.lease_''~car~''_current_budget_overage''))
+        %}
+
+        {{ name }}: {{ states(''sensor.lease_''~car~''_monthly_miles'')|float(0)|round(0)
+        }} / {{ states(''sensor.lease_''~car~''_monthly_allowance'')|float(0)|round(0)
+        }} mi this month.
+
+        Budget overage today: {{ states(''sensor.lease_''~car~''_current_budget_overage'')|float(0)|round(0)
+        }} mi (${{ states(''sensor.lease_''~car~''_current_budget_cost'') }} at ${{
+        states(''input_number.lease_''~car~''_excess_rate'') }}/mi).
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_overage'')) %}At
+        weighted pace: {{ states(''sensor.lease_''~car~''_projected_overage'')|float(0)|round(0)
+        }} mi over at lease end.{% else %}Projection waiting for valid history.{%
+        endif %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_cost'')) %}Estimated
+        excess fee ${{ states(''sensor.lease_''~car~''_projected_cost'') }}.{% else
+        %}Enter excess-mile rate for cost estimate.{% endif %}
+
+        {% if states(''sensor.lease_''~car~''_data_age_hours'')|float(999)>72 %}Vehicle
+        data is stale; refresh before relying on this estimate.{% endif %}
+
+        {% else %}{{ name }}: mileage unavailable; check vehicle data and lease inputs.{%
+        endif %}
+
+        {% endfor %}
+
+        {{ states(''sensor.lease_driving_guidance'') }}.
+
+        {% if not is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'') or
+        not is_state(''input_boolean.lease_charger_terms_confirmed'',''on'') %}Provisional
+        lease dates/starting mileage; confirm in dashboard.{% endif %}'
+      data:
+        tag: lease-mileage-warning
+        url: /dashboard-vehicles/overview
+        clickAction: /dashboard-vehicles/overview
+    continue_on_error: true
+  - action: notify.mobile_app_samsung_s23_ultra
+    data:
+      title: Vehicle mileage warning
+      message: '{% for car,name in [(''ioniq'',''Ioniq''),(''charger'',''Charger'')]
+        %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_monthly_miles'')) and is_number(states(''sensor.lease_''~car~''_current_budget_overage''))
+        %}
+
+        {{ name }}: {{ states(''sensor.lease_''~car~''_monthly_miles'')|float(0)|round(0)
+        }} / {{ states(''sensor.lease_''~car~''_monthly_allowance'')|float(0)|round(0)
+        }} mi this month.
+
+        Budget overage today: {{ states(''sensor.lease_''~car~''_current_budget_overage'')|float(0)|round(0)
+        }} mi (${{ states(''sensor.lease_''~car~''_current_budget_cost'') }} at ${{
+        states(''input_number.lease_''~car~''_excess_rate'') }}/mi).
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_overage'')) %}At
+        weighted pace: {{ states(''sensor.lease_''~car~''_projected_overage'')|float(0)|round(0)
+        }} mi over at lease end.{% else %}Projection waiting for valid history.{%
+        endif %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_cost'')) %}Estimated
+        excess fee ${{ states(''sensor.lease_''~car~''_projected_cost'') }}.{% else
+        %}Enter excess-mile rate for cost estimate.{% endif %}
+
+        {% if states(''sensor.lease_''~car~''_data_age_hours'')|float(999)>72 %}Vehicle
+        data is stale; refresh before relying on this estimate.{% endif %}
+
+        {% else %}{{ name }}: mileage unavailable; check vehicle data and lease inputs.{%
+        endif %}
+
+        {% endfor %}
+
+        {{ states(''sensor.lease_driving_guidance'') }}.
+
+        {% if not is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'') or
+        not is_state(''input_boolean.lease_charger_terms_confirmed'',''on'') %}Provisional
+        lease dates/starting mileage; confirm in dashboard.{% endif %}'
+      data:
+        tag: lease-mileage-warning
+        url: /dashboard-vehicles/overview
+        clickAction: /dashboard-vehicles/overview
+    continue_on_error: true
+  - action: input_datetime.set_datetime
+    data:
+      entity_id: input_datetime.lease_last_warning
+      datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+  mode: single
+- id: lease_weekly_utilization
+  alias: Lease - Weekly utilization summary to JD and Sam
+  description: Sunday summary includes both vehicle budgets and guidance; unused miles
+    are not cash credits.
+  triggers:
+  - trigger: time
+    at: '10:00:00'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.lease_notifications_enabled
+    state: 'on'
+  - condition: time
+    weekday:
+    - sun
+  actions:
+  - action: notify.mobile_app_jd_s23_ultra
+    data:
+      title: Weekly vehicle mileage
+      message: '{% for car,name in [(''ioniq'',''Ioniq''),(''charger'',''Charger'')]
+        %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_monthly_miles'')) and is_number(states(''sensor.lease_''~car~''_current_budget_overage''))
+        %}
+
+        {{ name }}: {{ states(''sensor.lease_''~car~''_monthly_miles'')|float(0)|round(0)
+        }} / {{ states(''sensor.lease_''~car~''_monthly_allowance'')|float(0)|round(0)
+        }} mi this month.
+
+        Budget overage today: {{ states(''sensor.lease_''~car~''_current_budget_overage'')|float(0)|round(0)
+        }} mi (${{ states(''sensor.lease_''~car~''_current_budget_cost'') }} at ${{
+        states(''input_number.lease_''~car~''_excess_rate'') }}/mi).
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_overage'')) %}At
+        weighted pace: {{ states(''sensor.lease_''~car~''_projected_overage'')|float(0)|round(0)
+        }} mi over at lease end.{% else %}Projection waiting for valid history.{%
+        endif %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_cost'')) %}Estimated
+        excess fee ${{ states(''sensor.lease_''~car~''_projected_cost'') }}.{% else
+        %}Enter excess-mile rate for cost estimate.{% endif %}
+
+        {% if states(''sensor.lease_''~car~''_data_age_hours'')|float(999)>72 %}Vehicle
+        data is stale; refresh before relying on this estimate.{% endif %}
+
+        {% else %}{{ name }}: mileage unavailable; check vehicle data and lease inputs.{%
+        endif %}
+
+        {% endfor %}
+
+        {{ states(''sensor.lease_driving_guidance'') }}.
+
+        {% if not is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'') or
+        not is_state(''input_boolean.lease_charger_terms_confirmed'',''on'') %}Provisional
+        lease dates/starting mileage; confirm in dashboard.{% endif %}'
+      data:
+        tag: lease-weekly-summary
+        url: /dashboard-vehicles/overview
+        clickAction: /dashboard-vehicles/overview
+    continue_on_error: true
+  - action: notify.mobile_app_samsung_s23_ultra
+    data:
+      title: Weekly vehicle mileage
+      message: '{% for car,name in [(''ioniq'',''Ioniq''),(''charger'',''Charger'')]
+        %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_monthly_miles'')) and is_number(states(''sensor.lease_''~car~''_current_budget_overage''))
+        %}
+
+        {{ name }}: {{ states(''sensor.lease_''~car~''_monthly_miles'')|float(0)|round(0)
+        }} / {{ states(''sensor.lease_''~car~''_monthly_allowance'')|float(0)|round(0)
+        }} mi this month.
+
+        Budget overage today: {{ states(''sensor.lease_''~car~''_current_budget_overage'')|float(0)|round(0)
+        }} mi (${{ states(''sensor.lease_''~car~''_current_budget_cost'') }} at ${{
+        states(''input_number.lease_''~car~''_excess_rate'') }}/mi).
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_overage'')) %}At
+        weighted pace: {{ states(''sensor.lease_''~car~''_projected_overage'')|float(0)|round(0)
+        }} mi over at lease end.{% else %}Projection waiting for valid history.{%
+        endif %}
+
+        {% if is_number(states(''sensor.lease_''~car~''_projected_cost'')) %}Estimated
+        excess fee ${{ states(''sensor.lease_''~car~''_projected_cost'') }}.{% else
+        %}Enter excess-mile rate for cost estimate.{% endif %}
+
+        {% if states(''sensor.lease_''~car~''_data_age_hours'')|float(999)>72 %}Vehicle
+        data is stale; refresh before relying on this estimate.{% endif %}
+
+        {% else %}{{ name }}: mileage unavailable; check vehicle data and lease inputs.{%
+        endif %}
+
+        {% endfor %}
+
+        {{ states(''sensor.lease_driving_guidance'') }}.
+
+        {% if not is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'') or
+        not is_state(''input_boolean.lease_charger_terms_confirmed'',''on'') %}Provisional
+        lease dates/starting mileage; confirm in dashboard.{% endif %}'
+      data:
+        tag: lease-weekly-summary
+        url: /dashboard-vehicles/overview
+        clickAction: /dashboard-vehicles/overview
+    continue_on_error: true
+  mode: single
+- id: lease_freeze_downtime
+  alias: Lease - Preserve Ioniq mileage when Charger returns
+  description: Switch Charger unavailable off to capture the final reading for this
+    incident. Baselines remain editable.
+  triggers:
+  - trigger: state
+    entity_id: input_boolean.lease_charger_unavailable
+    from: 'on'
+    to: 'off'
+  conditions: []
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ is_number(states(''sensor.2025_ioniq_5_n_odometer'')) }}'
+    then:
+    - action: input_number.set_value
+      data:
+        entity_id: input_number.lease_downtime_ioniq_end_odometer
+        value: '{{ states(''sensor.2025_ioniq_5_n_odometer'')|float }}'
+    - action: input_datetime.set_datetime
+      data:
+        entity_id: input_datetime.lease_downtime_end
+        datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    else:
+    - action: persistent_notification.create
+      data:
+        title: 'Lease tracking: final odometer needed'
+        message: The Ioniq odometer is unavailable. Enter the downtime end time and
+          final odometer on Vehicle leases before relying on incident totals.
+        notification_id: lease-downtime-final-needed
+  mode: single
+- id: homeops_presence_jd_to_sam
+  alias: HomeOps Presence JD to SAM
+  description: Reciprocal named-zone notification with editable debounce and quiet
+    hours.
+  triggers:
+  - trigger: state
+    entity_id: person.jd
+    to: null
+    id: transition
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: state
+    entity_id: device_tracker.jd_s23_ultra
+    from: unknown
+    id: source_recovered_unknown
+  - trigger: state
+    entity_id: device_tracker.jd_s23_ultra
+    from: unavailable
+    id: source_recovered_unavailable
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+      - condition: template
+        value_template: '{{ state_attr(''person.jd'',''source'') == ''device_tracker.jd_s23_ultra''
+          and states(''device_tracker.jd_s23_ultra'') not in [''unknown'',''unavailable'']
+          }}'
+      - condition: template
+        value_template: '{{ states(''person.jd'') not in [''unknown'',''unavailable'']
+          }}'
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_jd_committed_zone
+        data:
+          value: '{{ states(''person.jd'') }}'
+      - stop: Presence committed zone seeded after startup
+    - conditions:
+      - condition: trigger
+        id:
+        - source_recovered_unknown
+        - source_recovered_unavailable
+      sequence:
+      - delay:
+          seconds: '{{ states(''input_number.homeops_presence_debounce_seconds'')|int(30)
+            }}'
+      - condition: template
+        value_template: '{{ state_attr(''person.jd'',''source'') == ''device_tracker.jd_s23_ultra''
+          and states(''device_tracker.jd_s23_ultra'') not in [''unknown'',''unavailable'']
+          }}'
+      - condition: template
+        value_template: '{{ states(''person.jd'') not in [''unknown'',''unavailable'']
+          }}'
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_jd_committed_zone
+        data:
+          value: '{{ states(''person.jd'') }}'
+      - stop: Presence committed zone reseeded after source recovery
+  - condition: template
+    value_template: '{{ trigger.to_state is not none and trigger.to_state.state not
+      in [''unknown'',''unavailable''] and (trigger.from_state is none or trigger.from_state.state
+      in [''unknown'',''unavailable''] or trigger.from_state.state != trigger.to_state.state)
+      }}'
+  - variables:
+      from_state: '{{ trigger.from_state.state if trigger.from_state is not none else
+        ''unknown'' }}'
+      to_state: '{{ trigger.to_state.state }}'
+      to_changed: '{{ trigger.to_state.last_changed.isoformat() }}'
+      zone_labels:
+        home: home
+        JD's Job: JD's work
+        Sam's Job: Sam's work
+        Daycare: daycare
+        Maya Alt Daycare: alternate daycare
+        Maya's School: school
+      recovery_seed: '{{ trigger.from_state is none or trigger.from_state.state in
+        [''unknown'',''unavailable''] }}'
+  - delay:
+      seconds: '{{ states(''input_number.homeops_presence_debounce_seconds'') | int(30)
+        }}'
+  - condition: template
+    value_template: '{{ state_attr(''person.jd'',''source'') == ''device_tracker.jd_s23_ultra''
+      and states(''device_tracker.jd_s23_ultra'') not in [''unknown'',''unavailable'']
+      }}'
+  - condition: template
+    value_template: '{{ states[''person.jd''].last_changed.isoformat() == to_changed
+      and states(''person.jd'') == to_state }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ recovery_seed }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_jd_committed_zone
+        data:
+          value: '{{ to_state }}'
+      - stop: Presence committed zone reseeded after restored person state
+  - variables:
+      committed_state: '{{ states(''input_text.homeops_presence_jd_committed_zone'')
+        }}'
+      enabled_now: '{{ is_state(''input_boolean.homeops_presence_alerts_enabled'',''on'')
+        }}'
+      snoozed_now: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      not_quiet_now: '{% set sr=states(''input_datetime.homeops_presence_quiet_start'')
+        %}{% set er=states(''input_datetime.homeops_presence_quiet_end'') %}{% set
+        s=(sr if '':'' in sr else ''22:00:00'').split('':'') %}{% set e=(er if '':''
+        in er else ''07:00:00'').split('':'') %}{% set n=now().hour*60+now().minute
+        %}{% set sm=s[0]|int(22)*60+s[1]|int(0) %}{% set em=e[0]|int(7)*60+e[1]|int(0)
+        %}{{ not ((sm <= n < em) if sm < em else (n >= sm or n < em)) }}'
+  - variables:
+      presence_decision: '{%- if committed_state in ['''', ''unknown'', ''unavailable'',
+        ''none''] -%}seed
+
+        {%- elif committed_state == to_state -%}none
+
+        {%- else -%}commit
+
+        {%- endif -%}'
+      notify_allowed: '{{ enabled_now and not snoozed_now and not_quiet_now }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ presence_decision == ''seed'' }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_jd_committed_zone
+        data:
+          value: '{{ to_state }}'
+      - stop: Presence committed zone seeded without notification
+    - conditions:
+      - condition: template
+        value_template: '{{ presence_decision == ''none'' }}'
+      sequence:
+      - stop: Presence returned to committed zone; bounce suppressed
+  - if:
+    - condition: template
+      value_template: '{{ notify_allowed and committed_state in zone_labels and committed_state
+        != to_state }}'
+    then:
+    - action: script.homeops_send_sam
+      data:
+        title: JD location
+        message: '{{ ''JD has left '' ~ zone_labels[committed_state] ~ ''.'' }}'
+        tag: homeops-presence-jd-{{ committed_state|lower|replace(' ','-') }}-leave
+        dry_run: false
+      continue_on_error: true
+  - if:
+    - condition: template
+      value_template: '{{ notify_allowed and to_state in zone_labels and committed_state
+        != to_state }}'
+    then:
+    - action: script.homeops_send_sam
+      data:
+        title: JD location
+        message: '{{ ''JD has arrived at '' ~ zone_labels[to_state] ~ ''.'' }}'
+        tag: homeops-presence-jd-{{ to_state|lower|replace(' ','-') }}-enter
+        dry_run: false
+      continue_on_error: true
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.homeops_presence_jd_committed_zone
+    data:
+      value: '{{ to_state }}'
+  mode: restart
+- id: homeops_presence_sam_to_jd
+  alias: HomeOps Presence Sam to JD
+  description: Reciprocal named-zone notification with editable debounce and quiet
+    hours.
+  triggers:
+  - trigger: state
+    entity_id: person.sam
+    to: null
+    id: transition
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: state
+    entity_id: device_tracker.sam_s_s23_ultra_2
+    from: unknown
+    id: source_recovered_unknown
+  - trigger: state
+    entity_id: device_tracker.sam_s_s23_ultra_2
+    from: unavailable
+    id: source_recovered_unavailable
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+      - condition: template
+        value_template: '{{ state_attr(''person.sam'',''source'') == ''device_tracker.sam_s_s23_ultra_2''
+          and states(''device_tracker.sam_s_s23_ultra_2'') not in [''unknown'',''unavailable'']
+          }}'
+      - condition: template
+        value_template: '{{ states(''person.sam'') not in [''unknown'',''unavailable'']
+          }}'
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_sam_committed_zone
+        data:
+          value: '{{ states(''person.sam'') }}'
+      - stop: Presence committed zone seeded after startup
+    - conditions:
+      - condition: trigger
+        id:
+        - source_recovered_unknown
+        - source_recovered_unavailable
+      sequence:
+      - delay:
+          seconds: '{{ states(''input_number.homeops_presence_debounce_seconds'')|int(30)
+            }}'
+      - condition: template
+        value_template: '{{ state_attr(''person.sam'',''source'') == ''device_tracker.sam_s_s23_ultra_2''
+          and states(''device_tracker.sam_s_s23_ultra_2'') not in [''unknown'',''unavailable'']
+          }}'
+      - condition: template
+        value_template: '{{ states(''person.sam'') not in [''unknown'',''unavailable'']
+          }}'
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_sam_committed_zone
+        data:
+          value: '{{ states(''person.sam'') }}'
+      - stop: Presence committed zone reseeded after source recovery
+  - condition: template
+    value_template: '{{ trigger.to_state is not none and trigger.to_state.state not
+      in [''unknown'',''unavailable''] and (trigger.from_state is none or trigger.from_state.state
+      in [''unknown'',''unavailable''] or trigger.from_state.state != trigger.to_state.state)
+      }}'
+  - variables:
+      from_state: '{{ trigger.from_state.state if trigger.from_state is not none else
+        ''unknown'' }}'
+      to_state: '{{ trigger.to_state.state }}'
+      to_changed: '{{ trigger.to_state.last_changed.isoformat() }}'
+      zone_labels:
+        home: home
+        JD's Job: JD's work
+        Sam's Job: Sam's work
+        Daycare: daycare
+        Maya Alt Daycare: alternate daycare
+        Maya's School: school
+      recovery_seed: '{{ trigger.from_state is none or trigger.from_state.state in
+        [''unknown'',''unavailable''] }}'
+  - delay:
+      seconds: '{{ states(''input_number.homeops_presence_debounce_seconds'') | int(30)
+        }}'
+  - condition: template
+    value_template: '{{ state_attr(''person.sam'',''source'') == ''device_tracker.sam_s_s23_ultra_2''
+      and states(''device_tracker.sam_s_s23_ultra_2'') not in [''unknown'',''unavailable'']
+      }}'
+  - condition: template
+    value_template: '{{ states[''person.sam''].last_changed.isoformat() == to_changed
+      and states(''person.sam'') == to_state }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ recovery_seed }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_sam_committed_zone
+        data:
+          value: '{{ to_state }}'
+      - stop: Presence committed zone reseeded after restored person state
+  - variables:
+      committed_state: '{{ states(''input_text.homeops_presence_sam_committed_zone'')
+        }}'
+      enabled_now: '{{ is_state(''input_boolean.homeops_presence_alerts_enabled'',''on'')
+        }}'
+      snoozed_now: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      not_quiet_now: '{% set sr=states(''input_datetime.homeops_presence_quiet_start'')
+        %}{% set er=states(''input_datetime.homeops_presence_quiet_end'') %}{% set
+        s=(sr if '':'' in sr else ''22:00:00'').split('':'') %}{% set e=(er if '':''
+        in er else ''07:00:00'').split('':'') %}{% set n=now().hour*60+now().minute
+        %}{% set sm=s[0]|int(22)*60+s[1]|int(0) %}{% set em=e[0]|int(7)*60+e[1]|int(0)
+        %}{{ not ((sm <= n < em) if sm < em else (n >= sm or n < em)) }}'
+  - variables:
+      presence_decision: '{%- if committed_state in ['''', ''unknown'', ''unavailable'',
+        ''none''] -%}seed
+
+        {%- elif committed_state == to_state -%}none
+
+        {%- else -%}commit
+
+        {%- endif -%}'
+      notify_allowed: '{{ enabled_now and not snoozed_now and not_quiet_now }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ presence_decision == ''seed'' }}'
+      sequence:
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.homeops_presence_sam_committed_zone
+        data:
+          value: '{{ to_state }}'
+      - stop: Presence committed zone seeded without notification
+    - conditions:
+      - condition: template
+        value_template: '{{ presence_decision == ''none'' }}'
+      sequence:
+      - stop: Presence returned to committed zone; bounce suppressed
+  - if:
+    - condition: template
+      value_template: '{{ notify_allowed and committed_state in zone_labels and committed_state
+        != to_state }}'
+    then:
+    - action: script.homeops_send_jd
+      data:
+        title: Sam location
+        message: '{{ ''Sam has left '' ~ zone_labels[committed_state] ~ ''.'' }}'
+        tag: homeops-presence-sam-{{ committed_state|lower|replace(' ','-') }}-leave
+        dry_run: false
+      continue_on_error: true
+  - if:
+    - condition: template
+      value_template: '{{ notify_allowed and to_state in zone_labels and committed_state
+        != to_state }}'
+    then:
+    - action: script.homeops_send_jd
+      data:
+        title: Sam location
+        message: '{{ ''Sam has arrived at '' ~ zone_labels[to_state] ~ ''.'' }}'
+        tag: homeops-presence-sam-{{ to_state|lower|replace(' ','-') }}-enter
+        dry_run: false
+      continue_on_error: true
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.homeops_presence_sam_committed_zone
+    data:
+      value: '{{ to_state }}'
+  mode: restart
+- id: homeops_security_front_door
+  alias: HomeOps Security Front door deadbolt
+  description: Restart-persistent risk evaluation; unknown is never away or secure.
+    No actuation.
+  triggers:
+  - trigger: state
+    entity_id:
+    - lock.front_door_deadbolt
+    - person.jd
+    - person.sam
+    - device_tracker.jd_s23_ultra
+    - device_tracker.sam_s_s23_ultra_2
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time
+    at: input_datetime.homeops_security_night_start
+  - trigger: time
+    at: input_datetime.homeops_security_night_end
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_security_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      device_state: '{{ states(''lock.front_door_deadbolt'') }}'
+      risk_states: unlocked
+      secure_states: locked
+      jd_state: '{{ states(''person.jd'') }}'
+      sam_state: '{{ states(''person.sam'') }}'
+      jd_fresh: '{% set tracker_state = states(''device_tracker.jd_s23_ultra'') %}{%
+        set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_reported,
+        states[''device_tracker.jd_s23_ultra''].last_reported|float(0)) %}{% if reported
+        <= 0 %}{% set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_updated,
+        states[''device_tracker.jd_s23_ultra''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.jd'',''source'')
+        == ''device_tracker.jd_s23_ultra'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      sam_fresh: '{% set tracker_state = states(''device_tracker.sam_s_s23_ultra_2'')
+        %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_reported,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_reported|float(0)) %}{%
+        if reported <= 0 %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_updated,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.sam'',''source'')
+        == ''device_tracker.sam_s_s23_ultra_2'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      night: '{% set sr=states(''input_datetime.homeops_security_night_start'') %}{%
+        set er=states(''input_datetime.homeops_security_night_end'') %}{% set s=(sr
+        if '':'' in sr else ''21:00:00'').split('':'') %}{% set e=(er if '':'' in
+        er else ''07:00:00'').split('':'') %}{% set n=now().hour*60+now().minute %}{%
+        set sm=s[0]|int(21)*60+s[1]|int(0) %}{% set em=e[0]|int(7)*60+e[1]|int(0)
+        %}{{ (sm <= n < em) if sm < em else (n >= sm or n < em) }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_security_front_door_active'',''on'')
+        }}'
+      notification_count: '{{ states(''input_number.homeops_security_front_door_notification_count'')|int(0)
+        }}'
+      elapsed_minutes: '{{ (as_timestamp(now())-as_timestamp(states(''input_datetime.homeops_security_front_door_last_notified''),0))/60
+        }}'
+      followup_minutes: '{{ states(''input_number.homeops_security_followup_minutes'')|float(10)
+        }}'
+      reminder_minutes: '{{ states(''input_number.homeops_security_reminder_minutes'')|float(30)
+        }}'
+  - variables:
+      decision: '{%- set invalid = [''unknown'', ''unavailable'', ''none'', '''']
+        -%}
+
+        {%- set risks = risk_states.split('','') -%}
+
+        {%- set secures = secure_states.split('','') -%}
+
+        {%- set confirmed_away = jd_state not in invalid + [''home''] and sam_state
+        not in invalid + [''home''] and jd_fresh and sam_fresh -%}
+
+        {%- set eligible = confirmed_away or night -%}
+
+        {%- if device_state in invalid -%}{{ ''unavailable'' if incident_active else
+        ''none'' }}
+
+        {%- elif device_state in secures and incident_active -%}resolved
+
+        {%- elif device_state in risks and incident_active and not night and ((jd_state
+        == ''home'' and jd_fresh) or (sam_state == ''home'' and sam_fresh)) -%}inactive
+
+        {%- elif not enabled or snoozed -%}none
+
+        {%- elif device_state not in risks or not eligible -%}none
+
+        {%- elif not incident_active -%}initial
+
+        {%- elif notification_count == 1 and elapsed_minutes >= followup_minutes -%}followup
+
+        {%- elif notification_count >= 2 and elapsed_minutes >= reminder_minutes -%}reminder
+
+        {%- else -%}none
+
+        {%- endif -%}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''initial'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home security alert
+          message: Front door deadbolt is {{ device_state }}. This is active because
+            everyone is confirmed away or it is overnight.
+          tag: homeops-security-front-door
+          dry_run: false
+        continue_on_error: true
+      - action: script.homeops_send_sam
+        data:
+          title: Home security alert
+          message: Front door deadbolt is {{ device_state }}. This is active because
+            everyone is confirmed away or it is overnight.
+          tag: homeops-security-front-door
+          dry_run: false
+        continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_security_front_door_active
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_security_front_door_last_notified
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_front_door_notification_count
+        data:
+          value: '{{ states(''input_number.homeops_security_front_door_notification_count'')|int(0)+1
+            }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision in [''followup'',''reminder''] }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home security reminder
+          message: Front door deadbolt is {{ device_state }}. This is active because
+            everyone is confirmed away or it is overnight.
+          tag: homeops-security-front-door
+          dry_run: false
+        continue_on_error: true
+      - action: script.homeops_send_sam
+        data:
+          title: Home security reminder
+          message: Front door deadbolt is {{ device_state }}. This is active because
+            everyone is confirmed away or it is overnight.
+          tag: homeops-security-front-door
+          dry_run: false
+        continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_security_front_door_active
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_security_front_door_last_notified
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_front_door_notification_count
+        data:
+          value: '{{ states(''input_number.homeops_security_front_door_notification_count'')|int(0)+1
+            }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''resolved'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home security resolved
+              message: Front door deadbolt is now secure.
+              tag: homeops-security-front-door
+              dry_run: false
+            continue_on_error: true
+          - action: script.homeops_send_sam
+            data:
+              title: Home security resolved
+              message: Front door deadbolt is now secure.
+              tag: homeops-security-front-door
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_security_front_door_active
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_front_door_notification_count
+        data:
+          value: 0
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''inactive'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home security no longer active
+              message: Front door deadbolt remains {{ device_state }}, but this alert
+                is no longer active because someone returned and it is outside overnight
+                hours.
+              tag: homeops-security-front-door
+              dry_run: false
+            continue_on_error: true
+          - action: script.homeops_send_sam
+            data:
+              title: Home security no longer active
+              message: Front door deadbolt remains {{ device_state }}, but this alert
+                is no longer active because someone returned and it is outside overnight
+                hours.
+              tag: homeops-security-front-door
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_security_front_door_active
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_front_door_notification_count
+        data:
+          value: 0
+  mode: queued
+  max: 10
+- id: homeops_security_garage
+  alias: HomeOps Security Garage door
+  description: Restart-persistent risk evaluation; unknown is never away or secure.
+    No actuation.
+  triggers:
+  - trigger: state
+    entity_id:
+    - cover.garage_door
+    - person.jd
+    - person.sam
+    - device_tracker.jd_s23_ultra
+    - device_tracker.sam_s_s23_ultra_2
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time
+    at: input_datetime.homeops_security_night_start
+  - trigger: time
+    at: input_datetime.homeops_security_night_end
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_security_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      device_state: '{{ states(''cover.garage_door'') }}'
+      risk_states: open,opening
+      secure_states: closed
+      jd_state: '{{ states(''person.jd'') }}'
+      sam_state: '{{ states(''person.sam'') }}'
+      jd_fresh: '{% set tracker_state = states(''device_tracker.jd_s23_ultra'') %}{%
+        set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_reported,
+        states[''device_tracker.jd_s23_ultra''].last_reported|float(0)) %}{% if reported
+        <= 0 %}{% set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_updated,
+        states[''device_tracker.jd_s23_ultra''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.jd'',''source'')
+        == ''device_tracker.jd_s23_ultra'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      sam_fresh: '{% set tracker_state = states(''device_tracker.sam_s_s23_ultra_2'')
+        %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_reported,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_reported|float(0)) %}{%
+        if reported <= 0 %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_updated,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.sam'',''source'')
+        == ''device_tracker.sam_s_s23_ultra_2'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      night: '{% set sr=states(''input_datetime.homeops_security_night_start'') %}{%
+        set er=states(''input_datetime.homeops_security_night_end'') %}{% set s=(sr
+        if '':'' in sr else ''21:00:00'').split('':'') %}{% set e=(er if '':'' in
+        er else ''07:00:00'').split('':'') %}{% set n=now().hour*60+now().minute %}{%
+        set sm=s[0]|int(21)*60+s[1]|int(0) %}{% set em=e[0]|int(7)*60+e[1]|int(0)
+        %}{{ (sm <= n < em) if sm < em else (n >= sm or n < em) }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_security_garage_active'',''on'')
+        }}'
+      notification_count: '{{ states(''input_number.homeops_security_garage_notification_count'')|int(0)
+        }}'
+      elapsed_minutes: '{{ (as_timestamp(now())-as_timestamp(states(''input_datetime.homeops_security_garage_last_notified''),0))/60
+        }}'
+      followup_minutes: '{{ states(''input_number.homeops_security_followup_minutes'')|float(10)
+        }}'
+      reminder_minutes: '{{ states(''input_number.homeops_security_reminder_minutes'')|float(30)
+        }}'
+  - variables:
+      decision: '{%- set invalid = [''unknown'', ''unavailable'', ''none'', '''']
+        -%}
+
+        {%- set risks = risk_states.split('','') -%}
+
+        {%- set secures = secure_states.split('','') -%}
+
+        {%- set confirmed_away = jd_state not in invalid + [''home''] and sam_state
+        not in invalid + [''home''] and jd_fresh and sam_fresh -%}
+
+        {%- set eligible = confirmed_away or night -%}
+
+        {%- if device_state in invalid -%}{{ ''unavailable'' if incident_active else
+        ''none'' }}
+
+        {%- elif device_state in secures and incident_active -%}resolved
+
+        {%- elif device_state in risks and incident_active and not night and ((jd_state
+        == ''home'' and jd_fresh) or (sam_state == ''home'' and sam_fresh)) -%}inactive
+
+        {%- elif not enabled or snoozed -%}none
+
+        {%- elif device_state not in risks or not eligible -%}none
+
+        {%- elif not incident_active -%}initial
+
+        {%- elif notification_count == 1 and elapsed_minutes >= followup_minutes -%}followup
+
+        {%- elif notification_count >= 2 and elapsed_minutes >= reminder_minutes -%}reminder
+
+        {%- else -%}none
+
+        {%- endif -%}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''initial'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home security alert
+          message: Garage door is {{ device_state }}. This is active because everyone
+            is confirmed away or it is overnight.
+          tag: homeops-security-garage
+          dry_run: false
+        continue_on_error: true
+      - action: script.homeops_send_sam
+        data:
+          title: Home security alert
+          message: Garage door is {{ device_state }}. This is active because everyone
+            is confirmed away or it is overnight.
+          tag: homeops-security-garage
+          dry_run: false
+        continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_security_garage_active
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_security_garage_last_notified
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_garage_notification_count
+        data:
+          value: '{{ states(''input_number.homeops_security_garage_notification_count'')|int(0)+1
+            }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision in [''followup'',''reminder''] }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home security reminder
+          message: Garage door is {{ device_state }}. This is active because everyone
+            is confirmed away or it is overnight.
+          tag: homeops-security-garage
+          dry_run: false
+        continue_on_error: true
+      - action: script.homeops_send_sam
+        data:
+          title: Home security reminder
+          message: Garage door is {{ device_state }}. This is active because everyone
+            is confirmed away or it is overnight.
+          tag: homeops-security-garage
+          dry_run: false
+        continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_security_garage_active
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_security_garage_last_notified
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_garage_notification_count
+        data:
+          value: '{{ states(''input_number.homeops_security_garage_notification_count'')|int(0)+1
+            }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''resolved'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home security resolved
+              message: Garage door is now secure.
+              tag: homeops-security-garage
+              dry_run: false
+            continue_on_error: true
+          - action: script.homeops_send_sam
+            data:
+              title: Home security resolved
+              message: Garage door is now secure.
+              tag: homeops-security-garage
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_security_garage_active
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_garage_notification_count
+        data:
+          value: 0
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''inactive'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home security no longer active
+              message: Garage door remains {{ device_state }}, but this alert is no
+                longer active because someone returned and it is outside overnight
+                hours.
+              tag: homeops-security-garage
+              dry_run: false
+            continue_on_error: true
+          - action: script.homeops_send_sam
+            data:
+              title: Home security no longer active
+              message: Garage door remains {{ device_state }}, but this alert is no
+                longer active because someone returned and it is outside overnight
+                hours.
+              tag: homeops-security-garage
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_security_garage_active
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.homeops_security_garage_notification_count
+        data:
+          value: 0
+  mode: queued
+  max: 10
+- id: homeops_health_front_door
+  alias: HomeOps Health Front door deadbolt
+  description: Selected critical monitoring health with editable grace and one recovery.
+  triggers:
+  - trigger: state
+    entity_id: lock.front_door_deadbolt
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      available: '{{ states(''lock.front_door_deadbolt'') in [''locked'',''unlocked'',''locking'',''unlocking'']
+        }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_health_front_door_unavailable'',''on'')
+        }}'
+      unavailable_minutes: '{{ (as_timestamp(now())-as_timestamp(states.lock.front_door_deadbolt.last_changed,0))/60
+        }}'
+      grace_minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+  - variables:
+      decision: '{%- if available and incident_active -%}recover
+
+        {%- elif not enabled or snoozed -%}none
+
+        {%- elif not available and not incident_active and unavailable_minutes >=
+        grace_minutes -%}open
+
+        {%- else -%}none
+
+        {%- endif -%}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home monitoring unavailable
+          message: Front door deadbolt has been unavailable or stale beyond the configured
+            grace period.
+          tag: homeops-health-front_door_unavailable
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home monitoring unavailable
+              message: Front door deadbolt has been unavailable or stale beyond the
+                configured grace period.
+              tag: homeops-health-front_door_unavailable
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_front_door_unavailable
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home monitoring recovered
+              message: Front door deadbolt is reporting valid data again.
+              tag: homeops-health-front_door_unavailable
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home monitoring recovered
+                  message: Front door deadbolt is reporting valid data again.
+                  tag: homeops-health-front_door_unavailable
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_front_door_unavailable
+  mode: queued
+  max: 5
+- id: homeops_health_garage
+  alias: HomeOps Health Garage door
+  description: Selected critical monitoring health with editable grace and one recovery.
+  triggers:
+  - trigger: state
+    entity_id: cover.garage_door
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      available: '{{ states(''cover.garage_door'') not in [''unknown'',''unavailable'']
+        }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_health_garage_unavailable'',''on'')
+        }}'
+      unavailable_minutes: '{{ (as_timestamp(now())-as_timestamp(states.cover.garage_door.last_changed,0))/60
+        }}'
+      grace_minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+  - variables:
+      decision: '{%- if available and incident_active -%}recover
+
+        {%- elif not enabled or snoozed -%}none
+
+        {%- elif not available and not incident_active and unavailable_minutes >=
+        grace_minutes -%}open
+
+        {%- else -%}none
+
+        {%- endif -%}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home monitoring unavailable
+          message: Garage door has been unavailable or stale beyond the configured
+            grace period.
+          tag: homeops-health-garage_unavailable
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home monitoring unavailable
+              message: Garage door has been unavailable or stale beyond the configured
+                grace period.
+              tag: homeops-health-garage_unavailable
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_garage_unavailable
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home monitoring recovered
+              message: Garage door is reporting valid data again.
+              tag: homeops-health-garage_unavailable
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home monitoring recovered
+                  message: Garage door is reporting valid data again.
+                  tag: homeops-health-garage_unavailable
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_garage_unavailable
+  mode: queued
+  max: 5
+- id: homeops_health_jd_location
+  alias: HomeOps Health JD mobile location
+  description: Tracks invalid state, active-source mismatch, and freshness with a
+    persistent grace baseline.
+  triggers:
+  - trigger: state
+    entity_id:
+    - device_tracker.jd_s23_ultra
+    - person.jd
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      available: '{% set tracker_state = states(''device_tracker.jd_s23_ultra'') %}{%
+        set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_reported,
+        states[''device_tracker.jd_s23_ultra''].last_reported|float(0)) %}{% if reported
+        <= 0 %}{% set reported = as_timestamp(states[''device_tracker.jd_s23_ultra''].last_updated,
+        states[''device_tracker.jd_s23_ultra''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.jd'',''source'')
+        == ''device_tracker.jd_s23_ultra'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_health_jd_location_stale'',''on'')
+        }}'
+      since_set: '{{ states(''input_datetime.homeops_health_jd_location_since'') not
+        in [''unknown'',''unavailable'',''none'',''''] and states(''input_datetime.homeops_health_jd_location_since'')[:10]
+        != ''2000-01-01'' }}'
+      unavailable_minutes: '{{ (as_timestamp(now())-as_timestamp(states(''input_datetime.homeops_health_jd_location_since''),as_timestamp(now())))/60
+        }}'
+      grace_minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+  - variables:
+      decision: '{% if available and incident_active %}recover{% elif available and
+        since_set %}reset{% elif available %}none{% elif not since_set %}start{% elif
+        not enabled or snoozed %}none{% elif not incident_active and unavailable_minutes
+        >= grace_minutes %}open{% else %}none{% endif %}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''start'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_jd_location_since
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''reset'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_jd_location_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home monitoring unavailable
+          message: JD mobile location is invalid, no longer the active person source,
+            or stale beyond the configured threshold and grace.
+          tag: homeops-health-jd-location
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home monitoring unavailable
+              message: JD mobile location is invalid, no longer the active person
+                source, or stale beyond the configured threshold and grace.
+              tag: homeops-health-jd-location
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_jd_location_stale
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home monitoring recovered
+              message: JD mobile location is valid, active, and fresh again.
+              tag: homeops-health-jd-location
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home monitoring recovered
+                  message: JD mobile location is valid, active, and fresh again.
+                  tag: homeops-health-jd-location
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_jd_location_stale
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_jd_location_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+  mode: queued
+  max: 5
+- id: homeops_health_sam_location
+  alias: HomeOps Health Sam mobile location
+  description: Tracks invalid state, active-source mismatch, and freshness with a
+    persistent grace baseline.
+  triggers:
+  - trigger: state
+    entity_id:
+    - device_tracker.sam_s_s23_ultra_2
+    - person.sam
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      available: '{% set tracker_state = states(''device_tracker.sam_s_s23_ultra_2'')
+        %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_reported,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_reported|float(0)) %}{%
+        if reported <= 0 %}{% set reported = as_timestamp(states[''device_tracker.sam_s_s23_ultra_2''].last_updated,
+        states[''device_tracker.sam_s_s23_ultra_2''].last_updated|float(0)) %}{% endif
+        %}{% set age = as_timestamp(now()) - reported %}{{ state_attr(''person.sam'',''source'')
+        == ''device_tracker.sam_s_s23_ultra_2'' and tracker_state not in [''unknown'',''unavailable'',''none'','''']
+        and reported > 0 and 0 <= age <= (states(''input_number.homeops_phone_freshness_minutes'')|float(120))*60
+        }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_health_sam_location_stale'',''on'')
+        }}'
+      since_set: '{{ states(''input_datetime.homeops_health_sam_location_since'')
+        not in [''unknown'',''unavailable'',''none'',''''] and states(''input_datetime.homeops_health_sam_location_since'')[:10]
+        != ''2000-01-01'' }}'
+      unavailable_minutes: '{{ (as_timestamp(now())-as_timestamp(states(''input_datetime.homeops_health_sam_location_since''),as_timestamp(now())))/60
+        }}'
+      grace_minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+  - variables:
+      decision: '{% if available and incident_active %}recover{% elif available and
+        since_set %}reset{% elif available %}none{% elif not since_set %}start{% elif
+        not enabled or snoozed %}none{% elif not incident_active and unavailable_minutes
+        >= grace_minutes %}open{% else %}none{% endif %}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''start'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_sam_location_since
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''reset'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_sam_location_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home monitoring unavailable
+          message: Sam mobile location is invalid, no longer the active person source,
+            or stale beyond the configured threshold and grace.
+          tag: homeops-health-sam-location
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home monitoring unavailable
+              message: Sam mobile location is invalid, no longer the active person
+                source, or stale beyond the configured threshold and grace.
+              tag: homeops-health-sam-location
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_sam_location_stale
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home monitoring recovered
+              message: Sam mobile location is valid, active, and fresh again.
+              tag: homeops-health-sam-location
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home monitoring recovered
+                  message: Sam mobile location is valid, active, and fresh again.
+                  tag: homeops-health-sam-location
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_sam_location_stale
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_sam_location_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+  mode: queued
+  max: 5
+- id: homeops_health_backup
+  alias: HomeOps Health Automatic backup
+  description: Selected critical monitoring health with editable grace and one recovery.
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.backup_last_successful_automatic_backup
+    - sensor.backup_backup_manager_state
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      available: '{% set backup_age_hours=(as_timestamp(now())-as_timestamp(states(''sensor.backup_last_successful_automatic_backup''),0))/3600
+        %}{{ states(''sensor.backup_backup_manager_state'') not in [''failed'',''error'',''unknown'',''unavailable'']
+        and 0 <= backup_age_hours <= 48 }}'
+      incident_active: '{{ is_state(''input_boolean.homeops_health_backup_stale'',''on'')
+        }}'
+      unavailable_minutes: '{% set backup_age_hours=(as_timestamp(now())-as_timestamp(states(''sensor.backup_last_successful_automatic_backup''),0))/3600
+        %}{% if states(''sensor.backup_backup_manager_state'') in [''failed'',''error'',''unknown'',''unavailable'']
+        %}{{ (as_timestamp(now())-as_timestamp(states.sensor.backup_backup_manager_state.last_changed,0))/60
+        }}{% elif backup_age_hours < 0 %}{{ (as_timestamp(now())-as_timestamp(states.sensor.backup_last_successful_automatic_backup.last_changed,0))/60
+        }}{% else %}{{ [backup_age_hours*60-2880,0]|max }}{% endif %}'
+      grace_minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+  - variables:
+      decision: '{%- if available and incident_active -%}recover
+
+        {%- elif not enabled or snoozed -%}none
+
+        {%- elif not available and not incident_active and unavailable_minutes >=
+        grace_minutes -%}open
+
+        {%- else -%}none
+
+        {%- endif -%}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home monitoring unavailable
+          message: Automatic backup has been unavailable or stale beyond the configured
+            grace period.
+          tag: homeops-health-backup_stale
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home monitoring unavailable
+              message: Automatic backup has been unavailable or stale beyond the configured
+                grace period.
+              tag: homeops-health-backup_stale
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_backup_stale
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home monitoring recovered
+              message: Automatic backup is reporting valid data again.
+              tag: homeops-health-backup_stale
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home monitoring recovered
+                  message: Automatic backup is reporting valid data again.
+                  tag: homeops-health-backup_stale
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_backup_stale
+  mode: queued
+  max: 5
+- id: homeops_health_disk
+  alias: HomeOps Health Disk Pressure
+  description: 'Selected /config disk metric: warn at editable threshold after grace;
+    recover below editable hysteresis threshold.'
+  triggers:
+  - trigger: state
+    entity_id: sensor.system_monitor_disk_usage_config
+  - trigger: homeassistant
+    event: start
+    id: startup
+  - trigger: time_pattern
+    minutes: /5
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: startup
+      sequence:
+      - delay:
+          minutes: '{{ states(''input_number.homeops_availability_grace_minutes'')|int(5)
+            }}'
+  - variables:
+      enabled: '{{ is_state(''input_boolean.homeops_health_alerts_enabled'',''on'')
+        }}'
+      snoozed: '{{ as_timestamp(now()) < as_timestamp(states(''input_datetime.homeops_snooze_until''),
+        0) }}'
+      value_valid: '{{ is_number(states(''sensor.system_monitor_disk_usage_config''))
+        and 0 <= states(''sensor.system_monitor_disk_usage_config'')|float <= 100
+        }}'
+      value: '{{ states(''sensor.system_monitor_disk_usage_config'')|float(0) }}'
+      active: '{{ is_state(''input_boolean.homeops_health_disk_pressure'',''on'')
+        }}'
+      warning: '{{ states(''input_number.homeops_disk_warning_percent'')|float(85)
+        }}'
+      recovery: '{% set warning=states(''input_number.homeops_disk_warning_percent'')|float(85)
+        %}{{ [states(''input_number.homeops_disk_recovery_percent'')|float(80), warning-1]|min
+        }}'
+      age: '{{ (as_timestamp(now())-as_timestamp(states(''input_datetime.homeops_health_disk_pressure_since''),as_timestamp(now())))/60
+        }}'
+      grace: '{{ states(''input_number.homeops_availability_grace_minutes'')|float(5)
+        }}'
+      since_set: '{{ states(''input_datetime.homeops_health_disk_pressure_since'')
+        not in [''unknown'',''unavailable'',''none'',''''] and states(''input_datetime.homeops_health_disk_pressure_since'')[:10]
+        != ''2000-01-01'' }}'
+  - variables:
+      decision: '{% if active and value_valid and value < recovery %}recover{% elif
+        not enabled or snoozed %}none{% elif (not value_valid or value >= warning)
+        and not active and not since_set %}start{% elif (not value_valid or value
+        >= warning) and not active and age >= grace %}open{% elif active %}none{%
+        else %}reset{% endif %}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''start'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_disk_pressure_since
+        data:
+          datetime: '{{ now().strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''reset'' }}'
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_disk_pressure_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''open'' }}'
+      sequence:
+      - action: script.homeops_send_jd
+        data:
+          title: Home Assistant disk warning
+          message: 'Disk use is {{ states(''sensor.system_monitor_disk_usage_config'')
+            }}% (warning {{ warning }}%), or the live metric is invalid. Free: {{
+            states(''sensor.system_monitor_disk_free_config'') }} GiB.'
+          tag: homeops-health-disk
+          dry_run: false
+        continue_on_error: true
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.homeops_health_include_sam
+            state: 'on'
+          sequence:
+          - action: script.homeops_send_sam
+            data:
+              title: Home Assistant disk warning
+              message: 'Disk use is {{ states(''sensor.system_monitor_disk_usage_config'')
+                }}% (warning {{ warning }}%), or the live metric is invalid. Free:
+                {{ states(''sensor.system_monitor_disk_free_config'') }} GiB.'
+              tag: homeops-health-disk
+              dry_run: false
+            continue_on_error: true
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.homeops_health_disk_pressure
+    - conditions:
+      - condition: template
+        value_template: '{{ decision == ''recover'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ not snoozed }}'
+          sequence:
+          - action: script.homeops_send_jd
+            data:
+              title: Home Assistant disk recovered
+              message: Disk use is {{ value }}%, below the {{ recovery }}% recovery
+                threshold.
+              tag: homeops-health-disk
+              dry_run: false
+            continue_on_error: true
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.homeops_health_include_sam
+                state: 'on'
+              sequence:
+              - action: script.homeops_send_sam
+                data:
+                  title: Home Assistant disk recovered
+                  message: Disk use is {{ value }}%, below the {{ recovery }}% recovery
+                    threshold.
+                  tag: homeops-health-disk
+                  dry_run: false
+                continue_on_error: true
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.homeops_health_disk_pressure
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.homeops_health_disk_pressure_since
+        data:
+          datetime: '2000-01-01 00:00:00'
+  mode: queued
+  max: 5
+- id: homeops_daily_digest
+  alias: HomeOps Daily Maintenance Digest
+  description: 09:00 selected health, valid battery, freshness, and backup digest.
+  triggers:
+  - trigger: time
+    at: 09:00:00
+  conditions:
+  - condition: state
+    entity_id: input_boolean.homeops_digest_enabled
+    state: 'on'
+  - condition: template
+    value_template: '{{ as_timestamp(now()) >= as_timestamp(states(''input_datetime.homeops_snooze_until''),
+      0) }}'
+  actions:
+  - action: script.homeops_send_jd
+    data:
+      title: Home Operations daily digest
+      message: "Home Operations daily digest.\n{% set issues = namespace(items=[])\
+        \ %}\n{% for eid,label in {\n 'input_boolean.homeops_health_front_door_unavailable':'Front\
+        \ door monitoring unavailable',\n 'input_boolean.homeops_health_garage_unavailable':'Garage\
+        \ monitoring unavailable',\n 'input_boolean.homeops_health_jd_location_stale':'JD\
+        \ location stale',\n 'input_boolean.homeops_health_sam_location_stale':'Sam\
+        \ location stale',\n 'input_boolean.homeops_health_backup_stale':'Backup stale',\n\
+        \ 'input_boolean.homeops_health_disk_pressure':'Home Assistant disk pressure/monitoring\
+        \ issue'}.items() %}{% if is_state(eid,'on') %}{% set issues.items=issues.items+[label]\
+        \ %}{% endif %}{% endfor %}\n{% for eid,label in {\n 'sensor.front_door_deadbolt_battery_level':'Front\
+        \ deadbolt',\n 'sensor.jd_s23_ultra_battery_level':'JD phone',\n 'sensor.samsung_s23_ultra_battery_level':'Sam\
+        \ phone'}.items() %}{% set v=states(eid) %}{% if state_attr(eid,'unit_of_measurement')\
+        \ != '%' or not is_number(v) or v|float < 0 or v|float > 100 %}{% set issues.items=issues.items+[label~'\
+        \ battery data unavailable/invalid'] %}{% elif v|float <= 20 %}{% set issues.items=issues.items+[label~'\
+        \ battery low ('~(v|float|round(0))~'%)'] %}{% endif %}{% endfor %}\n{% if\
+        \ issues.items|length %}{{ issues.items|join('; ') }}.{% else %}No selected\
+        \ maintenance issues.{% endif %}\nLast successful backup: {{ states('sensor.backup_last_successful_automatic_backup')\
+        \ }}. Backup manager: {{ states('sensor.backup_backup_manager_state') }}.\
+        \ Disk used: {{ states('sensor.system_monitor_disk_usage_config') }}%."
+      tag: homeops-daily-digest
+      dry_run: false
+    continue_on_error: true
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.homeops_health_include_sam
+        state: 'on'
+      sequence:
+      - action: script.homeops_send_sam
+        data:
+          title: Home Operations daily digest
+          message: "Home Operations daily digest.\n{% set issues = namespace(items=[])\
+            \ %}\n{% for eid,label in {\n 'input_boolean.homeops_health_front_door_unavailable':'Front\
+            \ door monitoring unavailable',\n 'input_boolean.homeops_health_garage_unavailable':'Garage\
+            \ monitoring unavailable',\n 'input_boolean.homeops_health_jd_location_stale':'JD\
+            \ location stale',\n 'input_boolean.homeops_health_sam_location_stale':'Sam\
+            \ location stale',\n 'input_boolean.homeops_health_backup_stale':'Backup\
+            \ stale',\n 'input_boolean.homeops_health_disk_pressure':'Home Assistant\
+            \ disk pressure/monitoring issue'}.items() %}{% if is_state(eid,'on')\
+            \ %}{% set issues.items=issues.items+[label] %}{% endif %}{% endfor %}\n\
+            {% for eid,label in {\n 'sensor.front_door_deadbolt_battery_level':'Front\
+            \ deadbolt',\n 'sensor.jd_s23_ultra_battery_level':'JD phone',\n 'sensor.samsung_s23_ultra_battery_level':'Sam\
+            \ phone'}.items() %}{% set v=states(eid) %}{% if state_attr(eid,'unit_of_measurement')\
+            \ != '%' or not is_number(v) or v|float < 0 or v|float > 100 %}{% set\
+            \ issues.items=issues.items+[label~' battery data unavailable/invalid']\
+            \ %}{% elif v|float <= 20 %}{% set issues.items=issues.items+[label~'\
+            \ battery low ('~(v|float|round(0))~'%)'] %}{% endif %}{% endfor %}\n\
+            {% if issues.items|length %}{{ issues.items|join('; ') }}.{% else %}No\
+            \ selected maintenance issues.{% endif %}\nLast successful backup: {{\
+            \ states('sensor.backup_last_successful_automatic_backup') }}. Backup\
+            \ manager: {{ states('sensor.backup_backup_manager_state') }}. Disk used:\
+            \ {{ states('sensor.system_monitor_disk_usage_config') }}%."
+          tag: homeops-daily-digest
+          dry_run: false
+        continue_on_error: true
+  mode: single
+- id: '1795110810097'
+  alias: FlowLedger alerts
+  description: Receives FlowLedger alert events (webhook) and shows them as notifications.
+  triggers:
+  - trigger: webhook
+    webhook_id: !secret 'automations_33_triggers_0_webhook_id'
+    allowed_methods:
+    - POST
+    local_only: false
+  conditions: []
+  actions:
+  - action: persistent_notification.create
+    data:
+      title: 'FlowLedger: {{ trigger.json.title }}'
+      message: '{{ trigger.json.message }}'
+  mode: queued

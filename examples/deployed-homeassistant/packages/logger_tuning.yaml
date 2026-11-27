@@ -1,0 +1,9 @@
+logger:
+  default: warning
+  logs:
+    meshtastic: critical
+    custom_components.cync_lights.cync_hub: critical
+    roombapy: critical
+    custom_components.moonraker: error
+    music_assistant_client.connection: critical
+    homeassistant.components.waze_travel_time.coordinator: critical

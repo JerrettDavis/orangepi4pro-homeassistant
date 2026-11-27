@@ -1,0 +1,24 @@
+automation:
+- id: opiha_backup_stale
+  alias: Backup is stale
+  mode: single
+  triggers:
+  - trigger: time
+    at: 09:00:00
+  conditions:
+  - condition: template
+    value_template: "{% set s = states('sensor.backup_last_successful_automatic_backup')\
+      \ %} {{ s not in ['unknown', 'unavailable']\n   and (now() - as_datetime(s)).total_seconds()\
+      \ > 36 * 3600 }}"
+  actions:
+  - action: persistent_notification.create
+    data:
+      notification_id: opiha_backup_stale
+      title: No successful backup in 36 hours
+      message: 'Last success: {{ states(''sensor.backup_last_successful_automatic_backup'')
+        }}. Check Settings > System > Backups and the off-box destination.'
+  - action: notify.household
+    continue_on_error: true
+    data:
+      title: Home Assistant backup is stale
+      message: No successful automatic backup in over 36 hours.

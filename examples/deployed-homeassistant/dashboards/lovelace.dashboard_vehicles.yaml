@@ -1,0 +1,1057 @@
+config:
+  title: Vehicle leases
+  views:
+  - type: sections
+    title: Overview
+    path: overview
+    icon: mdi:car-multiple
+    max_columns: 2
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Vehicle leases
+        heading_style: title
+        icon: mdi:car-multiple
+      - type: custom:mushroom-template-card
+        primary: '{{ states(''sensor.lease_driving_guidance'') }}'
+        secondary: 'Combined projected excess-mile fees: ${{ states(''sensor.lease_combined_projected_cost'')|float(0)|round(0)|int
+          }} · {{ states(''sensor.lease_ioniq_remaining_days'')|float(0)|round(0)|int
+          }} days to lease end'
+        icon: mdi:speedometer
+        icon_color: '{{ ''red'' if ''over'' in states(''sensor.lease_driving_guidance'')|lower
+          else ''green'' }}'
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+        layout: horizontal
+        fill_container: true
+        multiline_secondary: true
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+        - type: template
+          content: Ioniq 24,000 mi / 24 mo
+          icon: mdi:car-electric
+          icon_color: ''
+          tap_action:
+            action: none
+        - type: template
+          content: Charger 30,000 mi / 24 mo
+          icon: mdi:car-sports
+          icon_color: ''
+          tap_action:
+            action: none
+        - type: template
+          content: $0.10 per excess mile
+          icon: mdi:cash-multiple
+          icon_color: ''
+          tap_action:
+            action: none
+        - type: template
+          content: Lease end Sep 30, 2027
+          icon: mdi:calendar-end
+          icon_color: ''
+          tap_action:
+            action: none
+      - type: custom:mushroom-chips-card
+        chips:
+        - type: entity
+          entity: input_boolean.lease_notifications_enabled
+          icon: mdi:bell-outline
+          content_info: name
+          name: Push alerts
+        - type: entity
+          entity: input_boolean.lease_charger_unavailable
+          icon: mdi:car-wrench
+          content_info: name
+          name: Charger in repair
+      column_span: 2
+    - type: grid
+      cards:
+      - type: heading
+        heading: Ioniq 5 N
+        heading_style: title
+        icon: mdi:car-electric
+      - type: custom:mushroom-template-card
+        primary: Ioniq 5 N
+        secondary: '{% if not is_number(states(''sensor.lease_ioniq_monthly_miles''))
+          %}Waiting for mileage data{% elif is_state(''binary_sensor.lease_ioniq_monthly_over_budget'',''on'')
+          %}Over this month''s allowance{% elif states(''sensor.lease_ioniq_month_pace_delta'')|float(0)
+          > states(''input_number.lease_warning_pace_miles'')|float(100) %}Ahead of
+          this month''s pace{% else %}Within this month''s pace{% endif %} · {{ states(''sensor.lease_ioniq_monthly_miles'')|float(0)|round(0)|int
+          }} of {{ states(''sensor.lease_ioniq_monthly_allowance'')|float(0)|round(0)|int
+          }} mi this month'
+        icon: mdi:car-electric
+        icon_color: '{% if is_state(''binary_sensor.lease_ioniq_monthly_over_budget'',''on'')
+          %}red{% elif states(''sensor.lease_ioniq_month_pace_delta'')|float(0) >
+          states(''input_number.lease_warning_pace_miles'')|float(100) %}orange{%
+          else %}green{% endif %}'
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+        layout: horizontal
+        fill_container: true
+        entity: sensor.2025_ioniq_5_n_odometer
+      - type: custom:button-card
+        entity: sensor.lease_ioniq_projected_miles
+        show_name: false
+        show_icon: false
+        show_state: false
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+        triggers_update: all
+        custom_fields:
+          body: "[[[\nconst v = 'ioniq';\nconst num = id => { const s = hass.states[id];\
+            \ const n = s ? parseFloat(s.state) : NaN; return isNaN(n) ? 0 : n; };\n\
+            const fmt = n => Math.round(n).toLocaleString();\nconst money = n => '$'\
+            \ + Math.round(n).toLocaleString();\nconst used = num(`sensor.lease_${v}_used_miles`),\
+            \ total = num(`sensor.lease_${v}_total_allowance`) || 1;\nconst proj =\
+            \ num(`sensor.lease_${v}_projected_miles`), fee = num(`sensor.lease_${v}_projected_cost`);\n\
+            const remaining = num(`sensor.lease_${v}_remaining_miles`), safe = num(`sensor.lease_${v}_safe_monthly_miles`);\n\
+            const weighted = num(`sensor.lease_${v}_weighted_monthly_miles`);\nconst\
+            \ st = hass.states[`input_datetime.lease_${v}_start`], en = hass.states[`input_datetime.lease_${v}_end`];\n\
+            let timePct = 0;\nif (st && en) { const a = new Date(st.state + 'T00:00:00'),\
+            \ b = new Date(en.state + 'T23:59:59');\n  timePct = Math.min(100, Math.max(0,\
+            \ (Date.now() - a) / (b - a) * 100)); }\nconst scale = Math.max(total,\
+            \ proj, used) * 1.04;\nconst p = n => Math.min(100, n / scale * 100).toFixed(1);\n\
+            const over = proj > total, ahead = used / total * 100 > timePct + 3;\n\
+            const color = over ? '#e53935' : (ahead ? '#fb8c00' : '#43a047');\nconst\
+            \ label = over ? 'Projected over' : (ahead ? 'Ahead of pace' : 'On track');\n\
+            const stat = (k, val, sub) => `<div style=\"flex:1;min-width:92px\"><div\
+            \ style=\"font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.04em\"\
+            >${k}</div><div style=\"font-size:20px;font-weight:600\">${val}</div><div\
+            \ style=\"font-size:11px;opacity:.6\">${sub || '&nbsp;'}</div></div>`;\n\
+            return `\n<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:10px\"\
+            >\n  <div style=\"font-size:12px;opacity:.7\">Lease miles used vs. allowance</div>\n\
+            \  <div style=\"background:${color};color:#fff;border-radius:12px;padding:2px\
+            \ 10px;font-size:12px;font-weight:600\">${label}</div>\n</div>\n<div style=\"\
+            position:relative;height:18px;background:var(--divider-color,#8883);border-radius:9px;overflow:visible\"\
+            >\n  <div style=\"position:absolute;left:0;top:0;height:100%;width:${p(proj)}%;background:${color};opacity:.28;border-radius:9px\"\
+            ></div>\n  <div style=\"position:absolute;left:0;top:0;height:100%;width:${p(used)}%;background:${color};border-radius:9px\"\
+            ></div>\n  <div title=\"Time elapsed\" style=\"position:absolute;left:${p(total\
+            \ * timePct / 100)}%;top:-4px;height:26px;width:3px;background:var(--primary-text-color);border-radius:2px\"\
+            ></div>\n  <div title=\"Allowance\" style=\"position:absolute;left:${p(total)}%;top:-4px;height:26px;width:2px;background:var(--primary-text-color);opacity:.5\"\
+            ></div>\n</div>\n<div style=\"position:relative;height:16px;font-size:11px;opacity:.7;margin-top:6px\"\
+            >\n  <span style=\"position:absolute;left:${p(total * timePct / 100)}%;transform:translateX(-50%)\"\
+            >today ${timePct.toFixed(0)}%</span>\n  <span style=\"position:absolute;right:0\"\
+            >${fmt(total)} mi allowance</span>\n</div>\n<div style=\"display:flex;flex-wrap:wrap;gap:14px;margin-top:14px\"\
+            >\n  ${stat('Driven', fmt(used) + ' mi', (used / total * 100).toFixed(0)\
+            \ + '% of allowance')}\n  ${stat('Remaining', fmt(remaining) + ' mi',\
+            \ 'safe ' + fmt(safe) + ' mi/mo')}\n  ${stat('At lease end', fmt(proj)\
+            \ + ' mi', over ? '+' + fmt(proj - total) + ' over' : 'within allowance')}\n\
+            \  ${stat('Projected fee', money(fee), 'pace ' + fmt(weighted) + ' mi/mo')}\n\
+            </div>`;\n]]]"
+        styles:
+          card:
+          - padding: 16px
+          - border-radius: var(--ha-card-border-radius,12px)
+          grid:
+          - grid-template-areas: '"body"'
+          - grid-template-columns: 1fr
+          custom_fields:
+            body:
+            - width: 100%
+            - text-align: left
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+        - type: gauge
+          entity: sensor.lease_ioniq_monthly_percent
+          name: Month allowance used
+          min: 0
+          max: 150
+          needle: true
+          severity:
+            green: 0
+            yellow: 80
+            red: 100
+        - type: gauge
+          entity: sensor.lease_ioniq_projected_cost
+          name: Projected fee
+          min: 0
+          max: 500
+          unit: USD
+          needle: true
+          severity:
+            green: 0
+            yellow: 1
+            red: 150
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+        - type: template
+          content: '{% if is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'')
+            %}Terms confirmed{% else %}Dates provisional{% endif %}'
+          icon: mdi:file-document-check-outline
+          icon_color: '{{ ''green'' if is_state(''input_boolean.lease_ioniq_terms_confirmed'',''on'')
+            else ''orange'' }}'
+          tap_action:
+            action: none
+        - type: template
+          content: '{% set h = states(''sensor.lease_ioniq_data_age_hours'')|float(999)
+            %}{% if h > 72 %}Data {{ (h/24)|round(0)|int }}d old{% else %}Data {{
+            h|round(1) }} h old{% endif %}'
+          icon: mdi:database-clock-outline
+          icon_color: '{{ ''red'' if states(''sensor.lease_ioniq_data_age_hours'')|float(999)
+            > 72 else ''grey'' }}'
+          tap_action:
+            action: none
+    - type: grid
+      cards:
+      - type: heading
+        heading: Dodge Charger
+        heading_style: title
+        icon: mdi:car-sports
+      - type: custom:mushroom-template-card
+        primary: Dodge Charger
+        secondary: '{% if not is_number(states(''sensor.lease_charger_monthly_miles''))
+          %}Waiting for mileage data{% elif is_state(''binary_sensor.lease_charger_monthly_over_budget'',''on'')
+          %}Over this month''s allowance{% elif states(''sensor.lease_charger_month_pace_delta'')|float(0)
+          > states(''input_number.lease_warning_pace_miles'')|float(100) %}Ahead of
+          this month''s pace{% else %}Within this month''s pace{% endif %} · {{ states(''sensor.lease_charger_monthly_miles'')|float(0)|round(0)|int
+          }} of {{ states(''sensor.lease_charger_monthly_allowance'')|float(0)|round(0)|int
+          }} mi this month'
+        icon: mdi:car-sports
+        icon_color: '{% if is_state(''binary_sensor.lease_charger_monthly_over_budget'',''on'')
+          %}red{% elif states(''sensor.lease_charger_month_pace_delta'')|float(0)
+          > states(''input_number.lease_warning_pace_miles'')|float(100) %}orange{%
+          else %}green{% endif %}'
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+        layout: horizontal
+        fill_container: true
+        entity: sensor.dodge_charger_odometer
+      - type: custom:button-card
+        entity: sensor.lease_charger_projected_miles
+        show_name: false
+        show_icon: false
+        show_state: false
+        tap_action:
+          action: none
+        hold_action:
+          action: none
+        triggers_update: all
+        custom_fields:
+          body: "[[[\nconst v = 'charger';\nconst num = id => { const s = hass.states[id];\
+            \ const n = s ? parseFloat(s.state) : NaN; return isNaN(n) ? 0 : n; };\n\
+            const fmt = n => Math.round(n).toLocaleString();\nconst money = n => '$'\
+            \ + Math.round(n).toLocaleString();\nconst used = num(`sensor.lease_${v}_used_miles`),\
+            \ total = num(`sensor.lease_${v}_total_allowance`) || 1;\nconst proj =\
+            \ num(`sensor.lease_${v}_projected_miles`), fee = num(`sensor.lease_${v}_projected_cost`);\n\
+            const remaining = num(`sensor.lease_${v}_remaining_miles`), safe = num(`sensor.lease_${v}_safe_monthly_miles`);\n\
+            const weighted = num(`sensor.lease_${v}_weighted_monthly_miles`);\nconst\
+            \ st = hass.states[`input_datetime.lease_${v}_start`], en = hass.states[`input_datetime.lease_${v}_end`];\n\
+            let timePct = 0;\nif (st && en) { const a = new Date(st.state + 'T00:00:00'),\
+            \ b = new Date(en.state + 'T23:59:59');\n  timePct = Math.min(100, Math.max(0,\
+            \ (Date.now() - a) / (b - a) * 100)); }\nconst scale = Math.max(total,\
+            \ proj, used) * 1.04;\nconst p = n => Math.min(100, n / scale * 100).toFixed(1);\n\
+            const over = proj > total, ahead = used / total * 100 > timePct + 3;\n\
+            const color = over ? '#e53935' : (ahead ? '#fb8c00' : '#43a047');\nconst\
+            \ label = over ? 'Projected over' : (ahead ? 'Ahead of pace' : 'On track');\n\
+            const stat = (k, val, sub) => `<div style=\"flex:1;min-width:92px\"><div\
+            \ style=\"font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.04em\"\
+            >${k}</div><div style=\"font-size:20px;font-weight:600\">${val}</div><div\
+            \ style=\"font-size:11px;opacity:.6\">${sub || '&nbsp;'}</div></div>`;\n\
+            return `\n<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:10px\"\
+            >\n  <div style=\"font-size:12px;opacity:.7\">Lease miles used vs. allowance</div>\n\
+            \  <div style=\"background:${color};color:#fff;border-radius:12px;padding:2px\
+            \ 10px;font-size:12px;font-weight:600\">${label}</div>\n</div>\n<div style=\"\
+            position:relative;height:18px;background:var(--divider-color,#8883);border-radius:9px;overflow:visible\"\
+            >\n  <div style=\"position:absolute;left:0;top:0;height:100%;width:${p(proj)}%;background:${color};opacity:.28;border-radius:9px\"\
+            ></div>\n  <div style=\"position:absolute;left:0;top:0;height:100%;width:${p(used)}%;background:${color};border-radius:9px\"\
+            ></div>\n  <div title=\"Time elapsed\" style=\"position:absolute;left:${p(total\
+            \ * timePct / 100)}%;top:-4px;height:26px;width:3px;background:var(--primary-text-color);border-radius:2px\"\
+            ></div>\n  <div title=\"Allowance\" style=\"position:absolute;left:${p(total)}%;top:-4px;height:26px;width:2px;background:var(--primary-text-color);opacity:.5\"\
+            ></div>\n</div>\n<div style=\"position:relative;height:16px;font-size:11px;opacity:.7;margin-top:6px\"\
+            >\n  <span style=\"position:absolute;left:${p(total * timePct / 100)}%;transform:translateX(-50%)\"\
+            >today ${timePct.toFixed(0)}%</span>\n  <span style=\"position:absolute;right:0\"\
+            >${fmt(total)} mi allowance</span>\n</div>\n<div style=\"display:flex;flex-wrap:wrap;gap:14px;margin-top:14px\"\
+            >\n  ${stat('Driven', fmt(used) + ' mi', (used / total * 100).toFixed(0)\
+            \ + '% of allowance')}\n  ${stat('Remaining', fmt(remaining) + ' mi',\
+            \ 'safe ' + fmt(safe) + ' mi/mo')}\n  ${stat('At lease end', fmt(proj)\
+            \ + ' mi', over ? '+' + fmt(proj - total) + ' over' : 'within allowance')}\n\
+            \  ${stat('Projected fee', money(fee), 'pace ' + fmt(weighted) + ' mi/mo')}\n\
+            </div>`;\n]]]"
+        styles:
+          card:
+          - padding: 16px
+          - border-radius: var(--ha-card-border-radius,12px)
+          grid:
+          - grid-template-areas: '"body"'
+          - grid-template-columns: 1fr
+          custom_fields:
+            body:
+            - width: 100%
+            - text-align: left
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+        - type: gauge
+          entity: sensor.lease_charger_monthly_percent
+          name: Month allowance used
+          min: 0
+          max: 150
+          needle: true
+          severity:
+            green: 0
+            yellow: 80
+            red: 100
+        - type: gauge
+          entity: sensor.lease_charger_projected_cost
+          name: Projected fee
+          min: 0
+          max: 500
+          unit: USD
+          needle: true
+          severity:
+            green: 0
+            yellow: 1
+            red: 150
+      - type: custom:mushroom-chips-card
+        alignment: start
+        chips:
+        - type: template
+          content: '{% if is_state(''input_boolean.lease_charger_terms_confirmed'',''on'')
+            %}Terms confirmed{% else %}Dates provisional{% endif %}'
+          icon: mdi:file-document-check-outline
+          icon_color: '{{ ''green'' if is_state(''input_boolean.lease_charger_terms_confirmed'',''on'')
+            else ''orange'' }}'
+          tap_action:
+            action: none
+        - type: template
+          content: '{% set h = states(''sensor.lease_charger_data_age_hours'')|float(999)
+            %}{% if h > 72 %}Data {{ (h/24)|round(0)|int }}d old{% else %}Data {{
+            h|round(1) }} h old{% endif %}'
+          icon: mdi:database-clock-outline
+          icon_color: '{{ ''red'' if states(''sensor.lease_charger_data_age_hours'')|float(999)
+            > 72 else ''grey'' }}'
+          tap_action:
+            action: none
+    - type: grid
+      cards:
+      - type: heading
+        heading: Trends
+        heading_style: title
+        icon: mdi:chart-line
+      - type: statistics-graph
+        title: Odometer · last 90 days
+        chart_type: line
+        period: day
+        days_to_show: 90
+        stat_types:
+        - state
+        entities:
+        - entity: sensor.2025_ioniq_5_n_odometer
+          name: Ioniq 5 N
+        - entity: sensor.dodge_charger_odometer
+          name: Dodge Charger
+      - type: statistics-graph
+        title: Daily miles · last 30 days
+        chart_type: bar
+        period: day
+        days_to_show: 30
+        stat_types:
+        - change
+        entities:
+        - entity: sensor.2025_ioniq_5_n_odometer
+          name: Ioniq 5 N
+        - entity: sensor.dodge_charger_odometer
+          name: Dodge Charger
+      - type: history-graph
+        title: Pace gap · positive means ahead of budget
+        hours_to_show: 168
+        entities:
+        - entity: sensor.lease_ioniq_pace_delta
+          name: Ioniq 5 N
+        - entity: sensor.lease_charger_pace_delta
+          name: Dodge Charger
+      column_span: 2
+    - type: grid
+      cards:
+      - type: markdown
+        content: <sub>Projections weight the last 7 days (default 60%) and 30 days
+          (40%) and assume that pace continues to lease end. Excess-mile fees use
+          each vehicle's total contract allowance; unused miles on one lease do not
+          offset the other. Costs are estimates at the rate entered under Setup. The
+          Charger's repair-period pace is not representative of normal use.</sub>
+      column_span: 2
+  - type: sections
+    title: Details
+    path: details
+    icon: mdi:table-large
+    max_columns: 2
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Calculation detail
+        heading_style: title
+        icon: mdi:table-large
+      - type: markdown
+        content: Every figure behind the Overview, grouped by vehicle.
+      column_span: 2
+    - type: grid
+      cards:
+      - type: heading
+        heading: Ioniq 5 N
+        heading_style: title
+        icon: mdi:car-electric
+      - type: entities
+        title: Month & lease
+        show_header_toggle: false
+        entities:
+        - entity: sensor.lease_ioniq_monthly_miles
+          name: Miles this calendar month
+        - entity: sensor.lease_ioniq_monthly_allowance
+          name: Monthly allowance
+        - entity: sensor.lease_ioniq_month_pace_delta
+          name: Ahead (+) / behind (−) month pace
+        - entity: sensor.lease_ioniq_monthly_overage
+          name: Over full monthly allowance
+        - entity: sensor.lease_ioniq_monthly_overage_cost
+          name: This month excess fee
+        - entity: sensor.lease_ioniq_current_budget_overage
+          name: Over cumulative budget today
+        - entity: sensor.lease_ioniq_current_budget_cost
+          name: Current budget overage fee
+        - entity: sensor.lease_ioniq_pace_delta
+          name: Ahead (+) / behind (−) lease pace
+        - entity: sensor.lease_ioniq_remaining_miles
+          name: Lease miles remaining
+        - entity: sensor.lease_ioniq_safe_monthly_miles
+          name: Monthly pace to stay within lease
+      - type: entities
+        title: Projections
+        show_header_toggle: false
+        entities:
+        - entity: sensor.lease_ioniq_weighted_monthly_miles
+          name: Weighted pace, monthly
+        - entity: sensor.lease_ioniq_weekly_daily_miles
+          name: Last 7 days, mi/day
+        - entity: sensor.lease_ioniq_recent_daily_miles
+          name: Last 30 days, mi/day
+        - entity: sensor.lease_ioniq_projected_miles
+          name: Lease-end miles, weighted pace
+        - entity: sensor.lease_ioniq_lifetime_projected_miles
+          name: Lease-end miles, lifetime pace
+        - entity: sensor.lease_ioniq_projected_overage
+          name: Projected excess miles
+        - entity: sensor.lease_ioniq_projected_cost
+          name: Projected excess-mile fee
+        - entity: sensor.lease_ioniq_already_incurred_cost
+          name: Fee if no more miles driven
+        - entity: sensor.lease_ioniq_data_age_hours
+          name: Vehicle data age (hours)
+    - type: grid
+      cards:
+      - type: heading
+        heading: Dodge Charger
+        heading_style: title
+        icon: mdi:car-sports
+      - type: entities
+        title: Month & lease
+        show_header_toggle: false
+        entities:
+        - entity: sensor.lease_charger_monthly_miles
+          name: Miles this calendar month
+        - entity: sensor.lease_charger_monthly_allowance
+          name: Monthly allowance
+        - entity: sensor.lease_charger_month_pace_delta
+          name: Ahead (+) / behind (−) month pace
+        - entity: sensor.lease_charger_monthly_overage
+          name: Over full monthly allowance
+        - entity: sensor.lease_charger_monthly_overage_cost
+          name: This month excess fee
+        - entity: sensor.lease_charger_current_budget_overage
+          name: Over cumulative budget today
+        - entity: sensor.lease_charger_current_budget_cost
+          name: Current budget overage fee
+        - entity: sensor.lease_charger_pace_delta
+          name: Ahead (+) / behind (−) lease pace
+        - entity: sensor.lease_charger_remaining_miles
+          name: Lease miles remaining
+        - entity: sensor.lease_charger_safe_monthly_miles
+          name: Monthly pace to stay within lease
+      - type: entities
+        title: Projections
+        show_header_toggle: false
+        entities:
+        - entity: sensor.lease_charger_weighted_monthly_miles
+          name: Weighted pace, monthly
+        - entity: sensor.lease_charger_weekly_daily_miles
+          name: Last 7 days, mi/day
+        - entity: sensor.lease_charger_recent_daily_miles
+          name: Last 30 days, mi/day
+        - entity: sensor.lease_charger_projected_miles
+          name: Lease-end miles, weighted pace
+        - entity: sensor.lease_charger_lifetime_projected_miles
+          name: Lease-end miles, lifetime pace
+        - entity: sensor.lease_charger_projected_overage
+          name: Projected excess miles
+        - entity: sensor.lease_charger_projected_cost
+          name: Projected excess-mile fee
+        - entity: sensor.lease_charger_already_incurred_cost
+          name: Fee if no more miles driven
+        - entity: sensor.lease_charger_data_age_hours
+          name: Vehicle data age (hours)
+  - type: sections
+    title: Downtime & savings
+    path: downtime
+    icon: mdi:car-wrench
+    max_columns: 2
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Charger downtime & Ioniq impact
+        heading_style: title
+        icon: mdi:car-wrench
+      - type: markdown
+        content: '{% if not is_state(''input_boolean.lease_downtime_baseline_confirmed'',''on'')
+          %}**Start date estimated: March 8, 2026** (midpoint of an early-to-mid-March
+          estimate); the range covers every start date March 1–15.{% else %}Incident
+          baseline confirmed.{% endif %} Turn **Charger unavailable** off when it
+          returns to freeze the record.'
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+        - type: custom:mushroom-template-card
+          primary: Downtime
+          secondary: '{{ states(''sensor.lease_downtime_days'')|float(0)|round(0)|int
+            }} days tracked'
+          icon: mdi:car-wrench
+          icon_color: orange
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Ioniq driven
+          secondary: '{{ states(''sensor.lease_downtime_ioniq_miles'')|float(0)|round(0)|int|string
+            }} mi'
+          icon: mdi:map-marker-distance
+          icon_color: blue
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Above allowance pace
+          secondary: '{{ states(''sensor.lease_downtime_excess_miles'')|float(0)|round(0)|int
+            }} excess mi'
+          icon: mdi:gauge-full
+          icon_color: red
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Potential cost
+          secondary: ${{ states('sensor.lease_downtime_cost_low')|float(0)|round(0)|int
+            }}–${{ states('sensor.lease_downtime_cost_high')|float(0)|round(0)|int
+            }} (range)
+          icon: mdi:cash
+          icon_color: red
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+      - type: markdown
+        content: '<sub>Measured = Ioniq odometer change. Estimated = miles above the
+          Ioniq''s allowance pace (1,000/month). A planning baseline, not proof that
+          each excess mile was caused by the wreck, and not a guarantee of insurance
+          reimbursement. Marginal projected fee: ${{ states(''sensor.lease_downtime_marginal_projected_cost'')|float(0)|round(0)|int
+          }}.</sub>'
+      column_span: 2
+    - type: grid
+      cards:
+      - type: heading
+        heading: Downtime record
+        heading_style: title
+        icon: mdi:clipboard-text-clock
+      - type: entities
+        title: ''
+        show_header_toggle: false
+        entities:
+        - entity: input_boolean.lease_charger_unavailable
+          name: Charger unavailable
+        - entity: input_datetime.lease_downtime_start
+          name: Downtime start
+        - entity: input_number.lease_downtime_ioniq_start_odometer
+          name: Ioniq odometer at start
+        - entity: input_boolean.lease_downtime_baseline_confirmed
+          name: Baseline confirmed
+        - entity: input_datetime.lease_downtime_end
+          name: Downtime end
+        - entity: input_number.lease_downtime_ioniq_end_odometer
+          name: Ioniq final odometer
+    - type: grid
+      cards:
+      - type: heading
+        heading: After the Charger returns
+        heading_style: title
+        icon: mdi:swap-horizontal
+      - type: custom:mushroom-number-card
+        entity: input_number.lease_shift_monthly_miles
+        name: Monthly miles shifted to Charger
+        display_mode: slider
+        icon: mdi:swap-horizontal
+        fill_container: true
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+        - type: custom:mushroom-template-card
+          primary: Avoided fees
+          secondary: '{{ ''-'' if states(''sensor.lease_shift_projected_savings'')|float(0)
+            < 0 }}${{ states(''sensor.lease_shift_projected_savings'')|float(0)|abs|round(0)|int
+            }}'
+          icon: mdi:piggy-bank-outline
+          icon_color: '{{ ''green'' if states(''sensor.lease_shift_projected_savings'')|float(0)
+            > 0 else ''red'' }}'
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+        - type: custom:mushroom-template-card
+          primary: Combined fees now
+          secondary: ${{ states('sensor.lease_combined_projected_cost')|float(0)|round(0)|int
+            }}
+          icon: mdi:cash-multiple
+          icon_color: orange
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          layout: horizontal
+          fill_container: true
+      - type: markdown
+        content: <sub>Assumes the shift starts now and lasts the Ioniq's remaining
+          term, including any new Charger excess fee. Negative means the shift would
+          cost more. Excludes energy, repair and operating costs.</sub>
+  - type: sections
+    title: Setup
+    path: setup
+    icon: mdi:tune
+    max_columns: 2
+    sections:
+    - type: grid
+      cards:
+      - type: heading
+        heading: Lease inputs
+        heading_style: title
+        icon: mdi:tune
+      - type: markdown
+        content: 'Defaults: **Oct 1, 2025 – Sep 30, 2027** (24 months), starting odometers
+          **0 mi** (enter the odometer at delivery, not today''s). The excess charge
+          is USD per mile (currently **$0.10**); **0 means unknown, not free**. Keep
+          the 24-month term if you change dates. Confirmation switches only label
+          the inputs.'
+      column_span: 2
+    - type: grid
+      cards:
+      - type: heading
+        heading: Ioniq 5 N contract
+        heading_style: title
+        icon: mdi:car-electric
+      - type: entities
+        title: ''
+        show_header_toggle: false
+        entities:
+        - entity: input_datetime.lease_ioniq_start
+          name: Lease start
+        - entity: input_datetime.lease_ioniq_end
+          name: Lease end (inclusive)
+        - entity: input_number.lease_ioniq_start_odometer
+          name: Odometer at delivery
+        - entity: input_number.lease_ioniq_annual_allowance
+          name: Annual allowance
+        - entity: input_number.lease_ioniq_excess_rate
+          name: Excess-mile charge (USD/mi)
+        - entity: input_boolean.lease_ioniq_terms_confirmed
+          name: Dates & delivery mileage confirmed
+    - type: grid
+      cards:
+      - type: heading
+        heading: Dodge Charger contract
+        heading_style: title
+        icon: mdi:car-sports
+      - type: entities
+        title: ''
+        show_header_toggle: false
+        entities:
+        - entity: input_datetime.lease_charger_start
+          name: Lease start
+        - entity: input_datetime.lease_charger_end
+          name: Lease end (inclusive)
+        - entity: input_number.lease_charger_start_odometer
+          name: Odometer at delivery
+        - entity: input_number.lease_charger_annual_allowance
+          name: Annual allowance
+        - entity: input_number.lease_charger_excess_rate
+          name: Excess-mile charge (USD/mi)
+        - entity: input_boolean.lease_charger_terms_confirmed
+          name: Dates & delivery mileage confirmed
+    - type: grid
+      cards:
+      - type: heading
+        heading: Notifications
+        heading_style: title
+        icon: mdi:bell-cog-outline
+      - type: entities
+        title: ''
+        show_header_toggle: false
+        entities:
+        - entity: input_boolean.lease_notifications_enabled
+          name: Enable notifications
+        - entity: input_number.lease_warning_pace_miles
+          name: Miles ahead of month pace before warning
+        - entity: input_number.lease_recent_weight_percent
+          name: Weight on last 7 days (%)
+        - entity: input_datetime.lease_last_warning
+          name: Last daily warning
+      - type: markdown
+        content: <sub>Daily 6 PM warning if over budget, ahead of pace or projected
+          over; threshold crossings can also warn 8 AM–9 PM, at most once a day. Sunday
+          10 AM weekly summary to JD and Sam. Baselines refresh at 12:15 AM and on
+          startup.</sub>
+  - title: Roadbox
+    path: roadbox
+    icon: mdi:car-connected
+    type: sections
+    max_columns: 3
+    sections:
+    - type: grid
+      cards:
+      - type: button
+        name: Browse saved footage (Tailscale)
+        icon: mdi:video-outline
+        tap_action:
+          action: url
+          url_path: https://jdh-pro-05.tail2a279.ts.net/
+      - type: heading
+        heading: Pi power
+        icon: mdi:power-plug-battery-outline
+      - type: markdown
+        title: Pi power
+        content: '{% set stamp = as_timestamp(state_attr(''sensor.roadbox_power'',
+          ''observed_at''), none) %}
+
+          {% set age = as_timestamp(now()) - stamp if stamp is not none else none
+          %}
+
+          {% set fresh = age is not none and age >= 0 and age <= 45 and state_attr(''sensor.roadbox_power'',
+          ''fresh'') is sameas true %}
+
+          {% set source = states(''sensor.roadbox_power'') %}
+
+          {% if not fresh %}### Power status unavailable or stale
+
+          The Pi has stopped reporting. Last saved power state does not establish
+          current power.
+
+          {% elif source == ''external'' %}### External power connected
+
+          {% elif source == ''battery'' %}### Running on battery
+
+          {% else %}### Power signal unavailable
+
+          {% endif %}
+
+          {% set enabled = state_attr(''sensor.roadbox_power'', ''shutdown_enabled'')
+          is sameas true %}
+
+          {% if not enabled %}**Automatic shutdown disabled — commissioning.**
+
+          {% elif fresh and state_attr(''sensor.roadbox_power'', ''phase'') == ''shutdown_requested''
+          %}**Shutdown requested.** Restoration cannot cancel a shutdown already accepted.
+
+          {% elif fresh and source == ''battery'' %}{% set deadline = as_timestamp(state_attr(''sensor.roadbox_power'',
+          ''shutdown_at''), none) %}
+
+          {% if deadline is not none %}**Shutdown scheduled for {{ deadline | timestamp_custom(''%H:%M:%S'',
+          true) }}** (about {{ [0, (deadline - as_timestamp(now())) | round(0) | int]
+          | max }} seconds remaining at this update). Reconnect input power to cancel
+          before shutdown begins.
+
+          {% else %}**Shutdown deadline unavailable.**{% endif %}
+
+          {% elif fresh and source == ''external'' %}Automatic shutdown armed; power-loss
+          grace period is 2 minutes.
+
+          {% endif %}
+
+          {% if fresh and state_attr(''sensor.roadbox_power'', ''fault'') %}**Power
+          fault:** {{ state_attr(''sensor.roadbox_power'', ''fault'') }}{% endif %}
+
+
+          **PiSugar S Plus · Battery percentage unavailable.** This model has no charge
+          telemetry. External power presence does not confirm active charging.
+
+          {% if stamp is not none %}Last observation: {{ stamp | timestamp_custom(''%m/%d
+          %H:%M:%S'', true) }}. Readings older than 45 seconds are stale at the next
+          refresh (up to one additional minute if the Pi stops reporting). This card
+          is not a second-by-second timer.{% endif %}
+
+          '
+      - type: heading
+        heading: Transfer now
+        icon: mdi:cloud-download-outline
+      - type: tile
+        entity: sensor.roadbox_transfer
+        name: Transfer to PC
+      - type: tile
+        entity: binary_sensor.roadbox_transfer_needed
+        name: Footage waiting
+        color: amber
+      - type: tile
+        entity: binary_sensor.roadbox_camera_card_missing
+        name: Return camera SD card
+        color: red
+      - type: tile
+        entity: binary_sensor.roadbox_camera_recovery
+        name: Camera pause recovery
+        color: red
+      - type: markdown
+        content: '{% set recovery = states(''binary_sensor.roadbox_camera_recovery'')
+          %}
+
+          {% if recovery == ''on'' %}**Camera recording restoration has not been confirmed.**
+          The Pi retains the pause lease and retries recovery. An unreachable or powered-off
+          camera cannot acknowledge recording.
+
+          {% elif recovery == ''off'' %}No camera pause recovery is pending. This
+          does not prove the camera is recording.
+
+          {% else %}Camera pause recovery status is unknown.
+
+          {% endif %}
+
+          {% if not state_attr(''binary_sensor.roadbox_camera_recovery'',''fresh'')
+          %}**The lease observation is unavailable or stale.** A previous recovery
+          warning remains until a current Pi observation clears it.{% endif %}'
+      - type: conditional
+        conditions:
+        - entity: binary_sensor.roadbox_camera_card_missing
+          state: 'on'
+        card:
+          type: button
+          entity: input_button.roadbox_camera_card_returned
+          name: Card back in camera
+          icon: mdi:micro-sd
+          show_state: false
+          tap_action:
+            action: perform-action
+            perform_action: input_button.press
+            target:
+              entity_id: input_button.roadbox_camera_card_returned
+            confirmation:
+              text: I have returned the SD card to the camera. Clear the reminder
+                and allow wireless transfers?
+      - type: markdown
+        content: '{% set t = states(''sensor.roadbox_transfer'') %}
+
+          {% set hb = states(''sensor.roadbox_heartbeat'') %}
+
+          {% set age = as_timestamp(now()) - as_timestamp(hb,0) %}
+
+          {% set healthy = hb not in [''unknown'',''unavailable''] and -5 <= age <
+          180 and state_attr(''sensor.roadbox_heartbeat'',''healthy'') is sameas true
+          %}
+
+          ### {{ ''Last report'' if healthy else ''Monitor needs attention'' }} ·
+          {{ t | title }}
+
+          {% set verified = state_attr(''sensor.roadbox_archive'',''verified_bytes'')
+          | float(0) %}
+
+          {% set expected = state_attr(''sensor.roadbox_archive'',''expected_bytes'')
+          | float(0) %}
+
+          **{{ states(''sensor.roadbox_archive'') }} verified clips** · {{ ''%.2f''
+          | format(verified / 1000000000) }} GB saved
+
+          {% if expected > 0 %}{% set pct = [100, [0, 100 * verified / expected] |
+          max] | min %}
+
+          **Archive · {{ ''%.1f'' | format(pct) }}%**
+
+          {% set filled = (pct / 5) | int %}
+
+          `{{ ''█'' * filled }}{{ ''░'' * (20 - filled) }}`
+
+          {{ ''%.2f'' | format(verified / 1000000000) }} / {{ ''%.1f'' | format(expected
+          / 1000000000) }} GB verified
+
+          {% else %}Archive size not yet known.{% endif %}
+
+          {% set chunk = state_attr(''sensor.roadbox_transfer'',''inflight_bytes'')
+          | float(0) %}
+
+          {% set total = state_attr(''sensor.roadbox_transfer'',''inflight_total_bytes'')
+          | float(0) %}
+
+          {% if total > 0 %}{% set clip_pct = [100, [0, 100 * chunk / total] | max]
+          | min %}
+
+          **Current clip · {{ ''%.0f'' | format(clip_pct) }}%**
+
+          {% set clip_filled = (clip_pct / 5) | int %}
+
+          `{{ ''█'' * clip_filled }}{{ ''░'' * (20 - clip_filled) }}`
+
+          {{ ''%.1f'' | format(chunk / 1000000) }} / {{ ''%.1f'' | format(total /
+          1000000) }} MB
+
+          {% else %}No clip currently in flight.{% endif %}
+
+
+          {% set mode = state_attr(''sensor.roadbox_transfer'',''source_mode'') %}
+
+          **{{ ''USB card'' if mode == ''usb_card'' else ''Camera Wi-Fi'' }} → Pi
+          bridge → PC.** Completed clips are verified and skipped on reconnect.
+
+          {% if is_state(''binary_sensor.roadbox_camera_card_missing'',''on'') %}**Return
+          the SD card to the camera before driving.** {% if state_attr(''sensor.roadbox_transfer'',''safe_to_remove'')
+          %}The card is safely unmounted; remove it from the reader.{% else %}Keep
+          the reader connected until safe removal is confirmed.{% endif %}{% else
+          %}Wireless imports start automatically when the camera is reachable and
+          the vehicle is at home. USB cards take priority for catch-up copies.{% endif
+          %}'
+      - type: entities
+        title: Car and monitor
+        show_header_toggle: false
+        entities:
+        - entity: sensor.dodge_charger_hvbattery_charge
+          name: Vehicle charge
+        - entity: binary_sensor.dodge_charger_ignition
+          name: Vehicle ignition
+        - entity: device_tracker.dodge_charger_location
+          name: Vehicle location
+        - entity: sensor.roadbox_heartbeat
+          name: Last monitor update
+    - type: grid
+      cards:
+      - type: heading
+        heading: Daily footage
+        icon: mdi:calendar-check-outline
+      - type: tile
+        entity: sensor.roadbox_youtube
+        name: YouTube processing
+      - type: markdown
+        content: '{% if not state_attr(''sensor.roadbox_youtube'',''fresh'') %}**YouTube
+          worker status is unavailable or stale.** Saved day receipts remain visible,
+          but an old uploading state does not establish current activity.
+
+          {% elif is_state(''sensor.roadbox_youtube'',''waiting_for_youtube_processing'')
+          %}**Uploads are waiting for owner processing confirmation.** Existing video
+          IDs are retained and checked again without uploading duplicates.
+
+          {% elif is_state(''sensor.roadbox_youtube'',''held_youtube_rejected'') %}**YouTube
+          rejected an upload part.** Its rejection evidence is retained for review.
+
+          {% endif %}
+
+          All uploads remain private until residential privacy edits and review are
+          implemented.'
+      - type: markdown
+        content: '{% for d in state_attr(''sensor.roadbox_days'',''days'') or [] %}
+
+          {% set pct = [100, [0, 100 * d.verified / d.expected] | max] | min if d.expected
+          > 0 else 0 %}
+
+          **{{ d.day[4:6] }}/{{ d.day[6:8] }} · {{ ''%.0f'' | format(pct) }}% saved{{
+          '' · Archive complete'' if d.complete else ('' · Upload held'' if not d.closed
+          else '''') }}**
+
+          {% set filled = (pct / 5) | int %}
+
+          `{{ ''█'' * filled }}{{ ''░'' * (20 - filled) }}`
+
+          Front {{ d.front.verified }}/{{ d.front.expected }} · Rear {{ d.rear.verified
+          }}/{{ d.rear.expected }} · {{ d.verified }}/{{ d.expected }} clips verified
+
+          {% if d.unavailable | default(0) | int(0) > 0 %}{{ d.unavailable }} clips
+          confirmed unavailable; recorded as gaps.{% endif %}
+
+          {% if d.unresolved | int(0) > 0 %}**{{ d.unresolved }} unresolved source
+          gaps — upload held.**{% endif %}
+
+
+          {% set uploads = state_attr(''sensor.roadbox_youtube'',''days'') or {} %}
+
+          YouTube: **{{ (uploads.get(d.day, ''waiting for finalized day'')) | replace(''_'',''
+          '') }}**
+
+
+          {% endfor %}
+
+          All available clips must be verified against a finalized inventory before
+          upload. Confirmed unavailable footage is documented and does not block upload.
+          All uploads remain private.'
+      - type: history-graph
+        title: Transfer activity · 12 hours
+        hours_to_show: 12
+        entities:
+        - sensor.roadbox_transfer
+        - binary_sensor.roadbox_transfer_needed
+    - type: grid
+      cards:
+      - type: heading
+        heading: Trips and next action
+        icon: mdi:map-clock-outline
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.roadbox_transfer_needed
+          state: 'on'
+        card:
+          type: markdown
+          content: '### Footage is waiting
+
+            If the transfer is active, let it continue. If it is waiting and the car
+            is off, turn the car on when safe to power the camera. Keep camera power
+            on until copying finishes.
+
+
+            A Home Assistant notification appears when footage is waiting and camera/car
+            power needs attention.'
+      - type: markdown
+        content: '### Likely recording windows
+
+          {% for t in (state_attr(''sensor.roadbox_vehicle_history'',''likely_trips'')
+          or [])[-5:] | reverse %}- {{ as_timestamp(t.start) | timestamp_custom(''%m/%d
+          %H:%M'', true) }} – {{ as_timestamp(t.end) | timestamp_custom(''%H:%M'',
+          true) }} · {{ ''uncertain'' if t.uncertain else ''likely'' }}
+
+          {% else %}No retained recording windows are available.{% endfor %}
+
+
+          {% set pending = state_attr(''sensor.roadbox_vehicle_history'',''pending_recording_windows'')
+          or [] %}**{{ pending | length }} likely windows have no complete-day receipt.**
+          These are estimates, not confirmed missing clips.
+
+
+          History coverage: **{{ states(''sensor.roadbox_vehicle_history'') }}**.
+          Sparse or missing readings stay uncertain. Location history does not certify
+          a video is safe to publish.'

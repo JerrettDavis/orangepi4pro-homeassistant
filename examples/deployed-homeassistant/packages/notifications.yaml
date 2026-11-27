@@ -1,0 +1,6 @@
+notify:
+- platform: group
+  name: household
+  services:
+  - action: mobile_app_jd_s23_ultra
+  - action: mobile_app_samsung_s23_ultra

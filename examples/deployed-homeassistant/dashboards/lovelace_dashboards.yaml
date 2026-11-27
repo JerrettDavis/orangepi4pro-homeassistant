@@ -1,0 +1,43 @@
+items:
+- show_in_sidebar: true
+  icon: mdi:lan
+  title: Network
+  require_admin: false
+  mode: storage
+  url_path: dashboard-network
+  id: dashboard_network
+- id: map
+  icon: mdi:map
+  title: Map
+  url_path: map
+  mode: storage
+  require_admin: false
+  show_in_sidebar: true
+- id: dashboard_vehicles
+  url_path: dashboard-vehicles
+  title: Vehicle leases
+  icon: mdi:car-multiple
+  show_in_sidebar: true
+  require_admin: false
+  mode: storage
+- id: dashboard_desktops
+  url_path: dashboard-desktops
+  title: Desktops
+  icon: mdi:desktop-tower-monitor
+  show_in_sidebar: true
+  require_admin: false
+  mode: storage
+- id: dashboard_home_operations
+  url_path: dashboard-home-operations
+  title: Home Operations
+  icon: mdi:home-heart
+  show_in_sidebar: true
+  require_admin: false
+  mode: storage
+- id: dashboard_lights
+  url_path: dashboard-lights
+  title: Lights
+  icon: mdi:lightbulb-group
+  show_in_sidebar: true
+  require_admin: false
+  mode: storage

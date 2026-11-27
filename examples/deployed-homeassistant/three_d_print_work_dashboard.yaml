@@ -1,0 +1,46 @@
+title: 3D Print Work
+views:
+- title: Work
+  path: work
+  icon: mdi:clipboard-list
+  cards:
+  - type: entities
+    title: Work queue
+    entities:
+    - entity: sensor.three_d_print_active
+      name: Active
+    - entity: sensor.three_d_print_unacknowledged
+      name: Unacknowledged
+    - entity: sensor.three_d_print_urgent
+      name: Urgent
+    - entity: sensor.three_d_print_waiting_customer
+      name: Waiting for customer
+  - type: markdown
+    entity_id: sensor.three_d_print_work
+    content: '## Active work
+
+
+      [Open the operator queue](https://work.3dprint4.me/)
+
+
+      {% set items = state_attr(''sensor.three_d_print_work'', ''items'') %}
+
+      {% if not has_value(''sensor.three_d_print_work'') or items is none %}
+
+      Work feed unavailable. [Open the operator queue](https://work.3dprint4.me/).
+
+      {% elif items %}
+
+      {% for item in items %}
+
+      - [{{ item.id }}]({{ item.url }}) Â· {{ item.service }} Â· {{ item.status }}
+      Â· {{ item.priority }}{% if not item.acknowledged %} Â· unacknowledged{% endif
+      %}
+
+      {% endfor %}
+
+      {% else %}
+
+      No active work. [Open the operator queue](https://work.3dprint4.me/).
+
+      {% endif %}'

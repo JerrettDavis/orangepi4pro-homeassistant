@@ -1,0 +1,75 @@
+rest:
+- resource: https://3dprint4.me/api/home-assistant-work
+  method: GET
+  headers:
+    Authorization: !secret 'three_d_print_work_authorization'
+  scan_interval: 60
+  timeout: 10
+  sensor:
+  - name: Three D Print Work
+    unique_id: three_d_print_work
+    value_template: '{{ value_json.counts.active }}'
+    json_attributes:
+    - generatedAt
+    - queueUrl
+    - counts
+    - latestCreatedId
+    - items
+template:
+- sensor:
+  - name: Three D Print Active
+    unique_id: three_d_print_active
+    state_class: measurement
+    icon: mdi:clipboard-list
+    availability: '{{ has_value(''sensor.three_d_print_work'') }}'
+    state: '{{ (state_attr(''sensor.three_d_print_work'', ''counts'') or {}).get(''active'',
+      0) }}'
+  - name: Three D Print Unacknowledged
+    unique_id: three_d_print_unacknowledged
+    state_class: measurement
+    icon: mdi:bell-alert
+    availability: '{{ has_value(''sensor.three_d_print_work'') }}'
+    state: '{{ (state_attr(''sensor.three_d_print_work'', ''counts'') or {}).get(''unacknowledged'',
+      0) }}'
+  - name: Three D Print Urgent
+    unique_id: three_d_print_urgent
+    state_class: measurement
+    icon: mdi:alert-circle
+    availability: '{{ has_value(''sensor.three_d_print_work'') }}'
+    state: '{{ (state_attr(''sensor.three_d_print_work'', ''counts'') or {}).get(''urgent'',
+      0) }}'
+  - name: Three D Print Waiting Customer
+    unique_id: three_d_print_waiting_customer
+    state_class: measurement
+    icon: mdi:account-clock
+    availability: '{{ has_value(''sensor.three_d_print_work'') }}'
+    state: '{{ (state_attr(''sensor.three_d_print_work'', ''counts'') or {}).get(''waitingCustomer'',
+      0) }}'
+  - name: Three D Print Latest Work
+    unique_id: three_d_print_latest_work
+    icon: mdi:briefcase-clock
+    availability: '{{ has_value(''sensor.three_d_print_work'') }}'
+    state: '{{ state_attr(''sensor.three_d_print_work'', ''latestCreatedId'') or ''none''
+      }}'
+automation:
+- id: three_d_print_new_work
+  alias: 3D Print new work alert
+  initial_state: true
+  triggers:
+  - trigger: state
+    entity_id: sensor.three_d_print_latest_work
+    to: null
+  conditions:
+  - condition: template
+    value_template: "{% set previous = trigger.from_state.state if trigger.from_state\
+      \ is not none else '' %} {% set current = trigger.to_state.state if trigger.to_state\
+      \ is not none else '' %} {{ previous | regex_match('^work_[A-Za-z0-9_-]{8,123}$')\n\
+      \   and current | regex_match('^work_[A-Za-z0-9_-]{8,123}$')\n   and current\
+      \ != previous }}"
+  actions:
+  - action: persistent_notification.create
+    data:
+      notification_id: three_d_print_new_work
+      title: New 3D print work
+      message: New work is available. [Open it in the operator inbox](https://work.3dprint4.me/work/{{
+        trigger.to_state.state }})

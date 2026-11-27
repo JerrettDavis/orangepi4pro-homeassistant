@@ -1,0 +1,574 @@
+input_number:
+  spoolmansync_22e8aj632605622_last_tray:
+    name: SpoolmanSync 22e8aj632605622 Last Tray
+    min: -1
+    max: 99
+    step: 1
+  spoolmansync_20p5aj661102691_last_tray:
+    name: SpoolmanSync 20p5aj661102691 Last Tray
+    min: -1
+    max: 99
+    step: 1
+utility_meter:
+  spoolmansync_22e8aj632605622_filament_usage_meter:
+    unique_id: spoolmansync-22e8aj632605622-filament-usage-meter
+    source: sensor.spoolmansync_22e8aj632605622_filament_usage
+    always_available: true
+  spoolmansync_20p5aj661102691_filament_usage_meter:
+    unique_id: spoolmansync-20p5aj661102691-filament-usage-meter
+    source: sensor.spoolmansync_20p5aj661102691_filament_usage
+    always_available: true
+rest_command:
+  spoolmansync_update_spool:
+    url: https://spools.jerrettdavis.com/api/webhook
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-SpoolmanSync-Token: !secret 'packages_spoolmansync_rest_command_spoolmansync_update_spool_headers_x_spoolmansync_token'
+    payload: "{\n  \"event\": \"spool_usage\",\n  \"name\": \"{{ filament_name }}\"\
+      ,\n  \"material\": \"{{ filament_material }}\",\n  \"tray_uuid\": \"{{ filament_tray_uuid\
+      \ }}\",\n  \"used_weight\": {{ filament_used_weight | default(0) | round(2)\
+      \ }},\n  \"used_length\": {{ filament_used_length | default(0) | round(2) }},\n\
+      \  \"color\": \"{{ filament_color }}\",\n  \"active_tray_id\": \"{{ filament_active_tray_id\
+      \ }}\"\n}\n"
+  spoolmansync_tray_change:
+    url: https://spools.jerrettdavis.com/api/webhook
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-SpoolmanSync-Token: !secret 'packages_spoolmansync_rest_command_spoolmansync_tray_change_headers_x_spoolmansync_token'
+    payload: "{\n  \"event\": \"tray_change\",\n  \"tray_entity_id\": \"{{ tray_entity_id\
+      \ }}\",\n  \"tray_uuid\": \"{{ tray_uuid }}\",\n  \"name\": \"{{ name }}\",\n\
+      \  \"material\": \"{{ material }}\",\n  \"color\": \"{{ color }}\",\n  \"current_print_state\"\
+      : \"{{ current_print_state }}\"\n}\n"
+template:
+- sensor:
+  - name: SpoolmanSync 22e8aj632605622 Filament Usage
+    unique_id: spoolmansync-22e8aj632605622-filament-usage
+    state: "{{ states('sensor.kitchen_p2s_print_weight') | float(0) / 100 *\n   states('sensor.kitchen_p2s_print_progress')\
+      \ | float(0) }}\n"
+    availability: "{{ states('sensor.kitchen_p2s_print_weight') not in ['unknown',\
+      \ 'unavailable']\n   and states('sensor.kitchen_p2s_print_progress') not in\
+      \ ['unknown', 'unavailable'] }}\n"
+  - name: SpoolmanSync 22e8aj632605622 Active Tray
+    unique_id: spoolmansync-22e8aj632605622-active-tray
+    state: "{# Check external spool(s) #} {% if state_attr('sensor.kitchen_p2s_external_spool_external_spool',\
+      \ 'active') in [true, 'true', 'True'] %}\n  0\n{% endif %} {# Check AMS1 trays\
+      \ #} {% if state_attr('sensor.kitchen_p2s_ams_tray_1', 'active') in [true, 'true',\
+      \ 'True'] %}\n  11\n{% endif %} {% if state_attr('sensor.kitchen_p2s_ams_tray_2',\
+      \ 'active') in [true, 'true', 'True'] %}\n  12\n{% endif %} {% if state_attr('sensor.kitchen_p2s_ams_tray_3',\
+      \ 'active') in [true, 'true', 'True'] %}\n  13\n{% endif %} {% if state_attr('sensor.kitchen_p2s_ams_tray_4',\
+      \ 'active') in [true, 'true', 'True'] %}\n  14\n{% endif %}\n"
+    availability: "{{ expand([\n  'sensor.kitchen_p2s_external_spool_external_spool',\n\
+      \  'sensor.kitchen_p2s_ams_tray_1',\n  'sensor.kitchen_p2s_ams_tray_2',\n  'sensor.kitchen_p2s_ams_tray_3',\n\
+      \  'sensor.kitchen_p2s_ams_tray_4'\n]) | rejectattr('state', 'eq', 'unavailable')\
+      \ | list | count > 0 }}\n"
+  - name: SpoolmanSync 20p5aj661102691 Filament Usage
+    unique_id: spoolmansync-20p5aj661102691-filament-usage
+    state: "{{ states('sensor.x2d_20p5aj661102691_print_weight') | float(0) / 100\
+      \ *\n   states('sensor.x2d_20p5aj661102691_print_progress') | float(0) }}\n"
+    availability: "{{ states('sensor.x2d_20p5aj661102691_print_weight') not in ['unknown',\
+      \ 'unavailable']\n   and states('sensor.x2d_20p5aj661102691_print_progress')\
+      \ not in ['unknown', 'unavailable'] }}\n"
+  - name: SpoolmanSync 20p5aj661102691 Active Tray
+    unique_id: spoolmansync-20p5aj661102691-active-tray
+    state: "{# Check external spool(s) #} {% if state_attr('sensor.x2d_20p5aj661102691_externalspool_external_spool',\
+      \ 'active') in [true, 'true', 'True'] %}\n  0\n{% endif %} {% if state_attr('sensor.x2d_20p5aj661102691_externalspool2_external_spool',\
+      \ 'active') in [true, 'true', 'True'] %}\n  1\n{% endif %} {# Check AMS1 trays\
+      \ #} {% if state_attr('sensor.x2d_20p5aj661102691_ams_1_tray_1', 'active') in\
+      \ [true, 'true', 'True'] %}\n  11\n{% endif %} {% if state_attr('sensor.x2d_20p5aj661102691_ams_1_tray_2',\
+      \ 'active') in [true, 'true', 'True'] %}\n  12\n{% endif %} {% if state_attr('sensor.x2d_20p5aj661102691_ams_1_tray_3',\
+      \ 'active') in [true, 'true', 'True'] %}\n  13\n{% endif %} {% if state_attr('sensor.x2d_20p5aj661102691_ams_1_tray_4',\
+      \ 'active') in [true, 'true', 'True'] %}\n  14\n{% endif %}\n"
+    availability: "{{ expand([\n  'sensor.x2d_20p5aj661102691_externalspool_external_spool',\n\
+      \  'sensor.x2d_20p5aj661102691_externalspool2_external_spool',\n  'sensor.x2d_20p5aj661102691_ams_1_tray_1',\n\
+      \  'sensor.x2d_20p5aj661102691_ams_1_tray_2',\n  'sensor.x2d_20p5aj661102691_ams_1_tray_3',\n\
+      \  'sensor.x2d_20p5aj661102691_ams_1_tray_4'\n]) | rejectattr('state', 'eq',\
+      \ 'unavailable') | list | count > 0 }}\n"
+automation:
+- id: spoolmansync_update_spool_22e8aj632605622
+  alias: SpoolmanSync - Update Spool (22e8aj632605622)
+  description: Track spool usage and sync with Spoolman
+  triggers:
+  - entity_id: sensor.spoolmansync_22e8aj632605622_active_tray
+    id: tray
+    not_from:
+    - unavailable
+    - unknown
+    not_to:
+    - unavailable
+    - unknown
+    trigger: state
+  - entity_id: sensor.kitchen_p2s_current_stage
+    to:
+    - finished
+    - idle
+    id: print_end
+    trigger: state
+  - entity_id: sensor.kitchen_p2s_current_stage
+    to:
+    - offline
+    for: 00:02:00
+    id: offline
+    trigger: state
+  variables:
+    old_tray: "{% if trigger.id == 'tray' and trigger.from_state is not none and trigger.from_state.state\
+      \ not in [None, '', 'unknown', 'unavailable'] %}\n  {{ trigger.from_state.state\
+      \ | int(-1) }}\n{% else %}\n  -1\n{% endif %}"
+    new_tray: "{% if trigger.id == 'tray' and trigger.to_state is not none and trigger.to_state.state\
+      \ not in [None, '', 'unknown', 'unavailable'] %}\n  {{ trigger.to_state.state\
+      \ | int(-1) }}\n{% else %}\n  -1\n{% endif %}"
+    helper_tray: '{{ states(''input_number.spoolmansync_22e8aj632605622_last_tray'')
+      | int(-1) }}'
+    tray_composite: "{% if trigger.id == 'print_end' %}\n  {{ helper_tray }}\n{% else\
+      \ %}\n  {{ old_tray if old_tray >= 0 else helper_tray }}\n{% endif %}"
+    tray_sensor: '{% if tray_composite == 0 %}sensor.kitchen_p2s_external_spool_external_spool{%
+      endif %}{% if tray_composite == 11 %}sensor.kitchen_p2s_ams_tray_1{% endif %}{%
+      if tray_composite == 12 %}sensor.kitchen_p2s_ams_tray_2{% endif %}{% if tray_composite
+      == 13 %}sensor.kitchen_p2s_ams_tray_3{% endif %}{% if tray_composite == 14 %}sensor.kitchen_p2s_ams_tray_4{%
+      endif %}'
+    tray_weight: '{{ states(''sensor.spoolmansync_22e8aj632605622_filament_usage_meter'')
+      | float(0) | round(2) }}'
+    tray_uuid: '{{ state_attr(tray_sensor, ''tray_uuid'') | default('''') }}'
+    material: '{{ state_attr(tray_sensor, ''type'') | default('''') }}'
+    name: '{{ state_attr(tray_sensor, ''name'') | default('''') }}'
+    color: '{{ state_attr(tray_sensor, ''color'') | default('''') }}'
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''tray'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor\
+              \ != ''\n   and (old_tray >= 0 or (new_tray >= 0 and new_tray != tray_composite))\
+              \ }}"
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC TRAY CHANGE | Old tray {{ old_tray }} -> New
+                tray {{ new_tray }} | Flush tray {{ tray_composite }} | Sensor: {{
+                tray_sensor }} | Spool: {{ name }} ({{ material }}) | Weight used:
+                {{ tray_weight }}g | Spool Serial: {{ tray_uuid }}'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+          - action: utility_meter.calibrate
+            target:
+              entity_id: sensor.spoolmansync_22e8aj632605622_filament_usage_meter
+            data:
+              value: '0'
+        - conditions:
+          - condition: template
+            value_template: '{{ old_tray >= 0 }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC TRAY CHANGE (no usage logged) | Old: {{ old_tray
+                }} -> New: {{ new_tray }} | Weight: {{ tray_weight }}g | Reason: {{
+                ''no weight to log'' if tray_weight < 0.01 else ''tray sensor not
+                found'' }}'
+              level: '{{ ''warning'' if tray_weight >= 0.01 else ''debug'' }}'
+          - action: utility_meter.calibrate
+            target:
+              entity_id: sensor.spoolmansync_22e8aj632605622_filament_usage_meter
+            data:
+              value: '0'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC TRAY CHANGE (meter preserved) | Old: {{ old_tray
+              }} -> New: {{ new_tray }} | Weight: {{ tray_weight }}g | Last tray:
+              {{ helper_tray }}'
+            level: info
+      - condition: template
+        value_template: '{{ new_tray >= 0 }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.spoolmansync_22e8aj632605622_last_tray
+        data:
+          value: '{{ new_tray }}'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC HELPER UPDATED | input_number.spoolmansync_22e8aj632605622_last_tray
+            -> {{ new_tray }}
+          level: info
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.id == 'print_end'\n   and trigger.from_state is\
+          \ not none\n   and trigger.from_state.state not in ['unavailable', 'unknown',\
+          \ 'idle', 'finished', 'none'] }}"
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor
+              != '''' }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC PRINT END | Tray {{ tray_composite }} | Sensor:
+                {{ tray_sensor }} | Spool: {{ name }} ({{ material }}) | Weight used:
+                {{ tray_weight }}g | Spool Serial: {{ tray_uuid }}'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC PRINT END (skipped) | Tray: {{ tray_composite }}
+              | Weight: {{ tray_weight }}g | Reason: {{ ''no tray in helper'' if tray_composite
+              < 0 else ''no weight'' }}'
+            level: '{{ ''warning'' if tray_weight >= 0.01 else ''info'' }}'
+      - action: utility_meter.calibrate
+        target:
+          entity_id: sensor.spoolmansync_22e8aj632605622_filament_usage_meter
+        data:
+          value: '0'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC METER RESET after print end
+          level: info
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''offline'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor
+              != '''' }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC OFFLINE FLUSH | Tray {{ tray_composite }} | Sensor:
+                {{ tray_sensor }} | Weight used: {{ tray_weight }}g'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC OFFLINE FLUSH (skipped) | Tray: {{ tray_composite
+              }} | Weight: {{ tray_weight }}g | Reason: {{ ''no tray in helper'' if
+              tray_composite < 0 else ''no weight'' if tray_weight < 0.01 else ''tray
+              sensor not found'' }}'
+            level: '{{ ''warning'' if tray_weight >= 0.01 else ''info'' }}'
+      - action: utility_meter.calibrate
+        target:
+          entity_id: sensor.spoolmansync_22e8aj632605622_filament_usage_meter
+        data:
+          value: '0'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC METER RESET (printer offline) | 22e8aj632605622
+          level: info
+  mode: single
+- id: spoolmansync_tray_change_22e8aj632605622
+  alias: SpoolmanSync - Tray Change (22e8aj632605622)
+  description: Detect physical spool changes and auto-assign/unassign in Spoolman
+  triggers:
+  - entity_id:
+    - sensor.kitchen_p2s_external_spool_external_spool
+    - sensor.kitchen_p2s_ams_tray_1
+    - sensor.kitchen_p2s_ams_tray_2
+    - sensor.kitchen_p2s_ams_tray_3
+    - sensor.kitchen_p2s_ams_tray_4
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.to_state is not none and trigger.to_state.state not
+      in [''unavailable'', ''unknown''] }}'
+  - condition: template
+    value_template: "{{ trigger.from_state is none or trigger.to_state is none or\n\
+      \   trigger.to_state.attributes.get('tray_uuid', '') != trigger.from_state.attributes.get('tray_uuid',\
+      \ '') or\n   trigger.to_state.attributes.get('name', '') != trigger.from_state.attributes.get('name',\
+      \ '') }}"
+  variables:
+    tray_entity_id: '{{ trigger.entity_id }}'
+    tray_uuid: '{{ state_attr(trigger.entity_id, ''tray_uuid'') | default('''') }}'
+    name: '{{ state_attr(trigger.entity_id, ''name'') | default('''') }}'
+    material: '{{ state_attr(trigger.entity_id, ''type'') | default('''') }}'
+    color: '{{ state_attr(trigger.entity_id, ''color'') | default('''') }}'
+  actions:
+  - action: system_log.write
+    data:
+      message: 'SPOOLMANSYNC TRAY CHANGE DETECTED | {{ tray_entity_id }} | Name: {{
+        name }} | Material: {{ material }} | Spool Serial: {{ tray_uuid }} | Color:
+        {{ color }}'
+      level: info
+  - action: rest_command.spoolmansync_tray_change
+    data:
+      tray_entity_id: '{{ tray_entity_id }}'
+      tray_uuid: '{{ tray_uuid }}'
+      name: '{{ name }}'
+      material: '{{ material }}'
+      color: '{{ color }}'
+      current_print_state: '{{ states(''sensor.kitchen_p2s_current_stage'') }}'
+  mode: queued
+  max: 10
+- id: spoolmansync_update_spool_20p5aj661102691
+  alias: SpoolmanSync - Update Spool (20p5aj661102691)
+  description: Track spool usage and sync with Spoolman
+  triggers:
+  - entity_id: sensor.spoolmansync_20p5aj661102691_active_tray
+    id: tray
+    not_from:
+    - unavailable
+    - unknown
+    not_to:
+    - unavailable
+    - unknown
+    trigger: state
+  - entity_id: sensor.x2d_20p5aj661102691_current_stage
+    to:
+    - finished
+    - idle
+    id: print_end
+    trigger: state
+  - entity_id: sensor.x2d_20p5aj661102691_current_stage
+    to:
+    - offline
+    for: 00:02:00
+    id: offline
+    trigger: state
+  variables:
+    old_tray: "{% if trigger.id == 'tray' and trigger.from_state is not none and trigger.from_state.state\
+      \ not in [None, '', 'unknown', 'unavailable'] %}\n  {{ trigger.from_state.state\
+      \ | int(-1) }}\n{% else %}\n  -1\n{% endif %}"
+    new_tray: "{% if trigger.id == 'tray' and trigger.to_state is not none and trigger.to_state.state\
+      \ not in [None, '', 'unknown', 'unavailable'] %}\n  {{ trigger.to_state.state\
+      \ | int(-1) }}\n{% else %}\n  -1\n{% endif %}"
+    helper_tray: '{{ states(''input_number.spoolmansync_20p5aj661102691_last_tray'')
+      | int(-1) }}'
+    tray_composite: "{% if trigger.id == 'print_end' %}\n  {{ helper_tray }}\n{% else\
+      \ %}\n  {{ old_tray if old_tray >= 0 else helper_tray }}\n{% endif %}"
+    tray_sensor: '{% if tray_composite == 0 %}sensor.x2d_20p5aj661102691_externalspool_external_spool{%
+      endif %}{% if tray_composite == 1 %}sensor.x2d_20p5aj661102691_externalspool2_external_spool{%
+      endif %}{% if tray_composite == 11 %}sensor.x2d_20p5aj661102691_ams_1_tray_1{%
+      endif %}{% if tray_composite == 12 %}sensor.x2d_20p5aj661102691_ams_1_tray_2{%
+      endif %}{% if tray_composite == 13 %}sensor.x2d_20p5aj661102691_ams_1_tray_3{%
+      endif %}{% if tray_composite == 14 %}sensor.x2d_20p5aj661102691_ams_1_tray_4{%
+      endif %}'
+    tray_weight: '{{ states(''sensor.spoolmansync_20p5aj661102691_filament_usage_meter'')
+      | float(0) | round(2) }}'
+    tray_uuid: '{{ state_attr(tray_sensor, ''tray_uuid'') | default('''') }}'
+    material: '{{ state_attr(tray_sensor, ''type'') | default('''') }}'
+    name: '{{ state_attr(tray_sensor, ''name'') | default('''') }}'
+    color: '{{ state_attr(tray_sensor, ''color'') | default('''') }}'
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''tray'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor\
+              \ != ''\n   and (old_tray >= 0 or (new_tray >= 0 and new_tray != tray_composite))\
+              \ }}"
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC TRAY CHANGE | Old tray {{ old_tray }} -> New
+                tray {{ new_tray }} | Flush tray {{ tray_composite }} | Sensor: {{
+                tray_sensor }} | Spool: {{ name }} ({{ material }}) | Weight used:
+                {{ tray_weight }}g | Spool Serial: {{ tray_uuid }}'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+          - action: utility_meter.calibrate
+            target:
+              entity_id: sensor.spoolmansync_20p5aj661102691_filament_usage_meter
+            data:
+              value: '0'
+        - conditions:
+          - condition: template
+            value_template: '{{ old_tray >= 0 }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC TRAY CHANGE (no usage logged) | Old: {{ old_tray
+                }} -> New: {{ new_tray }} | Weight: {{ tray_weight }}g | Reason: {{
+                ''no weight to log'' if tray_weight < 0.01 else ''tray sensor not
+                found'' }}'
+              level: '{{ ''warning'' if tray_weight >= 0.01 else ''debug'' }}'
+          - action: utility_meter.calibrate
+            target:
+              entity_id: sensor.spoolmansync_20p5aj661102691_filament_usage_meter
+            data:
+              value: '0'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC TRAY CHANGE (meter preserved) | Old: {{ old_tray
+              }} -> New: {{ new_tray }} | Weight: {{ tray_weight }}g | Last tray:
+              {{ helper_tray }}'
+            level: info
+      - condition: template
+        value_template: '{{ new_tray >= 0 }}'
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.spoolmansync_20p5aj661102691_last_tray
+        data:
+          value: '{{ new_tray }}'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC HELPER UPDATED | input_number.spoolmansync_20p5aj661102691_last_tray
+            -> {{ new_tray }}
+          level: info
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.id == 'print_end'\n   and trigger.from_state is\
+          \ not none\n   and trigger.from_state.state not in ['unavailable', 'unknown',\
+          \ 'idle', 'finished', 'none'] }}"
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor
+              != '''' }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC PRINT END | Tray {{ tray_composite }} | Sensor:
+                {{ tray_sensor }} | Spool: {{ name }} ({{ material }}) | Weight used:
+                {{ tray_weight }}g | Spool Serial: {{ tray_uuid }}'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC PRINT END (skipped) | Tray: {{ tray_composite }}
+              | Weight: {{ tray_weight }}g | Reason: {{ ''no tray in helper'' if tray_composite
+              < 0 else ''no weight'' }}'
+            level: '{{ ''warning'' if tray_weight >= 0.01 else ''info'' }}'
+      - action: utility_meter.calibrate
+        target:
+          entity_id: sensor.spoolmansync_20p5aj661102691_filament_usage_meter
+        data:
+          value: '0'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC METER RESET after print end
+          level: info
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''offline'' }}'
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ tray_composite >= 0 and tray_weight >= 0.01 and tray_sensor
+              != '''' }}'
+          sequence:
+          - action: system_log.write
+            data:
+              message: 'SPOOLMANSYNC OFFLINE FLUSH | Tray {{ tray_composite }} | Sensor:
+                {{ tray_sensor }} | Weight used: {{ tray_weight }}g'
+              level: info
+          - action: rest_command.spoolmansync_update_spool
+            data:
+              filament_name: '{{ name }}'
+              filament_material: '{{ material }}'
+              filament_tray_uuid: '{{ tray_uuid }}'
+              filament_used_weight: '{{ tray_weight }}'
+              filament_color: '{{ color }}'
+              filament_active_tray_id: '{{ tray_sensor }}'
+        default:
+        - action: system_log.write
+          data:
+            message: 'SPOOLMANSYNC OFFLINE FLUSH (skipped) | Tray: {{ tray_composite
+              }} | Weight: {{ tray_weight }}g | Reason: {{ ''no tray in helper'' if
+              tray_composite < 0 else ''no weight'' if tray_weight < 0.01 else ''tray
+              sensor not found'' }}'
+            level: '{{ ''warning'' if tray_weight >= 0.01 else ''info'' }}'
+      - action: utility_meter.calibrate
+        target:
+          entity_id: sensor.spoolmansync_20p5aj661102691_filament_usage_meter
+        data:
+          value: '0'
+      - action: system_log.write
+        data:
+          message: SPOOLMANSYNC METER RESET (printer offline) | 20p5aj661102691
+          level: info
+  mode: single
+- id: spoolmansync_tray_change_20p5aj661102691
+  alias: SpoolmanSync - Tray Change (20p5aj661102691)
+  description: Detect physical spool changes and auto-assign/unassign in Spoolman
+  triggers:
+  - entity_id:
+    - sensor.x2d_20p5aj661102691_externalspool_external_spool
+    - sensor.x2d_20p5aj661102691_externalspool2_external_spool
+    - sensor.x2d_20p5aj661102691_ams_1_tray_1
+    - sensor.x2d_20p5aj661102691_ams_1_tray_2
+    - sensor.x2d_20p5aj661102691_ams_1_tray_3
+    - sensor.x2d_20p5aj661102691_ams_1_tray_4
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.to_state is not none and trigger.to_state.state not
+      in [''unavailable'', ''unknown''] }}'
+  - condition: template
+    value_template: "{{ trigger.from_state is none or trigger.to_state is none or\n\
+      \   trigger.to_state.attributes.get('tray_uuid', '') != trigger.from_state.attributes.get('tray_uuid',\
+      \ '') or\n   trigger.to_state.attributes.get('name', '') != trigger.from_state.attributes.get('name',\
+      \ '') }}"
+  variables:
+    tray_entity_id: '{{ trigger.entity_id }}'
+    tray_uuid: '{{ state_attr(trigger.entity_id, ''tray_uuid'') | default('''') }}'
+    name: '{{ state_attr(trigger.entity_id, ''name'') | default('''') }}'
+    material: '{{ state_attr(trigger.entity_id, ''type'') | default('''') }}'
+    color: '{{ state_attr(trigger.entity_id, ''color'') | default('''') }}'
+  actions:
+  - action: system_log.write
+    data:
+      message: 'SPOOLMANSYNC TRAY CHANGE DETECTED | {{ tray_entity_id }} | Name: {{
+        name }} | Material: {{ material }} | Spool Serial: {{ tray_uuid }} | Color:
+        {{ color }}'
+      level: info
+  - action: rest_command.spoolmansync_tray_change
+    data:
+      tray_entity_id: '{{ tray_entity_id }}'
+      tray_uuid: '{{ tray_uuid }}'
+      name: '{{ name }}'
+      material: '{{ material }}'
+      color: '{{ color }}'
+      current_print_state: '{{ states(''sensor.x2d_20p5aj661102691_current_stage'')
+        }}'
+  mode: queued
+  max: 10

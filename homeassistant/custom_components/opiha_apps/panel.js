@@ -3,6 +3,7 @@ const TABS = [
   {id: "overview", label: "Overview", icon: "mdi:view-dashboard-outline", tag: "opiha-overview-tab", module: "./overview.js"},
   {id: "host", label: "Host", icon: "mdi:server", tag: "opiha-host-tab", module: "./host.js"},
   {id: "docker", label: "Docker", icon: "mdi:docker", tag: "opiha-docker-tab", module: "./docker.js"},
+{id: "storage", label: "Storage", icon: "mdi:harddisk", tag: "opiha-storage-tab", module: "./storage.js"},
   {id: "apps", label: "Apps", icon: "mdi:apps", tag: "opiha-apps-tab", module: "./apps.js"},
   {id: "store", label: "Add-ons", icon: "mdi:puzzle-outline", tag: "opiha-store-tab", module: "./store.js"},
   {id: "updates", label: "Updates", icon: "mdi:update", tag: "opiha-updates-tab", module: "./updates.js"},

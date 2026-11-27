@@ -1,0 +1,21 @@
+recorder:
+  purge_keep_days: 14
+  commit_interval: 30
+  exclude:
+    domains:
+    - update
+    - camera
+    - image
+    entity_globs:
+    - sensor.*_uptime
+    - sensor.*_last_boot
+    - sensor.*_interface_*_per_second
+    - automation.homeops_*
+    - sensor.*_lights_status
+    - sensor.office_hexa_status
+    - sensor.k1_memory_used
+    - sensor.k1_system_load
+    - sensor.k1_mcu_*
+    entities:
+    - sensor.date
+    - sensor.time

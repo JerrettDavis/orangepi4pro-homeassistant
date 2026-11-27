@@ -18,7 +18,7 @@ from .client import Client, NativeError, read_connection
 DOMAIN = "opiha_apps"
 # Kept in step with opiha_apps.hostctl.OPERATIONS (a test compares them); the manager validates every field.
 HOST_OPERATIONS = ["overview", "stats", "hardware", "services", "service", "logs", "power", "docker", "container", "container_logs",
-                   "images", "image", "docker_prune", "updates", "update_start", "update_job", "desktop", "desktop_mode", "display",
+                   "images", "image", "docker_prune", "storage", "updates", "update_start", "update_job", "desktop", "desktop_mode", "display",
                    "term_open", "term_io", "term_close"]
 HOST_TIMEOUT = 60
 TERMINAL_TIMEOUT = 10

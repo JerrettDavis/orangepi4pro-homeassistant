@@ -1,0 +1,67 @@
+input_number:
+  ev_charge_reminder_threshold:
+    name: EV charge reminder threshold
+    min: 20
+    max: 100
+    step: 5
+    unit_of_measurement: '%'
+    icon: mdi:ev-station
+    initial: 80
+automation:
+- id: opiha_ev_charge_reminder
+  alias: EV charge reminder
+  mode: single
+  triggers:
+  - trigger: time_pattern
+    minutes: 0
+  conditions:
+  - condition: time
+    after: '17:59:00'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: person.jd
+      state: home
+    - condition: state
+      entity_id: person.sam
+      state: home
+  - condition: template
+    value_template: "{{ states('sensor.wallbox_pulsar_plus_sn_873722_status_description')\
+      \ | lower != 'charging'\n   and (states('sensor.wallbox_pulsar_plus_sn_873722_charging_power')\
+      \ | float(0)) <= 0 }}"
+  actions:
+  - variables:
+      threshold: '{{ states(''input_number.ev_charge_reminder_threshold'') | float(80)
+        }}'
+      vehicles:
+      - name: Ioniq 5 N
+        tag: opiha_ev_reminder_ioniq
+        battery: sensor.2025_ioniq_5_n_ev_battery_level
+        location: device_tracker.2025_ioniq_5_n_location
+      - name: Dodge Charger
+        tag: opiha_ev_reminder_charger
+        battery: sensor.dodge_charger_hvbattery_charge
+        location: device_tracker.dodge_charger_location
+  - repeat:
+      for_each: '{{ vehicles }}'
+      sequence:
+      - condition: template
+        value_template: "{{ is_state(repeat.item.location, 'home')\n   and states(repeat.item.battery)\
+          \ | is_number\n   and states(repeat.item.battery) | float < threshold |\
+          \ float }}"
+      - variables:
+          vehicle: '{{ repeat.item }}'
+          level: '{{ states(repeat.item.battery) | float | round(0) | int }}'
+      - repeat:
+          for_each:
+          - notify.mobile_app_jd_s23_ultra
+          - notify.mobile_app_samsung_s23_ultra
+          sequence:
+          - action: '{{ repeat.item }}'
+            continue_on_error: true
+            data:
+              title: Charge the {{ vehicle.name }}
+              message: '{{ vehicle.name }} is at {{ level }}% and home. The charger
+                is free; plug it in.'
+              data:
+                tag: '{{ vehicle.tag }}'

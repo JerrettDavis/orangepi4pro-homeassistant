@@ -1,0 +1,1405 @@
+sensor:
+- name: JDH Raw Packet Type
+  unique_id: meshtastic_jdh_raw_packet_type
+  default_entity_id: sensor.meshtastic_jdh_raw_packet_type
+  state_topic: msh/US/2/json/JDH/#
+  value_template: '{{ value_json.type | default(''unknown'') }}'
+- name: JDH Position Debug
+  unique_id: meshtastic_jdh_position_debug
+  default_entity_id: sensor.meshtastic_jdh_position_debug
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.type == 'position'\n      and value_json.payload\
+    \ is defined\n      and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ value_json.get('from') }}:{{ (value_json.payload.latitude_i\
+    \ | float) / 10000000 }},{{ (value_json.payload.longitude_i | float) / 10000000\
+    \ }}\n{% else %}\n  {{ states('sensor.meshtastic_jdh_position_debug') }}\n{% endif\
+    \ %}"
+- name: Battery
+  unique_id: meshtastic_jd01_battery
+  default_entity_id: sensor.jd01_battery
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.battery_level\
+    \ is defined %}\n  {{ value_json.payload.battery_level }}\n{% else %}\n  {{ states('sensor.jd01_battery')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: '%'
+  device_class: battery
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Voltage
+  unique_id: meshtastic_jd01_voltage
+  default_entity_id: sensor.jd01_voltage
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.voltage\
+    \ is defined %}\n  {{ value_json.payload.voltage }}\n{% else %}\n  {{ states('sensor.jd01_voltage')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: V
+  device_class: voltage
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Latitude
+  unique_id: meshtastic_jd01_latitude
+  default_entity_id: sensor.jd01_latitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined %}\n  {{ (value_json.payload.latitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.jd01_latitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Longitude
+  unique_id: meshtastic_jd01_longitude
+  default_entity_id: sensor.jd01_longitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ (value_json.payload.longitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.jd01_longitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Altitude
+  unique_id: meshtastic_jd01_altitude
+  default_entity_id: sensor.jd01_altitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.altitude\
+    \ is defined %}\n  {{ value_json.payload.altitude }}\n{% else %}\n  {{ states('sensor.jd01_altitude')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m
+  device_class: distance
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Satellites
+  unique_id: meshtastic_jd01_satellites
+  default_entity_id: sensor.jd01_satellites
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.sats_in_view\
+    \ is defined %}\n  {{ value_json.payload.sats_in_view }}\n{% else %}\n  {{ states('sensor.jd01_satellites')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: PDOP
+  unique_id: meshtastic_jd01_pdop
+  default_entity_id: sensor.jd01_pdop
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.PDOP\
+    \ is defined %}\n  {{ (value_json.payload.PDOP | float) / 100 }}\n{% else %}\n\
+    \  {{ states('sensor.jd01_pdop') }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Track
+  unique_id: meshtastic_jd01_ground_track
+  default_entity_id: sensor.jd01_ground_track
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_track\
+    \ is defined %}\n  {{ (value_json.payload.ground_track | float) / 100000 }}\n\
+    {% else %}\n  {{ states('sensor.jd01_ground_track') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Speed
+  unique_id: meshtastic_jd01_ground_speed
+  default_entity_id: sensor.jd01_ground_speed
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_speed\
+    \ is defined %}\n  {{ value_json.payload.ground_speed }}\n{% else %}\n  {{ states('sensor.jd01_ground_speed')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m/s
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Precision Bits
+  unique_id: meshtastic_jd01_precision_bits
+  default_entity_id: sensor.jd01_precision_bits
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.precision_bits\
+    \ is defined %}\n  {{ value_json.payload.precision_bits }}\n{% else %}\n  {{ states('sensor.jd01_precision_bits')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: RSSI
+  unique_id: meshtastic_jd01_rssi
+  default_entity_id: sensor.jd01_rssi
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.rssi\
+    \ is defined %}\n  {{ value_json.rssi }}\n{% else %}\n  {{ states('sensor.jd01_rssi')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dBm
+  device_class: signal_strength
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: SNR
+  unique_id: meshtastic_jd01_snr
+  default_entity_id: sensor.jd01_snr
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.snr\
+    \ is defined %}\n  {{ value_json.snr }}\n{% else %}\n  {{ states('sensor.jd01_snr')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dB
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hops Away
+  unique_id: meshtastic_jd01_hops_away
+  default_entity_id: sensor.jd01_hops_away
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.hops_away\
+    \ is defined %}\n  {{ value_json.hops_away }}\n{% else %}\n  {{ states('sensor.jd01_hops_away')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hop Start
+  unique_id: meshtastic_jd01_hop_start
+  default_entity_id: sensor.jd01_hop_start
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.hop_start\
+    \ is defined %}\n  {{ value_json.hop_start }}\n{% else %}\n  {{ states('sensor.jd01_hop_start')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Packet Timestamp
+  unique_id: meshtastic_jd01_packet_timestamp
+  default_entity_id: sensor.jd01_packet_timestamp
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.timestamp\
+    \ is defined %}\n  {{ value_json.timestamp }}\n{% else %}\n  {{ states('sensor.jd01_packet_timestamp')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: GPS Fix Time
+  unique_id: meshtastic_jd01_gps_fix_time
+  default_entity_id: sensor.jd01_gps_fix_time
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.time\
+    \ is defined %}\n  {{ value_json.payload.time }}\n{% else %}\n  {{ states('sensor.jd01_gps_fix_time')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Last Packet
+  unique_id: meshtastic_jd01_last_packet
+  default_entity_id: sensor.jd01_last_packet
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134541604 %}\n  {% set packet_type\
+    \ = value_json.type | default('') %}\n  {{ packet_type if packet_type | length\
+    \ > 0 else 'unknown' }}\n{% else %}\n  {{ states('sensor.jd01_last_packet') }}\n\
+    {% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134541604
+    name: JD Dev Base Station 001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Battery
+  unique_id: meshtastic_dt01_battery
+  default_entity_id: sensor.dt01_battery
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.battery_level\
+    \ is defined %}\n  {{ value_json.payload.battery_level }}\n{% else %}\n  {{ states('sensor.dt01_battery')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: '%'
+  device_class: battery
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Voltage
+  unique_id: meshtastic_dt01_voltage
+  default_entity_id: sensor.dt01_voltage
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.voltage\
+    \ is defined %}\n  {{ value_json.payload.voltage }}\n{% else %}\n  {{ states('sensor.dt01_voltage')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: V
+  device_class: voltage
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Latitude
+  unique_id: meshtastic_dt01_latitude
+  default_entity_id: sensor.dt01_latitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined %}\n  {{ (value_json.payload.latitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dt01_latitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Longitude
+  unique_id: meshtastic_dt01_longitude
+  default_entity_id: sensor.dt01_longitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ (value_json.payload.longitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dt01_longitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Altitude
+  unique_id: meshtastic_dt01_altitude
+  default_entity_id: sensor.dt01_altitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.altitude\
+    \ is defined %}\n  {{ value_json.payload.altitude }}\n{% else %}\n  {{ states('sensor.dt01_altitude')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m
+  device_class: distance
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Satellites
+  unique_id: meshtastic_dt01_satellites
+  default_entity_id: sensor.dt01_satellites
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.sats_in_view\
+    \ is defined %}\n  {{ value_json.payload.sats_in_view }}\n{% else %}\n  {{ states('sensor.dt01_satellites')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: PDOP
+  unique_id: meshtastic_dt01_pdop
+  default_entity_id: sensor.dt01_pdop
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.PDOP\
+    \ is defined %}\n  {{ (value_json.payload.PDOP | float) / 100 }}\n{% else %}\n\
+    \  {{ states('sensor.dt01_pdop') }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Ground Track
+  unique_id: meshtastic_dt01_ground_track
+  default_entity_id: sensor.dt01_ground_track
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_track\
+    \ is defined %}\n  {{ (value_json.payload.ground_track | float) / 100000 }}\n\
+    {% else %}\n  {{ states('sensor.dt01_ground_track') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Ground Speed
+  unique_id: meshtastic_dt01_ground_speed
+  default_entity_id: sensor.dt01_ground_speed
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_speed\
+    \ is defined %}\n  {{ value_json.payload.ground_speed }}\n{% else %}\n  {{ states('sensor.dt01_ground_speed')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m/s
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Precision Bits
+  unique_id: meshtastic_dt01_precision_bits
+  default_entity_id: sensor.dt01_precision_bits
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.precision_bits\
+    \ is defined %}\n  {{ value_json.payload.precision_bits }}\n{% else %}\n  {{ states('sensor.dt01_precision_bits')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: RSSI
+  unique_id: meshtastic_dt01_rssi
+  default_entity_id: sensor.dt01_rssi
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.rssi\
+    \ is defined %}\n  {{ value_json.rssi }}\n{% else %}\n  {{ states('sensor.dt01_rssi')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dBm
+  device_class: signal_strength
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: SNR
+  unique_id: meshtastic_dt01_snr
+  default_entity_id: sensor.dt01_snr
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.snr\
+    \ is defined %}\n  {{ value_json.snr }}\n{% else %}\n  {{ states('sensor.dt01_snr')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dB
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Hops Away
+  unique_id: meshtastic_dt01_hops_away
+  default_entity_id: sensor.dt01_hops_away
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.hops_away\
+    \ is defined %}\n  {{ value_json.hops_away }}\n{% else %}\n  {{ states('sensor.dt01_hops_away')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Hop Start
+  unique_id: meshtastic_dt01_hop_start
+  default_entity_id: sensor.dt01_hop_start
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.hop_start\
+    \ is defined %}\n  {{ value_json.hop_start }}\n{% else %}\n  {{ states('sensor.dt01_hop_start')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Packet Timestamp
+  unique_id: meshtastic_dt01_packet_timestamp
+  default_entity_id: sensor.dt01_packet_timestamp
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.timestamp\
+    \ is defined %}\n  {{ value_json.timestamp }}\n{% else %}\n  {{ states('sensor.dt01_packet_timestamp')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: GPS Fix Time
+  unique_id: meshtastic_dt01_gps_fix_time
+  default_entity_id: sensor.dt01_gps_fix_time
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.time\
+    \ is defined %}\n  {{ value_json.payload.time }}\n{% else %}\n  {{ states('sensor.dt01_gps_fix_time')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Last Packet
+  unique_id: meshtastic_dt01_last_packet
+  default_entity_id: sensor.dt01_last_packet
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 318045044 %}\n  {% set packet_type\
+    \ = value_json.type | default('') %}\n  {{ packet_type if packet_type | length\
+    \ > 0 else 'unknown' }}\n{% else %}\n  {{ states('sensor.dt01_last_packet') }}\n\
+    {% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_318045044
+    name: Dev Tracker 001
+    manufacturer: Meshtastic
+    model: Seeed TRACKER T1000
+- name: Battery
+  unique_id: meshtastic_dn01_battery
+  default_entity_id: sensor.dn01_battery
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.battery_level\
+    \ is defined %}\n  {{ value_json.payload.battery_level }}\n{% else %}\n  {{ states('sensor.dn01_battery')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: '%'
+  device_class: battery
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Voltage
+  unique_id: meshtastic_dn01_voltage
+  default_entity_id: sensor.dn01_voltage
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.voltage\
+    \ is defined %}\n  {{ value_json.payload.voltage }}\n{% else %}\n  {{ states('sensor.dn01_voltage')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: V
+  device_class: voltage
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Latitude
+  unique_id: meshtastic_dn01_latitude
+  default_entity_id: sensor.dn01_latitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined %}\n  {{ (value_json.payload.latitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn01_latitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Longitude
+  unique_id: meshtastic_dn01_longitude
+  default_entity_id: sensor.dn01_longitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ (value_json.payload.longitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn01_longitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Altitude
+  unique_id: meshtastic_dn01_altitude
+  default_entity_id: sensor.dn01_altitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.altitude\
+    \ is defined %}\n  {{ value_json.payload.altitude }}\n{% else %}\n  {{ states('sensor.dn01_altitude')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m
+  device_class: distance
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Satellites
+  unique_id: meshtastic_dn01_satellites
+  default_entity_id: sensor.dn01_satellites
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.sats_in_view\
+    \ is defined %}\n  {{ value_json.payload.sats_in_view }}\n{% else %}\n  {{ states('sensor.dn01_satellites')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: PDOP
+  unique_id: meshtastic_dn01_pdop
+  default_entity_id: sensor.dn01_pdop
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.PDOP\
+    \ is defined %}\n  {{ (value_json.payload.PDOP | float) / 100 }}\n{% else %}\n\
+    \  {{ states('sensor.dn01_pdop') }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Track
+  unique_id: meshtastic_dn01_ground_track
+  default_entity_id: sensor.dn01_ground_track
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_track\
+    \ is defined %}\n  {{ (value_json.payload.ground_track | float) / 100000 }}\n\
+    {% else %}\n  {{ states('sensor.dn01_ground_track') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Speed
+  unique_id: meshtastic_dn01_ground_speed
+  default_entity_id: sensor.dn01_ground_speed
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_speed\
+    \ is defined %}\n  {{ value_json.payload.ground_speed }}\n{% else %}\n  {{ states('sensor.dn01_ground_speed')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m/s
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Precision Bits
+  unique_id: meshtastic_dn01_precision_bits
+  default_entity_id: sensor.dn01_precision_bits
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.precision_bits\
+    \ is defined %}\n  {{ value_json.payload.precision_bits }}\n{% else %}\n  {{ states('sensor.dn01_precision_bits')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: RSSI
+  unique_id: meshtastic_dn01_rssi
+  default_entity_id: sensor.dn01_rssi
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.rssi\
+    \ is defined %}\n  {{ value_json.rssi }}\n{% else %}\n  {{ states('sensor.dn01_rssi')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dBm
+  device_class: signal_strength
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: SNR
+  unique_id: meshtastic_dn01_snr
+  default_entity_id: sensor.dn01_snr
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.snr\
+    \ is defined %}\n  {{ value_json.snr }}\n{% else %}\n  {{ states('sensor.dn01_snr')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dB
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hops Away
+  unique_id: meshtastic_dn01_hops_away
+  default_entity_id: sensor.dn01_hops_away
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.hops_away\
+    \ is defined %}\n  {{ value_json.hops_away }}\n{% else %}\n  {{ states('sensor.dn01_hops_away')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hop Start
+  unique_id: meshtastic_dn01_hop_start
+  default_entity_id: sensor.dn01_hop_start
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.hop_start\
+    \ is defined %}\n  {{ value_json.hop_start }}\n{% else %}\n  {{ states('sensor.dn01_hop_start')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Packet Timestamp
+  unique_id: meshtastic_dn01_packet_timestamp
+  default_entity_id: sensor.dn01_packet_timestamp
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.timestamp\
+    \ is defined %}\n  {{ value_json.timestamp }}\n{% else %}\n  {{ states('sensor.dn01_packet_timestamp')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: GPS Fix Time
+  unique_id: meshtastic_dn01_gps_fix_time
+  default_entity_id: sensor.dn01_gps_fix_time
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.time\
+    \ is defined %}\n  {{ value_json.payload.time }}\n{% else %}\n  {{ states('sensor.dn01_gps_fix_time')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Last Packet
+  unique_id: meshtastic_dn01_last_packet
+  default_entity_id: sensor.dn01_last_packet
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463564200 %}\n  {% set packet_type\
+    \ = value_json.type | default('') %}\n  {{ packet_type if packet_type | length\
+    \ > 0 else 'unknown' }}\n{% else %}\n  {{ states('sensor.dn01_last_packet') }}\n\
+    {% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463564200
+    name: Dev Node 0001
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Battery
+  unique_id: meshtastic_dn02_battery
+  default_entity_id: sensor.dn02_battery
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.battery_level\
+    \ is defined %}\n  {{ value_json.payload.battery_level }}\n{% else %}\n  {{ states('sensor.dn02_battery')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: '%'
+  device_class: battery
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Voltage
+  unique_id: meshtastic_dn02_voltage
+  default_entity_id: sensor.dn02_voltage
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.voltage\
+    \ is defined %}\n  {{ value_json.payload.voltage }}\n{% else %}\n  {{ states('sensor.dn02_voltage')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: V
+  device_class: voltage
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Latitude
+  unique_id: meshtastic_dn02_latitude
+  default_entity_id: sensor.dn02_latitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined %}\n  {{ (value_json.payload.latitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn02_latitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Longitude
+  unique_id: meshtastic_dn02_longitude
+  default_entity_id: sensor.dn02_longitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ (value_json.payload.longitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn02_longitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Altitude
+  unique_id: meshtastic_dn02_altitude
+  default_entity_id: sensor.dn02_altitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.altitude\
+    \ is defined %}\n  {{ value_json.payload.altitude }}\n{% else %}\n  {{ states('sensor.dn02_altitude')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m
+  device_class: distance
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Satellites
+  unique_id: meshtastic_dn02_satellites
+  default_entity_id: sensor.dn02_satellites
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.sats_in_view\
+    \ is defined %}\n  {{ value_json.payload.sats_in_view }}\n{% else %}\n  {{ states('sensor.dn02_satellites')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: PDOP
+  unique_id: meshtastic_dn02_pdop
+  default_entity_id: sensor.dn02_pdop
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.PDOP\
+    \ is defined %}\n  {{ (value_json.payload.PDOP | float) / 100 }}\n{% else %}\n\
+    \  {{ states('sensor.dn02_pdop') }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Track
+  unique_id: meshtastic_dn02_ground_track
+  default_entity_id: sensor.dn02_ground_track
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_track\
+    \ is defined %}\n  {{ (value_json.payload.ground_track | float) / 100000 }}\n\
+    {% else %}\n  {{ states('sensor.dn02_ground_track') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Speed
+  unique_id: meshtastic_dn02_ground_speed
+  default_entity_id: sensor.dn02_ground_speed
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_speed\
+    \ is defined %}\n  {{ value_json.payload.ground_speed }}\n{% else %}\n  {{ states('sensor.dn02_ground_speed')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m/s
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Precision Bits
+  unique_id: meshtastic_dn02_precision_bits
+  default_entity_id: sensor.dn02_precision_bits
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.precision_bits\
+    \ is defined %}\n  {{ value_json.payload.precision_bits }}\n{% else %}\n  {{ states('sensor.dn02_precision_bits')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: RSSI
+  unique_id: meshtastic_dn02_rssi
+  default_entity_id: sensor.dn02_rssi
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.rssi\
+    \ is defined %}\n  {{ value_json.rssi }}\n{% else %}\n  {{ states('sensor.dn02_rssi')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dBm
+  device_class: signal_strength
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: SNR
+  unique_id: meshtastic_dn02_snr
+  default_entity_id: sensor.dn02_snr
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.snr\
+    \ is defined %}\n  {{ value_json.snr }}\n{% else %}\n  {{ states('sensor.dn02_snr')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dB
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hops Away
+  unique_id: meshtastic_dn02_hops_away
+  default_entity_id: sensor.dn02_hops_away
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.hops_away\
+    \ is defined %}\n  {{ value_json.hops_away }}\n{% else %}\n  {{ states('sensor.dn02_hops_away')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hop Start
+  unique_id: meshtastic_dn02_hop_start
+  default_entity_id: sensor.dn02_hop_start
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.hop_start\
+    \ is defined %}\n  {{ value_json.hop_start }}\n{% else %}\n  {{ states('sensor.dn02_hop_start')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Packet Timestamp
+  unique_id: meshtastic_dn02_packet_timestamp
+  default_entity_id: sensor.dn02_packet_timestamp
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.timestamp\
+    \ is defined %}\n  {{ value_json.timestamp }}\n{% else %}\n  {{ states('sensor.dn02_packet_timestamp')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: GPS Fix Time
+  unique_id: meshtastic_dn02_gps_fix_time
+  default_entity_id: sensor.dn02_gps_fix_time
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.time\
+    \ is defined %}\n  {{ value_json.payload.time }}\n{% else %}\n  {{ states('sensor.dn02_gps_fix_time')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Last Packet
+  unique_id: meshtastic_dn02_last_packet
+  default_entity_id: sensor.dn02_last_packet
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 4134496268 %}\n  {% set packet_type\
+    \ = value_json.type | default('') %}\n  {{ packet_type if packet_type | length\
+    \ > 0 else 'unknown' }}\n{% else %}\n  {{ states('sensor.dn02_last_packet') }}\n\
+    {% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_4134496268
+    name: Dev Node 002
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Battery
+  unique_id: meshtastic_dn03_battery
+  default_entity_id: sensor.dn03_battery
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.battery_level\
+    \ is defined %}\n  {{ value_json.payload.battery_level }}\n{% else %}\n  {{ states('sensor.dn03_battery')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: '%'
+  device_class: battery
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Voltage
+  unique_id: meshtastic_dn03_voltage
+  default_entity_id: sensor.dn03_voltage
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'telemetry'\n      and value_json.payload is defined\n      and value_json.payload.voltage\
+    \ is defined %}\n  {{ value_json.payload.voltage }}\n{% else %}\n  {{ states('sensor.dn03_voltage')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: V
+  device_class: voltage
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Latitude
+  unique_id: meshtastic_dn03_latitude
+  default_entity_id: sensor.dn03_latitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined %}\n  {{ (value_json.payload.latitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn03_latitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Longitude
+  unique_id: meshtastic_dn03_longitude
+  default_entity_id: sensor.dn03_longitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {{ (value_json.payload.longitude_i | float) / 10000000 }}\n\
+    {% else %}\n  {{ states('sensor.dn03_longitude') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Altitude
+  unique_id: meshtastic_dn03_altitude
+  default_entity_id: sensor.dn03_altitude
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.altitude\
+    \ is defined %}\n  {{ value_json.payload.altitude }}\n{% else %}\n  {{ states('sensor.dn03_altitude')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m
+  device_class: distance
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Satellites
+  unique_id: meshtastic_dn03_satellites
+  default_entity_id: sensor.dn03_satellites
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.sats_in_view\
+    \ is defined %}\n  {{ value_json.payload.sats_in_view }}\n{% else %}\n  {{ states('sensor.dn03_satellites')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: PDOP
+  unique_id: meshtastic_dn03_pdop
+  default_entity_id: sensor.dn03_pdop
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.PDOP\
+    \ is defined %}\n  {{ (value_json.payload.PDOP | float) / 100 }}\n{% else %}\n\
+    \  {{ states('sensor.dn03_pdop') }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Track
+  unique_id: meshtastic_dn03_ground_track
+  default_entity_id: sensor.dn03_ground_track
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_track\
+    \ is defined %}\n  {{ (value_json.payload.ground_track | float) / 100000 }}\n\
+    {% else %}\n  {{ states('sensor.dn03_ground_track') }}\n{% endif %}"
+  unit_of_measurement: °
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Ground Speed
+  unique_id: meshtastic_dn03_ground_speed
+  default_entity_id: sensor.dn03_ground_speed
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.ground_speed\
+    \ is defined %}\n  {{ value_json.payload.ground_speed }}\n{% else %}\n  {{ states('sensor.dn03_ground_speed')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: m/s
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Precision Bits
+  unique_id: meshtastic_dn03_precision_bits
+  default_entity_id: sensor.dn03_precision_bits
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.precision_bits\
+    \ is defined %}\n  {{ value_json.payload.precision_bits }}\n{% else %}\n  {{ states('sensor.dn03_precision_bits')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: RSSI
+  unique_id: meshtastic_dn03_rssi
+  default_entity_id: sensor.dn03_rssi
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.rssi\
+    \ is defined %}\n  {{ value_json.rssi }}\n{% else %}\n  {{ states('sensor.dn03_rssi')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dBm
+  device_class: signal_strength
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: SNR
+  unique_id: meshtastic_dn03_snr
+  default_entity_id: sensor.dn03_snr
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.snr\
+    \ is defined %}\n  {{ value_json.snr }}\n{% else %}\n  {{ states('sensor.dn03_snr')\
+    \ }}\n{% endif %}"
+  unit_of_measurement: dB
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hops Away
+  unique_id: meshtastic_dn03_hops_away
+  default_entity_id: sensor.dn03_hops_away
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.hops_away\
+    \ is defined %}\n  {{ value_json.hops_away }}\n{% else %}\n  {{ states('sensor.dn03_hops_away')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Hop Start
+  unique_id: meshtastic_dn03_hop_start
+  default_entity_id: sensor.dn03_hop_start
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.hop_start\
+    \ is defined %}\n  {{ value_json.hop_start }}\n{% else %}\n  {{ states('sensor.dn03_hop_start')\
+    \ }}\n{% endif %}"
+  state_class: measurement
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Packet Timestamp
+  unique_id: meshtastic_dn03_packet_timestamp
+  default_entity_id: sensor.dn03_packet_timestamp
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.timestamp\
+    \ is defined %}\n  {{ value_json.timestamp }}\n{% else %}\n  {{ states('sensor.dn03_packet_timestamp')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: GPS Fix Time
+  unique_id: meshtastic_dn03_gps_fix_time
+  default_entity_id: sensor.dn03_gps_fix_time
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.time\
+    \ is defined %}\n  {{ value_json.payload.time }}\n{% else %}\n  {{ states('sensor.dn03_gps_fix_time')\
+    \ }}\n{% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+- name: Last Packet
+  unique_id: meshtastic_dn03_last_packet
+  default_entity_id: sensor.dn03_last_packet
+  state_topic: msh/US/2/json/JDH/#
+  value_template: "{% if value_json.get('from') == 463668148 %}\n  {% set packet_type\
+    \ = value_json.type | default('') %}\n  {{ packet_type if packet_type | length\
+    \ > 0 else 'unknown' }}\n{% else %}\n  {{ states('sensor.dn03_last_packet') }}\n\
+    {% endif %}"
+  device:
+    identifiers:
+    - meshtastic_jdh_463668148
+    name: Dev Node 003
+    manufacturer: Meshtastic
+    model: Heltec v4
+device_tracker:
+- name: JD Dev Base Station 001 Location
+  unique_id: meshtastic_jd01_location
+  state_topic: msh/US/2/json/JDH/#
+  json_attributes_topic: msh/US/2/json/JDH/#
+  source_type: gps
+  value_template: "{% if value_json.get('from') == 4134541604\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined\n      and value_json.payload.longitude_i is defined %}\n  gps\n\
+    {% else %}\n  {{ states('device_tracker.jd_dev_base_station_001_location') }}\n\
+    {% endif %}"
+  json_attributes_template: "{% if value_json.get('from') == 4134541604\n      and\
+    \ value_json.type == 'position'\n      and value_json.payload is defined\n   \
+    \   and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {\n    \"latitude\": {{ (value_json.payload.latitude_i | float)\
+    \ / 10000000 }},\n    \"longitude\": {{ (value_json.payload.longitude_i | float)\
+    \ / 10000000 }},\n    \"gps_accuracy\": {{ 2 ** (32 - (value_json.payload.precision_bits\
+    \ | int(32))) }},\n    \"altitude\": {{ value_json.payload.altitude | default(0)\
+    \ }}\n  }\n{% else %}\n  {}\n{% endif %}"
+- name: Dev Tracker 001 Location
+  unique_id: meshtastic_dt01_location
+  state_topic: msh/US/2/json/JDH/#
+  json_attributes_topic: msh/US/2/json/JDH/#
+  source_type: gps
+  value_template: "{% if value_json.get('from') == 318045044\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined\n      and value_json.payload.longitude_i is defined %}\n  gps\n\
+    {% else %}\n  {{ states('device_tracker.dev_tracker_001_location') }}\n{% endif\
+    \ %}"
+  json_attributes_template: "{% if value_json.get('from') == 318045044\n      and\
+    \ value_json.type == 'position'\n      and value_json.payload is defined\n   \
+    \   and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {\n    \"latitude\": {{ (value_json.payload.latitude_i | float)\
+    \ / 10000000 }},\n    \"longitude\": {{ (value_json.payload.longitude_i | float)\
+    \ / 10000000 }},\n    \"gps_accuracy\": {{ 2 ** (32 - (value_json.payload.precision_bits\
+    \ | int(32))) }},\n    \"altitude\": {{ value_json.payload.altitude | default(0)\
+    \ }}\n  }\n{% else %}\n  {}\n{% endif %}"
+- name: Dev Node 0001 Location
+  unique_id: meshtastic_dn01_location
+  state_topic: msh/US/2/json/JDH/#
+  json_attributes_topic: msh/US/2/json/JDH/#
+  source_type: gps
+  value_template: "{% if value_json.get('from') == 463564200\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined\n      and value_json.payload.longitude_i is defined %}\n  gps\n\
+    {% else %}\n  {{ states('device_tracker.dev_node_0001_location') }}\n{% endif\
+    \ %}"
+  json_attributes_template: "{% if value_json.get('from') == 463564200\n      and\
+    \ value_json.type == 'position'\n      and value_json.payload is defined\n   \
+    \   and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {\n    \"latitude\": {{ (value_json.payload.latitude_i | float)\
+    \ / 10000000 }},\n    \"longitude\": {{ (value_json.payload.longitude_i | float)\
+    \ / 10000000 }},\n    \"gps_accuracy\": {{ 2 ** (32 - (value_json.payload.precision_bits\
+    \ | int(32))) }},\n    \"altitude\": {{ value_json.payload.altitude | default(0)\
+    \ }}\n  }\n{% else %}\n  {}\n{% endif %}"
+- name: Dev Node 002 Location
+  unique_id: meshtastic_dn02_location
+  state_topic: msh/US/2/json/JDH/#
+  json_attributes_topic: msh/US/2/json/JDH/#
+  source_type: gps
+  value_template: "{% if value_json.get('from') == 4134496268\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined\n      and value_json.payload.longitude_i is defined %}\n  gps\n\
+    {% else %}\n  {{ states('device_tracker.dev_node_002_location') }}\n{% endif %}"
+  json_attributes_template: "{% if value_json.get('from') == 4134496268\n      and\
+    \ value_json.type == 'position'\n      and value_json.payload is defined\n   \
+    \   and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {\n    \"latitude\": {{ (value_json.payload.latitude_i | float)\
+    \ / 10000000 }},\n    \"longitude\": {{ (value_json.payload.longitude_i | float)\
+    \ / 10000000 }},\n    \"gps_accuracy\": {{ 2 ** (32 - (value_json.payload.precision_bits\
+    \ | int(32))) }},\n    \"altitude\": {{ value_json.payload.altitude | default(0)\
+    \ }}\n  }\n{% else %}\n  {}\n{% endif %}"
+- name: Dev Node 003 Location
+  unique_id: meshtastic_dn03_location
+  state_topic: msh/US/2/json/JDH/#
+  json_attributes_topic: msh/US/2/json/JDH/#
+  source_type: gps
+  value_template: "{% if value_json.get('from') == 463668148\n      and value_json.type\
+    \ == 'position'\n      and value_json.payload is defined\n      and value_json.payload.latitude_i\
+    \ is defined\n      and value_json.payload.longitude_i is defined %}\n  gps\n\
+    {% else %}\n  {{ states('device_tracker.dev_node_003_location') }}\n{% endif %}"
+  json_attributes_template: "{% if value_json.get('from') == 463668148\n      and\
+    \ value_json.type == 'position'\n      and value_json.payload is defined\n   \
+    \   and value_json.payload.latitude_i is defined\n      and value_json.payload.longitude_i\
+    \ is defined %}\n  {\n    \"latitude\": {{ (value_json.payload.latitude_i | float)\
+    \ / 10000000 }},\n    \"longitude\": {{ (value_json.payload.longitude_i | float)\
+    \ / 10000000 }},\n    \"gps_accuracy\": {{ 2 ** (32 - (value_json.payload.precision_bits\
+    \ | int(32))) }},\n    \"altitude\": {{ value_json.payload.altitude | default(0)\
+    \ }}\n  }\n{% else %}\n  {}\n{% endif %}"

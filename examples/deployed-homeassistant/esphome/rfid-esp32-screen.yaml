@@ -1,0 +1,947 @@
+substitutions:
+  device_name: rfid-esp32-screen
+  friendly_name: RFID ESP32 Screen
+  ent_lr_lights: light.living_room_lights
+  ent_office_hexa: light.office_hexa
+  ent_string_lights: light.back_string_lights
+  ent_jd_bed_light: light.jd_bed_light
+  ent_sam_bed_light: light.sam_bed_light
+  ent_maya_lamp: light.maya_lamp
+  ent_indoor_temp: sensor.hallway_temperature
+  screen_timeout: 45s
+  rfid_update_interval_awake: 1500ms
+  battery_update_interval: 60s
+  i2c_sda_pin: '16'
+  i2c_scl_pin: '15'
+  lcd_spi_clk_pin: '12'
+  lcd_spi_mosi_pin: '11'
+  lcd_spi_miso_pin: '13'
+  lcd_cs_pin: '10'
+  lcd_dc_pin: '46'
+  lcd_backlight_pin: '45'
+  touch_reset_pin: '18'
+  touch_interrupt_pin: '17'
+  rgb_led_pin: '42'
+  speaker_enable_pin: '1'
+  i2s_mclk_pin: '4'
+  i2s_bclk_pin: '5'
+  i2s_dout_pin: '6'
+  i2s_lrclk_pin: '7'
+  i2s_din_pin: '8'
+  battery_adc_pin: '9'
+  rc522_spi_clk_pin: '2'
+  rc522_spi_mosi_pin: '3'
+  rc522_spi_miso_pin: '14'
+  rc522_cs_pin: '21'
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  min_version: 2025.11.0
+  name_add_mac_suffix: false
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: esp-idf
+psram:
+  mode: octal
+  speed: 80MHz
+logger:
+  level: INFO
+api:
+  encryption:
+    key: !secret 'esphome_rfid_esp32_screen_api_encryption_key'
+ota:
+- platform: esphome
+  password: !secret 'esphome_rfid_esp32_screen_ota_0_password'
+wifi:
+  ssid: !secret 'wifi_ssid'
+  password: !secret 'wifi_password'
+  use_psram: true
+  power_save_mode: LIGHT
+  ap:
+    ssid: Rfid-Esp32-Screen
+    password: !secret 'esphome_rfid_esp32_screen_wifi_ap_password'
+captive_portal: null
+web_server:
+  port: 80
+time:
+- platform: homeassistant
+  id: ha_time
+i2c:
+- id: board_i2c
+  sda: GPIO${i2c_sda_pin}
+  scl: GPIO${i2c_scl_pin}
+  scan: true
+spi:
+- id: lcd_spi
+  clk_pin: GPIO${lcd_spi_clk_pin}
+  mosi_pin: GPIO${lcd_spi_mosi_pin}
+  miso_pin: GPIO${lcd_spi_miso_pin}
+- id: rc522_spi_bus
+  clk_pin: GPIO${rc522_spi_clk_pin}
+  mosi_pin: GPIO${rc522_spi_mosi_pin}
+  miso_pin: GPIO${rc522_spi_miso_pin}
+output:
+- platform: gpio
+  pin: GPIO${speaker_enable_pin}
+  id: speaker_amp_enable
+  inverted: true
+- platform: gpio
+  pin: GPIO${lcd_backlight_pin}
+  id: lcd_backlight_output
+switch:
+- platform: output
+  name: Speaker Amplifier
+  id: speaker_amp_switch
+  output: speaker_amp_enable
+  restore_mode: ALWAYS_OFF
+- platform: output
+  name: Backlight
+  id: backlight_switch
+  output: lcd_backlight_output
+  restore_mode: ALWAYS_ON
+binary_sensor:
+- platform: homeassistant
+  id: ha_lr_lights
+  entity_id: ${ent_lr_lights}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_lr
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+- platform: homeassistant
+  id: ha_office_hexa
+  entity_id: ${ent_office_hexa}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_hexa
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+- platform: homeassistant
+  id: ha_jd_bed_light
+  entity_id: ${ent_jd_bed_light}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_jd_bed
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+- platform: homeassistant
+  id: ha_sam_bed_light
+  entity_id: ${ent_sam_bed_light}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_sam_bed
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+- platform: homeassistant
+  id: ha_maya_lamp
+  entity_id: ${ent_maya_lamp}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_maya_lamp
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+    - lvgl.widget.update:
+        id: tile_maya_power
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+    - lvgl.label.update:
+        id: lbl_maya_lamp_state
+        text: !lambda 'return std::string(x ? "ON" : "OFF");'
+- platform: homeassistant
+  id: ha_string_lights
+  entity_id: ${ent_string_lights}
+  on_state:
+    then:
+    - lvgl.widget.update:
+        id: tile_string
+        bg_color: !lambda 'return lv_color_hex(x ? 0xF9A825 : 0x263238);'
+text_sensor:
+- platform: template
+  name: Last RFID Tag
+  id: last_rfid_tag
+  icon: mdi:card-account-details
+  update_interval: never
+- platform: template
+  name: RFID Status
+  id: rfid_status
+  icon: mdi:nfc
+  update_interval: never
+- platform: wifi_info
+  ip_address:
+    name: IP Address
+    id: ip_address
+  ssid:
+    name: Connected SSID
+    id: wifi_ssid_text
+sensor:
+- platform: adc
+  pin: GPIO${battery_adc_pin}
+  name: Battery Voltage Estimated
+  id: battery_voltage_estimated
+  attenuation: 12db
+  update_interval: ${battery_update_interval}
+  filters:
+  - multiply: 2.0
+  unit_of_measurement: V
+  accuracy_decimals: 2
+  device_class: voltage
+  state_class: measurement
+- platform: homeassistant
+  id: ha_indoor_temp
+  entity_id: ${ent_indoor_temp}
+  on_value:
+    then:
+    - lvgl.label.update:
+        id: lbl_indoor_temp
+        text: !lambda 'return str_sprintf("%.0f\xC2\xB0", x);'
+button:
+- platform: restart
+  name: Restart
+rc522_spi:
+  id: rfid_reader
+  spi_id: rc522_spi_bus
+  cs_pin: GPIO${rc522_cs_pin}
+  update_interval: ${rfid_update_interval_awake}
+  on_tag:
+    then:
+    - script.execute: display_wake
+    - logger.log:
+        level: INFO
+        format: 'RFID tag scanned: %s'
+        args:
+        - x.c_str()
+    - text_sensor.template.publish:
+        id: last_rfid_tag
+        state: !lambda 'return x;'
+    - text_sensor.template.publish:
+        id: rfid_status
+        state: Tag present
+    - homeassistant.tag_scanned: !lambda 'return x;'
+    - light.turn_on:
+        id: my_status_led
+        brightness: 80%
+        red: 0%
+        green: 100%
+        blue: 20%
+    - lvgl.label.update:
+        id: lbl_rfid
+        text: !lambda 'return "RFID: " + x;'
+    - globals.set:
+        id: scan_count
+        value: !lambda 'return id(scan_count) + 1;'
+    - lvgl.label.update:
+        id: rfid_big
+        text: TAG READ
+    - lvgl.label.update:
+        id: rfid_uid
+        text: !lambda 'return x;'
+    - lvgl.label.update:
+        id: rfid_count
+        text: !lambda 'return "Scans: " + std::to_string(id(scan_count));'
+    - lvgl.page.show: page_rfid
+    - script.execute: scan_beep
+  on_tag_removed:
+    then:
+    - logger.log:
+        level: INFO
+        format: 'RFID tag removed: %s'
+        args:
+        - x.c_str()
+    - text_sensor.template.publish:
+        id: rfid_status
+        state: Waiting
+    - light.turn_off: my_status_led
+    - lvgl.label.update:
+        id: lbl_rfid
+        text: 'RFID: ready'
+    - lvgl.label.update:
+        id: rfid_big
+        text: WAITING
+i2s_audio:
+- id: i2s_audio_bus
+  i2s_lrclk_pin: GPIO${i2s_lrclk_pin}
+  i2s_bclk_pin: GPIO${i2s_bclk_pin}
+  i2s_mclk_pin: GPIO${i2s_mclk_pin}
+audio_dac:
+- platform: es8311
+  i2c_id: board_i2c
+  id: es8311_dac
+  address: 24
+  bits_per_sample: 16bit
+  sample_rate: 16000
+  use_mclk: true
+speaker:
+- platform: i2s_audio
+  id: my_speaker
+  i2s_audio_id: i2s_audio_bus
+  i2s_dout_pin: GPIO${i2s_dout_pin}
+  dac_type: external
+  sample_rate: 16000
+  bits_per_sample: 16bit
+  channel: mono
+  audio_dac: es8311_dac
+  buffer_duration: 100ms
+media_player:
+- platform: speaker
+  name: Speaker
+  id: external_media_player
+  buffer_size: 32768
+  announcement_pipeline:
+    speaker: my_speaker
+    format: WAV
+display:
+- platform: mipi_spi
+  model: ili9341
+  spi_id: lcd_spi
+  dc_pin: GPIO${lcd_dc_pin}
+  cs_pin: GPIO${lcd_cs_pin}
+  invert_colors: false
+  dimensions:
+    width: 240
+    height: 320
+  auto_clear_enabled: false
+  update_interval: never
+touchscreen:
+- platform: ft63x6
+  i2c_id: board_i2c
+  interrupt_pin: GPIO${touch_interrupt_pin}
+  reset_pin: GPIO${touch_reset_pin}
+  on_touch:
+    then:
+    - if:
+        condition:
+          lambda: return !id(display_is_awake);
+        then:
+        - script.execute: display_wake
+light:
+- platform: esp32_rmt_led_strip
+  rgb_order: GRB
+  pin: GPIO${rgb_led_pin}
+  num_leds: 1
+  chipset: ws2812
+  name: Status LED
+  id: my_status_led
+  effects:
+  - addressable_rainbow:
+      name: Rainbow
+  - pulse:
+      name: Slow Pulse
+font:
+- file: gfonts://Roboto
+  id: font_small
+  size: 16
+- file: gfonts://Roboto
+  id: font_medium
+  size: 22
+- file: gfonts://Roboto
+  id: font_large
+  size: 30
+- file: gfonts://Roboto
+  id: font_clock
+  size: 64
+globals:
+- id: scan_count
+  type: int
+  restore_value: false
+  initial_value: '0'
+- id: display_is_awake
+  type: bool
+  restore_value: false
+  initial_value: 'true'
+script:
+- id: display_sleep
+  mode: restart
+  then:
+  - globals.set:
+      id: display_is_awake
+      value: 'false'
+  - switch.turn_off: speaker_amp_switch
+  - light.turn_off: my_status_led
+  - switch.turn_off: backlight_switch
+  - lvgl.pause: null
+- id: display_wake
+  mode: restart
+  then:
+  - switch.turn_on: backlight_switch
+  - lvgl.resume: null
+  - globals.set:
+      id: display_is_awake
+      value: 'true'
+- id: tap_beep
+  mode: restart
+  then:
+  - switch.turn_on: speaker_amp_switch
+  - speaker.play:
+      id: my_speaker
+      data:
+      - 127
+      - 0
+      - 129
+      - 0
+      - 127
+      - 0
+      - 129
+      - 0
+  - delay: 35ms
+  - switch.turn_off: speaker_amp_switch
+- id: scan_beep
+  mode: restart
+  then:
+  - switch.turn_on: speaker_amp_switch
+  - delay: 15ms
+  - speaker.play:
+      id: my_speaker
+      data: !lambda "std::vector<uint8_t> v;\nconst int sr = 16000;     // matches\
+        \ the i2s/es8311 sample rate\nconst int ms = 180;\nconst int n = sr * ms /\
+        \ 1000;\nconst float f = 1175.0f;  // ~D6 beep\nfor (int i = 0; i < n; i++)\
+        \ {\n  int16_t s = (int16_t)(9000.0f * sinf(2.0f * 3.1415926f * f * i / sr));\n\
+        \  v.push_back((uint8_t)(s & 0xFF));\n  v.push_back((uint8_t)((s >> 8) & 0xFF));\n\
+        }\nreturn v;"
+  - delay: 230ms
+  - switch.turn_off: speaker_amp_switch
+lvgl:
+  disp_bg_color: 1053720
+  on_idle:
+    timeout: ${screen_timeout}
+    then:
+    - script.execute: display_sleep
+  theme:
+    button:
+      bg_color: 2503224
+      bg_opa: COVER
+      radius: 12
+      border_width: 0
+      text_color: 16777215
+    label:
+      text_color: 15527921
+  top_layer:
+    widgets:
+    - button:
+        id: nav_home
+        align: BOTTOM_LEFT
+        x: 4
+        y: -2
+        width: 55
+        height: 40
+        bg_color: 1777959
+        text_color: 16777215
+        widgets:
+        - label:
+            align: CENTER
+            text: Home
+            text_font: font_small
+        on_press:
+          then:
+          - lvgl.page.show: page_home
+          - script.execute: tap_beep
+    - button:
+        id: nav_controls
+        align: BOTTOM_LEFT
+        x: 63
+        y: -2
+        width: 55
+        height: 40
+        bg_color: 1777959
+        text_color: 16777215
+        widgets:
+        - label:
+            align: CENTER
+            text: Ctrl
+            text_font: font_small
+        on_press:
+          then:
+          - lvgl.page.show: page_controls
+          - script.execute: tap_beep
+    - button:
+        id: nav_maya_lamp
+        align: BOTTOM_LEFT
+        x: 122
+        y: -2
+        width: 55
+        height: 40
+        bg_color: 1777959
+        text_color: 16777215
+        widgets:
+        - label:
+            align: CENTER
+            text: Maya
+            text_font: font_small
+        on_press:
+          then:
+          - lvgl.page.show: page_maya_lamp
+          - script.execute: tap_beep
+    - button:
+        id: nav_rfid
+        align: BOTTOM_LEFT
+        x: 181
+        y: -2
+        width: 55
+        height: 40
+        bg_color: 1777959
+        text_color: 16777215
+        widgets:
+        - label:
+            align: CENTER
+            text: RFID
+            text_font: font_small
+        on_press:
+          then:
+          - lvgl.page.show: page_rfid
+          - script.execute: tap_beep
+  pages:
+  - id: page_home
+    bg_color: 1053720
+    bg_opa: COVER
+    text_color: 16777215
+    widgets:
+    - label:
+        id: lbl_clock
+        align: TOP_MID
+        y: 30
+        text_font: font_clock
+        text: --:--
+    - label:
+        id: lbl_date
+        align: TOP_MID
+        y: 100
+        text_font: font_small
+        text: Syncing...
+    - label:
+        align: TOP_LEFT
+        x: 16
+        y: 150
+        text_font: font_small
+        text: Indoor
+    - label:
+        id: lbl_indoor_temp
+        align: TOP_RIGHT
+        x: -16
+        y: 146
+        text_font: font_medium
+        text: --
+    - label:
+        align: TOP_LEFT
+        x: 16
+        y: 188
+        text_font: font_small
+        text: Battery
+    - label:
+        id: lbl_battery
+        align: TOP_RIGHT
+        x: -16
+        y: 184
+        text_font: font_medium
+        text: -- V
+    - label:
+        id: lbl_ssid
+        align: TOP_MID
+        y: 232
+        text_font: font_small
+        text: WiFi
+    - label:
+        id: lbl_rfid
+        align: TOP_MID
+        y: 256
+        text_font: font_small
+        text: 'RFID: ready'
+  - id: page_controls
+    bg_color: 1053720
+    bg_opa: COVER
+    text_color: 16777215
+    widgets:
+    - button:
+        id: tile_lr
+        align: TOP_LEFT
+        x: 8
+        y: 8
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_lr_lights}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'Living
+
+              Room'
+    - button:
+        id: tile_hexa
+        align: TOP_LEFT
+        x: 124
+        y: 8
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_office_hexa}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'Office
+
+              Hexa'
+    - button:
+        id: tile_string
+        align: TOP_LEFT
+        x: 8
+        y: 94
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_string_lights}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'String
+
+              Lights'
+    - button:
+        id: tile_jd_bed
+        align: TOP_LEFT
+        x: 124
+        y: 94
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_jd_bed_light}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'JD Bed
+
+              Light'
+    - button:
+        id: tile_sam_bed
+        align: TOP_LEFT
+        x: 8
+        y: 180
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_sam_bed_light}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'Sam Bed
+
+              Light'
+    - button:
+        id: tile_maya_lamp
+        align: TOP_LEFT
+        x: 124
+        y: 180
+        width: 108
+        height: 78
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_maya_lamp}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: 'Maya
+
+              Lamp'
+  - id: page_maya_lamp
+    bg_color: 1053720
+    bg_opa: COVER
+    text_color: 16777215
+    widgets:
+    - label:
+        align: TOP_MID
+        y: 8
+        text_font: font_medium
+        text: Maya Lamp
+    - button:
+        id: tile_maya_power
+        align: TOP_MID
+        y: 38
+        width: 208
+        height: 50
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.toggle
+              data:
+                entity_id: ${ent_maya_lamp}
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: TOP_MID
+            y: 5
+            text_font: font_small
+            text: Power
+        - label:
+            id: lbl_maya_lamp_state
+            align: BOTTOM_MID
+            y: -5
+            text_font: font_small
+            text: '...'
+    - button:
+        align: TOP_LEFT
+        x: 8
+        y: 98
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                brightness_pct: '20'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Dim
+    - button:
+        align: TOP_LEFT
+        x: 86
+        y: 98
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                brightness_pct: '55'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Med
+    - button:
+        align: TOP_LEFT
+        x: 164
+        y: 98
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                brightness_pct: '100'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Bright
+    - button:
+        align: TOP_LEFT
+        x: 8
+        y: 148
+        width: 68
+        height: 42
+        bg_color: 12000284
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                color_name: red
+                brightness_pct: '70'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Red
+    - button:
+        align: TOP_LEFT
+        x: 86
+        y: 148
+        width: 68
+        height: 42
+        bg_color: 870305
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                color_name: blue
+                brightness_pct: '70'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Blue
+    - button:
+        align: TOP_LEFT
+        x: 164
+        y: 148
+        width: 68
+        height: 42
+        bg_color: 6953882
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                color_name: purple
+                brightness_pct: '70'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Purple
+    - button:
+        align: TOP_LEFT
+        x: 8
+        y: 198
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                effect: Solid
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Solid
+    - button:
+        align: TOP_LEFT
+        x: 86
+        y: 198
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                effect: Rainbow
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Rainbow
+    - button:
+        align: TOP_LEFT
+        x: 164
+        y: 198
+        width: 68
+        height: 42
+        on_press:
+          then:
+          - homeassistant.action:
+              action: light.turn_on
+              data:
+                entity_id: ${ent_maya_lamp}
+                effect: Nightlight
+                brightness_pct: '10'
+          - script.execute: tap_beep
+        widgets:
+        - label:
+            align: CENTER
+            text_font: font_small
+            text: Night
+  - id: page_rfid
+    bg_color: 1053720
+    bg_opa: COVER
+    text_color: 16777215
+    widgets:
+    - label:
+        align: TOP_MID
+        y: 8
+        text_font: font_medium
+        text: RFID Reader
+    - label:
+        id: rfid_big
+        align: CENTER
+        y: -46
+        text_font: font_large
+        text: WAITING
+    - label:
+        id: rfid_uid
+        align: CENTER
+        y: 8
+        width: 224
+        long_mode: WRAP
+        text_align: CENTER
+        text_font: font_medium
+        text: Scan a card
+    - label:
+        id: rfid_count
+        align: BOTTOM_MID
+        y: -50
+        text_font: font_small
+        text: 'Scans: 0'
+interval:
+- interval: 15s
+  then:
+  - if:
+      condition:
+        lambda: return id(display_is_awake) && id(ha_time).now().is_valid();
+      then:
+      - lvgl.label.update:
+          id: lbl_clock
+          text: !lambda 'return id(ha_time).now().strftime("%I:%M");'
+      - lvgl.label.update:
+          id: lbl_date
+          text: !lambda 'return id(ha_time).now().strftime("%a %b %d");'
+- interval: 30s
+  then:
+  - if:
+      condition:
+        lambda: return id(display_is_awake);
+      then:
+      - lvgl.label.update:
+          id: lbl_battery
+          text: !lambda 'return str_sprintf("%.2f V", id(battery_voltage_estimated).state);'
+      - lvgl.label.update:
+          id: lbl_ssid
+          text: !lambda 'return id(wifi_ssid_text).state;'

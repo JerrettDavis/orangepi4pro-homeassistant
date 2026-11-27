@@ -1,0 +1,354 @@
+config:
+  views:
+  - title: Home
+    cards:
+    - type: conditional
+      conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_1
+          state_not: 'on'
+        - condition: state
+          entity: binary_sensor.10_0_0_100
+          state_not: 'on'
+        - condition: state
+          entity: binary_sensor.10_0_0_101
+          state_not: 'on'
+        - condition: state
+          entity: binary_sensor.1_1_1_1
+          state_not: 'on'
+        - condition: state
+          entity: device_tracker.jdh_ap_00
+          state_not: home
+        - condition: state
+          entity: device_tracker.jdh_ap_01
+          state_not: home
+        - condition: state
+          entity: device_tracker.jdh_ap_02
+          state_not: home
+        - condition: state
+          entity: binary_sensor.10_0_0_41
+          state_not: 'on'
+      card:
+        type: markdown
+        content: <ha-alert alert-type="error" title="Critical infrastructure DOWN">Check
+          the tiles below. Alerts have been sent to all phones.</ha-alert>
+    - type: grid
+      title: Critical Infrastructure
+      columns: 2
+      square: false
+      cards:
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_1
+          state: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_1
+          name: Gateway
+          icon: mdi:router-network
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_1
+          state_not: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_1
+          name: Gateway — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_100
+          state: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_100
+          name: DC jdh-dc-00
+          icon: mdi:server-network
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_100
+          state_not: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_100
+          name: DC jdh-dc-00 — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_101
+          state: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_101
+          name: DC jdh-dc-01
+          icon: mdi:server-network
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_101
+          state_not: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_101
+          name: DC jdh-dc-01 — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.1_1_1_1
+          state: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.1_1_1_1
+          name: Internet
+          icon: mdi:web
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.1_1_1_1
+          state_not: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.1_1_1_1
+          name: Internet — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_41
+          state: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_41
+          name: Switch TP-Link
+          icon: mdi:switch
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.10_0_0_41
+          state_not: 'on'
+        card:
+          type: tile
+          entity: binary_sensor.10_0_0_41
+          name: Switch TP-Link — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_00
+          state: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_00
+          name: AP-00
+          icon: mdi:access-point
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_00
+          state_not: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_00
+          name: AP-00 — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_01
+          state: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_01
+          name: AP-01
+          icon: mdi:access-point
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_01
+          state_not: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_01
+          name: AP-01 — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_02
+          state: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_02
+          name: AP-02
+          icon: mdi:access-point
+          color: green
+          vertical: false
+          state_content: last_changed
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: device_tracker.jdh_ap_02
+          state_not: home
+        card:
+          type: tile
+          entity: device_tracker.jdh_ap_02
+          name: AP-02 — DOWN
+          icon: mdi:alert-circle
+          color: red
+          vertical: false
+          state_content: last_changed
+    - type: entities
+      title: Latency & Self-test
+      state_color: true
+      show_header_toggle: false
+      entities:
+      - entity: sensor.10_0_0_1_round_trip_time_average
+        name: Gateway RTT
+      - entity: sensor.10_0_0_100_round_trip_time_average
+        name: jdh-dc-00 RTT
+      - entity: sensor.10_0_0_101_round_trip_time_average
+        name: jdh-dc-01 RTT
+      - entity: sensor.1_1_1_1_round_trip_time_average
+        name: Internet RTT
+      - entity: sensor.10_0_0_41_round_trip_time_average
+        name: Switch RTT
+      - entity: input_boolean.infra_alert_self_test
+        name: Alert self-test
+    - type: entities
+      title: Internet & Core Network
+      icon: mdi:wan
+      state_color: true
+      show_header_toggle: false
+      entities:
+      - entity: binary_sensor.1_1_1_1
+      - entity: binary_sensor.10_0_0_1
+      - entity: sensor.jdh_gateway_00_gateway_wan_dhcp_status
+      - entity: sensor.jdh_gateway_00_gateway_primaryswitch_status
+      - entity: sensor.jdh_gateway_00_interface_wan_status
+      - entity: sensor.jdh_gateway_00_interface_lan_status
+      - entity: sensor.jdh_gateway_00_interface_tlscl_status
+      - entity: sensor.speedtest_ping
+      - entity: sensor.speedtest_download
+      - entity: sensor.speedtest_upload
+    - type: entities
+      title: Domain Controller — jdh-dc-01
+      icon: mdi:server-network
+      show_header_toggle: false
+      entities:
+      - type: button
+        name: DC Manager (Cockpit)
+        icon: mdi:shield-account
+        action_name: OPEN
+        tap_action:
+          action: url
+          url_path: https://jdh-dc-01.jerrettdavis.com:9090/
+    - type: history-graph
+      title: WAN & Tailscale Traffic (24 hours)
+      hours_to_show: 24
+      entities:
+      - entity: sensor.jdh_gateway_00_interface_wan_inbytes_kilobytes_per_second
+      - entity: sensor.jdh_gateway_00_interface_wan_outbytes_kilobytes_per_second
+      - entity: sensor.jdh_gateway_00_interface_tlscl_inbytes_kilobytes_per_second
+      - entity: sensor.jdh_gateway_00_interface_tlscl_outbytes_kilobytes_per_second
+    - type: entities
+      title: Tailscale Devices — Last Seen
+      icon: mdi:vpn
+      show_header_toggle: false
+      entities:
+      - entity: sensor.front_door_deadbolt_last_seen
+      - entity: sensor.jd_s24_last_seen
+      - entity: sensor.jdh_gateway_00_last_seen
+      - entity: sensor.jdh_orin_01_last_seen
+      - entity: sensor.jdh_pi_01_last_seen
+      - entity: sensor.jdh_pi_02_last_seen
+      - entity: sensor.jdh_pro_01_last_seen
+      - entity: sensor.jdh_pro_03_last_seen
+      - entity: sensor.jdh_pro_05_last_seen
+      - entity: sensor.jds_macbook_air_last_seen
+      - entity: sensor.k1_outlet_last_seen
+      - entity: sensor.motorola_moto_g_5g_2024_last_seen
+      - entity: sensor.qidi_x_plus_3_outlet_last_seen
+    - show_name: true
+      show_icon: true
+      show_state: true
+      type: glance
+      entities:
+      - entity: update.jdh_gateway_00_firmware_updates_available
+      - entity: update.jdh_ap_00
+      - entity: update.jdh_ap_01
+      - entity: update.jdh_ap_02
+      state_color: false
+    - type: entities
+      title: Palworld — Cloudnium
+      icon: mdi:gamepad-variant
+      state_color: true
+      show_header_toggle: false
+      entities:
+      - entity: binary_sensor.palworld_cloudnium_online
+        name: Server online
+      - entity: sensor.palworld_cloudnium_players
+        name: Players online
+      - entity: sensor.palworld_cloudnium_player_names
+        name: Players
+      - entity: sensor.palworld_cloudnium_version
+        name: Server version
+      - type: attribute
+        entity: sensor.palworld_cloudnium_status
+        attribute: container_state
+        name: Container state
+      - type: attribute
+        entity: sensor.palworld_cloudnium_status
+        attribute: container_health
+        name: Container health
+      - entity: sensor.palworld_cloudnium_last_check
+        name: Last checked

@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-11-27",
+  "addons": [
+    {
+      "slug": "a2a505b7_paseo",
+      "version": "0.15.0-1-opiha.5",
+      "repository": "https://github.com/JerrettDavis/paseo-ha-addon",
+      "commit_prefix": "730cfe1",
+      "source_worktree_clean": true
+    },
+    {
+      "slug": "a0d7b954_nginxproxymanager",
+      "image": "ghcr.io/hassio-addons/nginxproxymanager:4.1.1",
+      "commit": "db22c2d38e8b7a1f6f6f6fa2e449b90d5756c257"
+    },
+    {
+      "slug": "core_matter_server",
+      "image": "ghcr.io/home-assistant/app-matter-server:9.3.0"
+    },
+    {
+      "slug": "core_whisper",
+      "image": "ghcr.io/home-assistant/app-whisper:3.6.1"
+    }
+  ]
+}

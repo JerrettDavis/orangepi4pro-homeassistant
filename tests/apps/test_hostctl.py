@@ -188,6 +188,28 @@ def test_image_and_prune_need_confirm(host, runner):
     assert runner.ran("docker", "image", "rm", "abcdef123456")
 
 
+def test_storage_reports_recorder_and_backups(host, runner, tmp_path):
+    (tmp_path / "backups").mkdir()
+    (tmp_path / "home-assistant_v2.db").write_bytes(b"x" * 100)
+    (tmp_path / "home-assistant_v2.db-wal").write_bytes(b"x" * 20)
+    (tmp_path / "backups" / "Automatic_backup_1.tar").write_bytes(b"x" * 5)
+    (tmp_path / "backups" / "abcd1234.tar").write_bytes(b"x" * 7)
+    host.config["ha_config"] = str(tmp_path)
+    runner.when("docker", "system", "df", out='{"Type":"Images","Size":"1GB","Reclaimable":"0B"}\n')
+    result = host.storage({})
+    assert result["recorder_bytes"] == 120
+    assert {b["name"]: b["automatic"] for b in result["backups"]} == {"Automatic_backup_1.tar": True, "abcd1234.tar": False}
+    assert result["docker"] == [{"type": "Images", "size": "1GB", "reclaimable": "0B"}]
+    with pytest.raises(AppError):
+        host.storage({"x": 1})
+
+
+def test_deep_clean_runs_guard_as_a_job(host, runner):
+    with pytest.raises(AppError):
+        host.update_start({"kind": "clean-deep"})
+    host.update_start({"kind": "clean-deep", "confirm": True})
+    assert runner.ran("systemd-run", hostctl.DISK_GUARD, "deep")
+
 APT = """Listing...
 openssl/jammy-updates,jammy-security 3.0.2-0ubuntu1.20 arm64 [upgradable from: 3.0.2-0ubuntu1.18]
 tzdata/jammy-updates 2026a-0ubuntu0.22.04 all [upgradable from: 2025b-0ubuntu0.22.04]

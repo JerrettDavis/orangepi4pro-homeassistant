@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-27T06:41:38.233738+00:00",
+  "scope": "Read-only inventory of direct directories and their files under /srv/homeassistant/ha/www/community; no unrelated configuration read.",
+  "hacs_metadata": "No HACS-named files were present directly in /srv/homeassistant/ha/.storage. Versions and upstream repositories were instead established by exact comparison with public release assets or tag-tree Git blobs.",
+  "gzip_comparison": "Every gzip payload decompressed byte-for-byte to its sibling file.",
+  "patches": "No differences from the corresponding identified public files were found; the extra auto-entities rollup config matches a historical upstream commit.",
+  "activity_note": "File presence does not establish that a frontend resource is registered or currently loaded.",
+  "reinstallation_warning": "Installer or HACS updates can replace deployed resources; retain version/ref and digest pins for restoration.",
+  "resources": [
+    {
+      "directory": "button-card",
+      "upstream_repository": "https://github.com/custom-cards/button-card",
+      "verified_version": "7.0.1",
+      "verified_ref": "v7.0.1",
+      "upstream_commit_sha": "dfa304f93ab73b41011b624960657c568672e9c9",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "button-card.js": {
+          "size": 162135,
+          "sha256": "5d6e9c6afca01e8014653fa56bb5d6aa9248d832c34fb944a7f2c36329bc22d1",
+          "git_blob_sha1": "037d6bde3479e9351564ab2e41433c26985f5ebe"
+        },
+        "button-card.js.gz": {
+          "size": 45488,
+          "sha256": "492b4b524079169945b939b4fd5f8f881abfb5e5baaa7d2dea9d50997a954cba",
+          "git_blob_sha1": "83f22d08392c252d45d91da56a045924aa4e3277",
+          "decompressed_sha256": "5d6e9c6afca01e8014653fa56bb5d6aa9248d832c34fb944a7f2c36329bc22d1",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "button-card.js",
+        "asset_url": "https://github.com/custom-cards/button-card/releases/download/v7.0.1/button-card.js",
+        "asset_sha256": "5d6e9c6afca01e8014653fa56bb5d6aa9248d832c34fb944a7f2c36329bc22d1",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "lovelace-auto-entities",
+      "upstream_repository": "https://github.com/thomasloven/lovelace-auto-entities",
+      "verified_version": "1.16.1",
+      "verified_ref": "v1.16.1",
+      "upstream_commit_sha": "360722dc512f6f3aea3bbfbe08553b06c37880b6",
+      "version_source": "exact deployed Git blob matched tag tree",
+      "files": {
+        "auto-entities.js": {
+          "size": 97077,
+          "sha256": "b7327b2fcd39f1fb859b60b53c869760d1d762ab4d4e4617b748971f528bd407",
+          "git_blob_sha1": "af00237ac0ee738b0ef958d4d4688243108650ee"
+        },
+        "auto-entities.js.gz": {
+          "size": 23877,
+          "sha256": "1c760da21334783af9e8df64234b3399c8bff268f5c5cc2689ec83903624523e",
+          "git_blob_sha1": "0e336240f9965a9b8291c671290c6058e1ea1f8f",
+          "decompressed_sha256": "b7327b2fcd39f1fb859b60b53c869760d1d762ab4d4e4617b748971f528bd407",
+          "matches_sibling": true
+        },
+        "rollup.config.js": {
+          "size": 556,
+          "sha256": "3ddb1e855166c415167b03112d60385aade18e67db9519241707ee60ef132710",
+          "git_blob_sha1": "b067baed2a18a258e11448f72903a50375b97190"
+        },
+        "rollup.config.js.gz": {
+          "size": 323,
+          "sha256": "b157bd021039b417f87ca05e4d6b705cf68a87c31c0ffb5e4cfee29fa4337429",
+          "git_blob_sha1": "3aef4dd91487948aeabb312b73a28ec37fb1ee61",
+          "decompressed_sha256": "3ddb1e855166c415167b03112d60385aade18e67db9519241707ee60ef132710",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "tag_tree_git_blob_sha1",
+        "upstream_path": "auto-entities.js",
+        "git_blob_sha1": "af00237ac0ee738b0ef958d4d4688243108650ee",
+        "exact_match": true
+      },
+      "extra_public_file": {
+        "path": "rollup.config.js",
+        "comparison": "exact historical upstream Git blob, absent from installed bundle tag",
+        "upstream_commit_sha": "4a25ed744163744b4c6072c0813c68bdbe524d67",
+        "git_blob_sha1": "b067baed2a18a258e11448f72903a50375b97190"
+      }
+    },
+    {
+      "directory": "lovelace-multiple-entity-row",
+      "upstream_repository": "https://github.com/benct/lovelace-multiple-entity-row",
+      "verified_version": "4.13.1",
+      "verified_ref": "v4.13.1",
+      "upstream_commit_sha": "2055d4f47e6e3a9180be0fd6435f7f015b2db69c",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "multiple-entity-row.js": {
+          "size": 106428,
+          "sha256": "85833ddd712e3a907cc6ff5fa59ae2ec516c72afddde2abf1be08c107654fae3",
+          "git_blob_sha1": "89e7ca8d30e3ec1f5b830e2d978bc3257bf432ec"
+        },
+        "multiple-entity-row.js.gz": {
+          "size": 28111,
+          "sha256": "eac786e1041f550e2fdb9016c7172c6f85497753c5b131eb3234f8022d9eca91",
+          "git_blob_sha1": "ba3bd225078a61fd6a9f470dee9c45bb3e45753a",
+          "decompressed_sha256": "85833ddd712e3a907cc6ff5fa59ae2ec516c72afddde2abf1be08c107654fae3",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "multiple-entity-row.js",
+        "asset_url": "https://github.com/benct/lovelace-multiple-entity-row/releases/download/v4.13.1/multiple-entity-row.js",
+        "asset_sha256": "85833ddd712e3a907cc6ff5fa59ae2ec516c72afddde2abf1be08c107654fae3",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "lovelace-mushroom",
+      "upstream_repository": "https://github.com/piitaya/lovelace-mushroom",
+      "verified_version": "5.3.0",
+      "verified_ref": "v5.3.0",
+      "upstream_commit_sha": "68bc1ba6d3e480caedae28635bec24701c3a26e2",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "mushroom.js": {
+          "size": 679491,
+          "sha256": "d2faf441f449489e4997533db248c2061b845eb633011f46d9aa6e78111fa237",
+          "git_blob_sha1": "869b9a001d7aa9142fa4a6de7cacab144ec7d9ca"
+        },
+        "mushroom.js.gz": {
+          "size": 182065,
+          "sha256": "b766bf4e810957308f045528ed1d699b303cdb5ab200993fc7c5b3182a43715a",
+          "git_blob_sha1": "de0a70601aa307ea7ff2445d5b97ea5e8f96a543",
+          "decompressed_sha256": "d2faf441f449489e4997533db248c2061b845eb633011f46d9aa6e78111fa237",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "mushroom.js",
+        "asset_url": "https://github.com/piitaya/lovelace-mushroom/releases/download/v5.3.0/mushroom.js",
+        "asset_sha256": "d2faf441f449489e4997533db248c2061b845eb633011f46d9aa6e78111fa237",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "lovelace-slider-entity-row",
+      "upstream_repository": "https://github.com/thomasloven/lovelace-slider-entity-row",
+      "verified_version": "17.5.0",
+      "verified_ref": "v17.5.0",
+      "upstream_commit_sha": "f178fb2da8f9404cd2f9b035f8c33929f80ed9e2",
+      "version_source": "exact deployed Git blob matched tag tree",
+      "files": {
+        "slider-entity-row.js": {
+          "size": 61456,
+          "sha256": "1d0ff89b3e095eab6954d194d5996e656847173278ee8b53ad5035ff1f8b77d0",
+          "git_blob_sha1": "7993b98ae9bdd8dc97c1b0fbc656385203400008"
+        },
+        "slider-entity-row.js.gz": {
+          "size": 16672,
+          "sha256": "75bad13c77251557e919a3eff407c63d227532e53f9ba246d9916f26d707dd74",
+          "git_blob_sha1": "298be1e85268290784c67979932f0afce7385eb4",
+          "decompressed_sha256": "1d0ff89b3e095eab6954d194d5996e656847173278ee8b53ad5035ff1f8b77d0",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "tag_tree_git_blob_sha1",
+        "upstream_path": "slider-entity-row.js",
+        "git_blob_sha1": "7993b98ae9bdd8dc97c1b0fbc656385203400008",
+        "exact_match": true
+      }
+    },
+    {
+      "directory": "lovelace-thermostat-dark-card",
+      "upstream_repository": "https://github.com/ciotlosm/lovelace-thermostat-dark-card",
+      "verified_version": "3.0.0",
+      "verified_ref": "v3.0.0",
+      "upstream_commit_sha": "44e2e4048a0788a08a7cd0b270e3c4fe7af5f76a",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "thermostat-dark-card.js": {
+          "size": 60401,
+          "sha256": "93d5a372551f5a596bd9142cdabbd5527135c1426596ba301795e1fa6fd19e89",
+          "git_blob_sha1": "8df3878e8e574f2d95a936822595513490e33f04"
+        },
+        "thermostat-dark-card.js.gz": {
+          "size": 18373,
+          "sha256": "715661f3e464c5cbf5f7d42e185a1aa9650e0f12b8edf9263eb71101c9f7370f",
+          "git_blob_sha1": "0da50e2085b3422a1117cc6fc5cfa5f28548062c",
+          "decompressed_sha256": "93d5a372551f5a596bd9142cdabbd5527135c1426596ba301795e1fa6fd19e89",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "thermostat-dark-card.js",
+        "asset_url": "https://github.com/ciotlosm/lovelace-thermostat-dark-card/releases/download/v3.0.0/thermostat-dark-card.js",
+        "asset_sha256": "93d5a372551f5a596bd9142cdabbd5527135c1426596ba301795e1fa6fd19e89",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "meshtastic-card",
+      "upstream_repository": "https://github.com/Hamper/meshtastic-card",
+      "verified_version": "1.0.0",
+      "verified_ref": "1.0.0",
+      "upstream_commit_sha": "db38de86d0b7904ec0a0b24fd97f4a2ac5ef3185",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "meshtastic-card.js": {
+          "size": 23394,
+          "sha256": "991eb82b98b8ed10e28c4bdd5c2ed8aca66ee15ce614bad22d9a5866cf2edf55",
+          "git_blob_sha1": "9928581ee43c06e9d16406ff29ac6a84602c8e0d"
+        },
+        "meshtastic-card.js.gz": {
+          "size": 8238,
+          "sha256": "87617ae617650f9661e6e62036d6f881d8365ca699c9350bd27663eef778c51c",
+          "git_blob_sha1": "622a82e9cf545a4069ba4525e5a764750d745279",
+          "decompressed_sha256": "991eb82b98b8ed10e28c4bdd5c2ed8aca66ee15ce614bad22d9a5866cf2edf55",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "meshtastic-card.js",
+        "asset_url": "https://github.com/Hamper/meshtastic-card/releases/download/1.0.0/meshtastic-card.js",
+        "asset_sha256": "991eb82b98b8ed10e28c4bdd5c2ed8aca66ee15ce614bad22d9a5866cf2edf55",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "mini-graph-card",
+      "upstream_repository": "https://github.com/kalkih/mini-graph-card",
+      "verified_version": "0.13.0",
+      "verified_ref": "v0.13.0",
+      "upstream_commit_sha": "a94771a516d79134536e96d40526541b3f23501d",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "mini-graph-card-bundle.js": {
+          "size": 124432,
+          "sha256": "4d8b986f3cd693c0f7771d2f5574008bc39c45ecb450aec067906150be2dfabd",
+          "git_blob_sha1": "4b6987083769f6cf876d3e6e78e0aac21c20657b"
+        },
+        "mini-graph-card-bundle.js.gz": {
+          "size": 38126,
+          "sha256": "00860a49b14689601de38411ec4e059a190fff843669ecdd084373cf854aafba",
+          "git_blob_sha1": "ea578da0215439f504b877b212520bd1c4678fcf",
+          "decompressed_sha256": "4d8b986f3cd693c0f7771d2f5574008bc39c45ecb450aec067906150be2dfabd",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "mini-graph-card-bundle.js",
+        "asset_url": "https://github.com/kalkih/mini-graph-card/releases/download/v0.13.0/mini-graph-card-bundle.js",
+        "asset_sha256": "4d8b986f3cd693c0f7771d2f5574008bc39c45ecb450aec067906150be2dfabd",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "mini-media-player",
+      "upstream_repository": "https://github.com/kalkih/mini-media-player",
+      "verified_version": "1.17.0",
+      "verified_ref": "v1.17.0",
+      "upstream_commit_sha": "0cb9164b7ae29ec4895d24aa04cd7e1120837959",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "mini-media-player-bundle.js": {
+          "size": 128882,
+          "sha256": "c4cb2ffd22d8b9f46d61b19d490d48e649eec7f22046657c2dd3e654d837c7dc",
+          "git_blob_sha1": "14e10dc6530ce433e33a1e143622081efa90ae0f"
+        },
+        "mini-media-player-bundle.js.gz": {
+          "size": 34645,
+          "sha256": "f5b021b96b6914174b99dedc0462c5dd9faa7179e96da00c05eecf2ae1466df7",
+          "git_blob_sha1": "fa2a04d8c2d431323e09f3477817b0f0c9f2603e",
+          "decompressed_sha256": "c4cb2ffd22d8b9f46d61b19d490d48e649eec7f22046657c2dd3e654d837c7dc",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "mini-media-player-bundle.js",
+        "asset_url": "https://github.com/kalkih/mini-media-player/releases/download/v1.17.0/mini-media-player-bundle.js",
+        "asset_sha256": "c4cb2ffd22d8b9f46d61b19d490d48e649eec7f22046657c2dd3e654d837c7dc",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "simple-thermostat",
+      "upstream_repository": "https://github.com/nervetattoo/simple-thermostat",
+      "verified_version": "2.5.0",
+      "verified_ref": "v2.5.0",
+      "upstream_commit_sha": "eb0c0d5902a4a1e51d4ae3849417ea3eef7b8886",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "simple-thermostat.js": {
+          "size": 62978,
+          "sha256": "982effe8cb15acb90d82496ce950c06828074f3c399e8615f9539e0b2eb2f97a",
+          "git_blob_sha1": "31de78e727aa63228b78350d3dd235ec7609fc9c"
+        },
+        "simple-thermostat.js.gz": {
+          "size": 19654,
+          "sha256": "9b63900dab16d428ae79b2a6dc41aeb1f9cc0029147afc53184517bc1cac0a52",
+          "git_blob_sha1": "b1a4e2eb78d093e64063eee0dd76cb48e49f5ebd",
+          "decompressed_sha256": "982effe8cb15acb90d82496ce950c06828074f3c399e8615f9539e0b2eb2f97a",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "simple-thermostat.js",
+        "asset_url": "https://github.com/nervetattoo/simple-thermostat/releases/download/v2.5.0/simple-thermostat.js",
+        "asset_sha256": "982effe8cb15acb90d82496ce950c06828074f3c399e8615f9539e0b2eb2f97a",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    },
+    {
+      "directory": "vertical-stack-in-card",
+      "upstream_repository": "https://github.com/ofekashery/vertical-stack-in-card",
+      "verified_version": "1.1.4",
+      "verified_ref": "v1.1.4",
+      "upstream_commit_sha": "07cadb19b37210e2f4d207f04462e8a1bfb0ab30",
+      "version_source": "exact deployed bytes matched published release",
+      "files": {
+        "vertical-stack-in-card.js": {
+          "size": 9780,
+          "sha256": "8e3775a19ae79664acf94afe4ebfacdc701f7294d3c5da24a74f99b0deb39c37",
+          "git_blob_sha1": "10268b2767702ace117aea149ddacb18b0d93547"
+        },
+        "vertical-stack-in-card.js.gz": {
+          "size": 2947,
+          "sha256": "b06ef181482a4e730cc7aca7c802083911ea5f4cdf646cfc0cf30f52d7ede39c",
+          "git_blob_sha1": "edbbec8288b68d0cc07c06c89664e2784ab0ea38",
+          "decompressed_sha256": "8e3775a19ae79664acf94afe4ebfacdc701f7294d3c5da24a74f99b0deb39c37",
+          "matches_sibling": true
+        }
+      },
+      "local_source_patch_detected": false,
+      "runtime_registration": "unknown",
+      "comparison": {
+        "basis": "release_asset_bytes",
+        "asset_name": "vertical-stack-in-card.js",
+        "asset_url": "https://github.com/ofekashery/vertical-stack-in-card/releases/download/v1.1.4/vertical-stack-in-card.js",
+        "asset_sha256": "8e3775a19ae79664acf94afe4ebfacdc701f7294d3c5da24a74f99b0deb39c37",
+        "exact_match": true,
+        "tag_commit_note": "Commit is the current tag target; asset-byte equality does not prove a reproducible build from that commit."
+      }
+    }
+  ]
+}

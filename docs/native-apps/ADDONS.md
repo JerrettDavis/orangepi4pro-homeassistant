@@ -93,6 +93,24 @@ and `/config` mapped read-write, `relay: false` by default, and the ingress shim
 under **Add-ons → Home Assistant access**, set `git_snapshot: true`, then start it. The `ha` CLI is not available;
 agents use the REST API instead.
 
+### MiniMax Code provider
+
+MiniMax Code is not in the add-on's `providers` option. It is an ACP catalog provider that you add in Paseo's
+settings (Providers → add ACP provider) with the command `npx -y -p @minimax-ai/code@0.6.13 mcode acp`. The add-on
+keeps providers you add this way across restarts.
+
+It then appears under providers but lists **no models** until the CLI is signed in, because Paseo reads the model
+list from the agent's `session/new` call, which fails with `Authentication required: Run mcode login`. Sign in once
+inside the add-on, not only on your workstation, because login state is per Paseo install:
+
+1. Open a Paseo terminal in the add-on (home is `/data/home`, which persists).
+2. Run `npx -y -p @minimax-ai/code@0.6.13 mcode login --no-browser` (add `--region global` or `--region cn` if
+   needed), open the printed URL and authorize.
+3. Restart the add-on or refresh providers; the models then appear in the new-session picker.
+
+Separately, the MiniMax **usage** panel (built-in `minimax-usage-source`) needs `MINIMAX_API_KEY` in the add-on's
+`env_vars`, or `~/.mmx/credentials.json`.
+
 ## Host networking detail
 
 The reverse proxy on the host owns port 80, so the shim listens on `172.30.32.2:8180` and an iptables rule

@@ -104,6 +104,11 @@ for the protected devices and current validation status.
 
 ## HTTPS proxy and time synchronization
 
+The current Supervisor installation uses the community Nginx Proxy Manager app, with its original proxy state
+migrated on 2026-10-29. See [the Supervisor proxy setup](REAL-SUPERVISOR.md#supervisor-managed-https-proxy) for active
+paths, startup, backup and rollback instructions. The compose setup below remains an alternative; do not start it
+alongside the app, because both use ports 80, 81 and 443.
+
 The optional `proxy` feature runs the pinned, multi-architecture Nginx Proxy
 Manager image with host networking. Its database, generated configuration,
 ACME account, and certificates live under `/srv/homeassistant/proxy`; none are

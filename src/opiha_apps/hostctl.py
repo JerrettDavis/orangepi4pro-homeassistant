@@ -32,11 +32,15 @@ OWN_UNIT = "orangepi-apps.service"
 LIFELINE = {OWN_UNIT, "ssh.service", "sshd.service", "dbus.service", "systemd-logind.service", "systemd-journald.service",
             "systemd-networkd.service", "NetworkManager.service", "systemd-resolved.service"}
 SERVICE_ACTIONS = {"start", "stop", "restart", "enable", "disable"}
+DISK_GUARD = "/usr/local/sbin/opiha-disk-guard"
+HA_CONFIG = "/srv/homeassistant/ha"
 JOB_UNIT = "opiha-host-job"
 JOB_KINDS = {
     "apt-update": (["apt-get", "update"], "Refresh package lists"),
     "apt-upgrade": (["apt-get", "-y", "-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold", "upgrade"], "Upgrade packages"),
     "snap-refresh": (["snap", "refresh"], "Refresh snaps"),
+    "clean-light": ([DISK_GUARD, "light"], "Free disk space (caches, Docker build cache)"),
+    "clean-deep": ([DISK_GUARD, "deep"], "Deep disk cleanup (unused Docker images, stopped containers, old backups)"),
 }
 KIOSK_UNITS = {"kiosk": "orangepi-homeassistant-kiosk.service", "controls": "orangepi-homeassistant-kiosk-controls.service",
                "keyboard": "orangepi-homeassistant-keyboard.service"}
@@ -499,6 +503,37 @@ class Host:
         confirmed(data, "remove dangling images and stopped build leftovers")
         return {"output": clip(self._docker(["image", "prune", "-f"], 120))}
 
+    # ----- storage --------------------------------------------------------------------------------------------
+    def storage(self, data: dict) -> dict:
+        """Root usage plus the usual suspects (recorder database, HA backups, Docker) so cleanup can be chosen."""
+        need(data, set())
+        root = next((d for d in self.disks() if d["mount"] == "/"), None)
+        base = Path(self.config.get("ha_config", HA_CONFIG))
+        recorder = 0
+        for suffix in ("", "-wal", "-shm"):
+            try:
+                recorder += (base / f"home-assistant_v2.db{suffix}").stat().st_size
+            except OSError:
+                pass
+        backups = []
+        try:
+            for item in (base / "backups").glob("*.tar"):
+                stat = item.stat()
+                backups.append({"name": item.name, "size": stat.st_size, "modified": int(stat.st_mtime),
+                                "automatic": item.name.lower().startswith("automatic_backup_")})
+        except OSError:
+            pass
+        backups.sort(key=lambda b: b["modified"], reverse=True)
+        docker = []
+        try:
+            docker = [{"type": r.get("Type", ""), "size": r.get("Size", ""), "reclaimable": r.get("Reclaimable", "")}
+                      for r in self._json_lines(self._docker(["system", "df", "--format", "{{json .}}"], 30))]
+        except AppError:
+            pass
+        _, last = self.run(["journalctl", "-u", "opiha-diskguard.service", "--no-pager", "-o", "cat", "-n", "5"], timeout=10)
+        return {"root": root, "used_percent": round(100 * (1 - root["free"] / root["total"]), 1) if root else None,
+                "recorder_bytes": recorder, "backups": backups, "docker": docker, "last_guard_run": clip(last, 4096)}
+
     # ----- updates --------------------------------------------------------------------------------------------
     def updates(self, data: dict) -> dict:
         need(data, set())
@@ -697,7 +732,7 @@ class Host:
 
 
 OPERATIONS = ("overview", "stats", "hardware", "services", "service", "logs", "power", "docker", "container", "container_logs",
-              "images", "image", "docker_prune", "updates", "update_start", "update_job", "desktop", "desktop_mode", "display",
+              "images", "image", "docker_prune", "storage", "updates", "update_start", "update_job", "desktop", "desktop_mode", "display",
               "term_open", "term_io", "term_close")
 
 
